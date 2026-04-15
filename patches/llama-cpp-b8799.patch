@@ -1,0 +1,313 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index caea48c..cde20f1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -33,6 +33,10 @@ endif()
+ 
+ option(LLAMA_USE_SYSTEM_GGML "Use system libggml" OFF)
+ 
++# Shannon-Prime VHT2 KV cache compression integration (off by default).
++option(LLAMA_SHANNON_PRIME "llama: enable Shannon-Prime VHT2 KV cache compression" OFF)
++set(SHANNON_PRIME_DIR "" CACHE STRING "Path to shannon-prime-llama repo (with lib/shannon-prime submodule). Required when LLAMA_SHANNON_PRIME=ON.")
++
+ option(LLAMA_WASM_MEM64 "llama: use 64-bit memory in WASM builds" ON)
+ 
+ if (EMSCRIPTEN)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 121c21f..7d0f39c 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -163,6 +163,27 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+ 
+ target_link_libraries(llama PUBLIC ggml)
+ 
++if (LLAMA_SHANNON_PRIME)
++    if (NOT SHANNON_PRIME_DIR)
++        message(FATAL_ERROR "LLAMA_SHANNON_PRIME=ON requires -DSHANNON_PRIME_DIR=<path/to/shannon-prime-llama>")
++    endif()
++    if (NOT EXISTS "${SHANNON_PRIME_DIR}/lib/shannon-prime/core/shannon_prime.c")
++        message(FATAL_ERROR "SHANNON_PRIME_DIR='${SHANNON_PRIME_DIR}' does not contain lib/shannon-prime/core/shannon_prime.c — did you `git submodule update --init` in shannon-prime-llama?")
++    endif()
++    add_library(shannon_prime_core STATIC
++        ${SHANNON_PRIME_DIR}/lib/shannon-prime/core/shannon_prime.c
++        ${SHANNON_PRIME_DIR}/lib/shannon-prime/tools/shannon_prime_llama.c
++    )
++    target_include_directories(shannon_prime_core PUBLIC
++        ${SHANNON_PRIME_DIR}/lib/shannon-prime/core
++        ${SHANNON_PRIME_DIR}/lib/shannon-prime/tools
++    )
++    set_property(TARGET shannon_prime_core PROPERTY POSITION_INDEPENDENT_CODE ON)
++    target_compile_definitions(llama PRIVATE LLAMA_SHANNON_PRIME)
++    target_sources(llama PRIVATE llama-shannon-prime.cpp)
++    target_link_libraries(llama PRIVATE shannon_prime_core)
++endif()
++
+ if (BUILD_SHARED_LIBS)
+     set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
+     target_compile_definitions(llama PRIVATE LLAMA_BUILD)
+diff --git a/src/llama-context.cpp b/src/llama-context.cpp
+index ee0c292..e3a0abe 100644
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -10,6 +10,9 @@
+ #include "llama-model.h"
+ #include "llama-ext.h"
+ #include "llama.h"
++#ifdef LLAMA_SHANNON_PRIME
++#include "llama-shannon-prime.h"
++#endif
+ 
+ #include <cinttypes>
+ #include <cmath>
+@@ -364,9 +367,16 @@ llama_context::llama_context(
+             sampling.token_ids_full_vocab[i] = i;
+         }
+     }
++
++#ifdef LLAMA_SHANNON_PRIME
++    llama_sp_maybe_init(&model, (int)cparams.n_ctx);
++#endif
+ }
+ 
+ llama_context::~llama_context() {
++#ifdef LLAMA_SHANNON_PRIME
++    llama_sp_free();
++#endif
+     if (!model.hparams.no_alloc) {
+         for (size_t i = 0; i < backend_ptrs.size(); ++i) {
+             ggml_backend_t             backend = backend_ptrs[i];
+@@ -1197,7 +1207,15 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
+         res->reset();
+ 
+         ggml_backend_sched_reset(sched.get());
++#ifdef LLAMA_SHANNON_PRIME
++        if (llama_sp_is_enabled()) {
++            ggml_backend_sched_set_eval_callback(sched.get(), llama_sp_eval_callback, nullptr);
++        } else {
++            ggml_backend_sched_set_eval_callback(sched.get(), cparams.cb_eval, cparams.cb_eval_user_data);
++        }
++#else
+         ggml_backend_sched_set_eval_callback(sched.get(), cparams.cb_eval, cparams.cb_eval_user_data);
++#endif
+ 
+         //const auto t_start_us = ggml_time_us();
+ 
+diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
+new file mode 100644
+index 0000000..f48045f
+--- /dev/null
++++ b/src/llama-shannon-prime.cpp
+@@ -0,0 +1,158 @@
++// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
++
++#ifdef LLAMA_SHANNON_PRIME
++
++#include "llama-shannon-prime.h"
++
++#include "llama-model.h"
++#include "llama-hparams.h"
++#include "llama-impl.h"
++
++#include "shannon_prime_llama.h"
++
++#include <atomic>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <vector>
++
++namespace {
++
++struct sp_state {
++    sp_llama_ctx_t * ctx = nullptr;
++    int head_dim_k = 0;
++    int head_dim_v = 0;
++    int n_layers   = 0;
++    int n_heads_kv = 0;
++};
++
++sp_state g_sp;
++
++inline bool name_has_prefix(const char * name, const char * prefix, int prefix_len) {
++    return name && std::strncmp(name, prefix, prefix_len) == 0;
++}
++
++// Parse "Kcur-7" → 7, "Vcur-3" → 3. Returns -1 if not a Kcur/Vcur tensor.
++// Sets *is_v to true for V, false for K.
++int parse_layer_index(const char * name, bool & is_v) {
++    if (name_has_prefix(name, "Kcur-", 5)) { is_v = false; return std::atoi(name + 5); }
++    if (name_has_prefix(name, "Vcur-", 5)) { is_v = true;  return std::atoi(name + 5); }
++    return -1;
++}
++
++// Round-trip a single tensor of shape [head_dim, n_heads_kv, n_tokens]
++// through Shannon-Prime. The tensor's data is overwritten in place with
++// the reconstructed values. Uses cache slot (layer, head, 0) as scratch:
++// each write→read pair completes before the next, so all batches share
++// position 0 without conflict.
++void round_trip_tensor(ggml_tensor * t, int il, bool is_v) {
++    if (t->type != GGML_TYPE_F32) {
++        static std::atomic<bool> warned{false};
++        bool expected = false;
++        if (warned.compare_exchange_strong(expected, true)) {
++            std::fprintf(stderr,
++                "[Shannon-Prime] tensor '%s' has non-fp32 type %d — passing through (CPU build expects fp32 KV)\n",
++                t->name, (int)t->type);
++        }
++        return;
++    }
++
++    const int hd  = (int)t->ne[0];
++    const int nhk = (int)t->ne[1];
++    const int nt  = (int)t->ne[2];
++
++    const int expected_hd = is_v ? g_sp.head_dim_v : g_sp.head_dim_k;
++    if (hd != expected_hd) return;
++    if (nhk != g_sp.n_heads_kv) return;
++
++    // ne[0..2] are element counts; nb[0..2] are byte strides.
++    // For a contiguous fp32 tensor, the vector for (token tok, head h)
++    // sits at base + (tok * nhk + h) * hd floats.
++    if (t->nb[0] != sizeof(float)) return;
++
++    float * base = (float *)t->data;
++    if (!base) return;
++
++    std::vector<float> recon(hd);
++    for (int tok = 0; tok < nt; ++tok) {
++        for (int h = 0; h < nhk; ++h) {
++            float * v = base + (size_t)(tok * nhk + h) * hd;
++
++            // Slot 0 is scratch. Each iteration overwrites it.
++            const int pos = 0;
++            if (is_v) {
++                sp_llama_write_v(g_sp.ctx, il, h, pos, v);
++                sp_llama_read_v (g_sp.ctx, il, h, pos, recon.data());
++            } else {
++                sp_llama_write_k(g_sp.ctx, il, h, pos, v);
++                sp_llama_read_k (g_sp.ctx, il, h, pos, recon.data());
++            }
++            std::memcpy(v, recon.data(), hd * sizeof(float));
++        }
++    }
++}
++
++} // namespace
++
++extern "C" void llama_sp_maybe_init(const struct llama_model * model, int n_ctx) {
++    if (g_sp.ctx != nullptr) return;
++    if (model == nullptr) return;
++
++    const auto & hp = model->hparams;
++
++    sp_llama_params_t params = {};
++    params.head_dim    = (int)hp.n_embd_head_k_full;
++    params.n_layers    = (int)hp.n_layer;
++    params.n_heads_kv  = (int)hp.n_head_kv(0);
++    params.max_seq_len = n_ctx > 16 ? n_ctx : 16; // we only use slot 0 anyway
++    // SP_BACKEND_CPU is an anonymous enum inside the struct (C-scoped). C++
++    // can't see it as a global identifier, so initialise with 0 explicitly.
++    params.backend     = decltype(params.backend)(0); // SP_BACKEND_CPU
++    params.gpu_context = nullptr;
++
++    if (params.head_dim <= 0 || params.n_layers <= 0 || params.n_heads_kv <= 0) {
++        std::fprintf(stderr,
++            "[Shannon-Prime] skipping init: invalid hparams (hd=%d nl=%d nhkv=%d)\n",
++            params.head_dim, params.n_layers, params.n_heads_kv);
++        return;
++    }
++
++    // sp_llama_init returns NULL if SHANNON_PRIME_ENABLED env var is unset.
++    g_sp.ctx = sp_llama_init(&params);
++    if (g_sp.ctx == nullptr) return;
++
++    g_sp.head_dim_k = params.head_dim;
++    g_sp.head_dim_v = (int)hp.n_embd_head_v_full;
++    g_sp.n_layers   = params.n_layers;
++    g_sp.n_heads_kv = params.n_heads_kv;
++
++    std::fprintf(stderr,
++        "[Shannon-Prime] enabled: head_dim_k=%d head_dim_v=%d n_layers=%d n_heads_kv=%d n_ctx=%d\n",
++        g_sp.head_dim_k, g_sp.head_dim_v, g_sp.n_layers, g_sp.n_heads_kv, params.max_seq_len);
++}
++
++extern "C" void llama_sp_free(void) {
++    if (g_sp.ctx) {
++        sp_llama_free(g_sp.ctx);
++        g_sp.ctx = nullptr;
++    }
++}
++
++extern "C" bool llama_sp_is_enabled(void) {
++    return g_sp.ctx != nullptr;
++}
++
++extern "C" bool llama_sp_eval_callback(struct ggml_tensor * t, bool ask, void * user_data) {
++    (void)user_data;
++    if (ask) return true;          // always allow evaluation
++    if (!g_sp.ctx) return true;    // safety: shouldn't be installed if not enabled
++
++    bool is_v = false;
++    int  il   = parse_layer_index(t->name, is_v);
++    if (il < 0 || il >= g_sp.n_layers) return true;
++
++    round_trip_tensor(t, il, is_v);
++    return true;
++}
++
++#endif // LLAMA_SHANNON_PRIME
+diff --git a/src/llama-shannon-prime.h b/src/llama-shannon-prime.h
+new file mode 100644
+index 0000000..1325157
+--- /dev/null
++++ b/src/llama-shannon-prime.h
+@@ -0,0 +1,49 @@
++// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp.
++//
++// Activated when SHANNON_PRIME_ENABLED=1 is set in the environment.
++// Hook strategy: a ggml_backend_sched eval callback that watches for tensors
++// named "Kcur-N" / "Vcur-N" (post-RoPE K and V per layer) and round-trips
++// their data through the Shannon-Prime CPU shadow cache before the existing
++// cpy_k / cpy_v graph nodes commit them to the live KV cache. The cache
++// thus holds reconstructed (compressed-then-decompressed) values; attention
++// reads them back in the standard llama.cpp path. No separate read hook
++// needed.
++//
++// CPU-only build path. fp32 tensors only. Other types are passed through
++// untouched (with a one-shot warning).
++
++#pragma once
++
++#ifdef LLAMA_SHANNON_PRIME
++
++#include <stdbool.h>
++#include "ggml.h"
++
++struct llama_model;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++// Lazily initialise the global Shannon-Prime context from model hparams +
++// environment variables. No-op if already initialised or if SHANNON_PRIME_ENABLED
++// is not set in the environment.
++void llama_sp_maybe_init(const struct llama_model * model, int n_ctx);
++
++// Tear down the global context. Idempotent.
++void llama_sp_free(void);
++
++// True iff Shannon-Prime is active.
++bool llama_sp_is_enabled(void);
++
++// ggml backend sched eval callback. Pass to ggml_backend_sched_set_eval_callback.
++// On post-eval (ask=false) for "Kcur-N" / "Vcur-N" tensors, replaces the
++// tensor's data with the VHT2 round-tripped values in place. Returns true so
++// the rest of the graph continues to evaluate normally.
++bool llama_sp_eval_callback(struct ggml_tensor * t, bool ask, void * user_data);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif // LLAMA_SHANNON_PRIME

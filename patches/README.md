@@ -1,0 +1,80 @@
+# llama.cpp patches
+
+Each patch in this directory is named `llama-cpp-b<NNNN>.patch` and applies
+cleanly against upstream `https://github.com/ggml-org/llama.cpp` at the tag
+indicated by `b<NNNN>`.
+
+## How to apply
+
+```bash
+git clone --branch b8799 --depth 1 https://github.com/ggml-org/llama.cpp /path/to/llama-cpp-sp
+cd /path/to/llama-cpp-sp
+git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8799.patch
+```
+
+## How to build (CPU-only is supported today)
+
+```bash
+cmake -S . -B build \
+  -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF \
+  -DLLAMA_SHANNON_PRIME=ON \
+  -DSHANNON_PRIME_DIR=/path/to/shannon-prime-llama
+cmake --build build --target llama-perplexity -j
+```
+
+## How to run
+
+VHT2 is gated by `SHANNON_PRIME_ENABLED=1`. With the env var unset, the patched
+binary is byte-identical in behaviour to vanilla llama.cpp (the eval callback
+isn't installed).
+
+```bash
+# baseline
+./build/bin/llama-perplexity -m model.gguf -f wikitext-2-raw/wiki.test.raw \
+    -c 2048 -b 512 -t 16 -fa off
+
+# VHT2 (ship config)
+SHANNON_PRIME_ENABLED=1 \
+SHANNON_PRIME_K_BITS=5,5,4,3 \
+SHANNON_PRIME_V_BITS=3 \
+SHANNON_PRIME_MOBIUS=1 \
+./build/bin/llama-perplexity -m model.gguf -f wikitext-2-raw/wiki.test.raw \
+    -c 2048 -b 512 -t 16 -fa off
+```
+
+## Hook strategy
+
+The patch installs a `ggml_backend_sched_set_eval_callback` that watches for
+post-RoPE `Kcur-N` / `Vcur-N` tensors. When one fires (post-eval), the data is
+read out, round-tripped through Shannon-Prime's CPU shadow cache (compress →
+decompress in-place), and written back. The existing `cpy_k` / `cpy_v` graph
+nodes then commit the round-tripped values into the live KV cache. Attention
+reads the cache normally — no separate read hook is needed because the cache
+already holds reconstructed (compressed-then-decompressed) values.
+
+This is the simplest correct shape for the first PPL number. It does NOT save
+memory in this build (the live ggml KV cache is unchanged in size); the live
+cache holds reconstructed values, and the PPL delta measures the quality cost
+of compression on this model. Memory savings is a follow-up: the integration
+needs to make the live cache itself compressed and reconstruct on demand,
+which requires backend-side hooks (CUDA/Vulkan/Metal) — out of scope for the
+first patch.
+
+CPU-only build (`-DGGML_CUDA=OFF`). fp32 tensors only. Other types are passed
+through untouched (with a one-shot warning to stderr).
+
+## Validation env vars
+
+| Variable | Default | Effect |
+|---|---|---|
+| `SHANNON_PRIME_ENABLED` | unset | `1` enables the eval callback. |
+| `SHANNON_PRIME_K_BITS` | `5,5,4,3` | Per-band K bit allocation (4 bands). |
+| `SHANNON_PRIME_V_BITS` | `3` | Flat V bit width (1 band). |
+| `SHANNON_PRIME_MOBIUS` | `1` | Möbius squarefree-first reordering on K. |
+| `SHANNON_PRIME_VERBOSE` | `0` | Print Shannon-Prime config + init line at startup. |
+
+## Patches in this directory
+
+| Patch | Upstream tag | Date | Notes |
+|---|---|---|---|
+| `llama-cpp-b8799.patch` | b8799 | 2026-04-16 | First end-to-end VHT2 hook + CMake integration. CPU-only. See `../ppl_logs/` for the headline PPL numbers. |
