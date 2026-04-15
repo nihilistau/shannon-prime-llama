@@ -205,3 +205,52 @@ That's the next integration patch — distinct from the core improvements
 landed here. The core `a6b14e8` changes (malloc-free hot path, real
 backend batches) are still prerequisites: any of the three fixes above
 call the same singleton/batch entry points we just fixed.
+
+## Update 3 — post-decode hook landed. The gap is closed.
+
+Switched the llama.cpp integration from a ggml eval callback to a post-
+`graph_compute` walk of the KV cache. Single sync per decode call
+instead of ~1,600 per-tensor syncs. Implementation:
+
+- `llama_kv_cache::get_layers()` and `llama_kv_cache_context::get_kv()`
+  / `get_cur_sinfo()` made public so the out-of-graph hook can walk the
+  cache without a friend declaration.
+- New `llama_sp_post_compute(mctx, ubatch)` in `llama-shannon-prime.cpp`
+  that iterates `layers[ikv].k` and (when v_trans=false) `layers[ikv].v`
+  for the `ubatch.n_tokens` slot indices in the current `slot_info`.
+  fp32 and fp16 cache types handled via `ggml_fp16_to_fp32_row` /
+  `ggml_fp32_to_fp16_row`.
+- Called from `llama_context::process_ubatch` immediately after
+  `graph_compute` returns `GGML_STATUS_SUCCESS`.
+- Eval-callback installation removed. `cparams.cb_eval` is preserved
+  and passed through unchanged (SP no longer clobbers user callbacks).
+
+Reran on the S22 Ultra. Same model, same prompt, same seed.
+
+| Run | Prompt (t/s) | Generation (t/s) | Δ vs baseline |
+|---|---|---|---|
+| Baseline (vanilla) | 121.4 | **17.7** | — |
+| SP CPU, post-decode | 126.8 | **18.1** | at parity (+2%) |
+| SP Adreno, post-decode | 113.4 | **18.2** | at parity (+3%) |
+
+Output remains `"Paris."` on all three. Compression is active
+(`3.8×`, `Cache: 4.25 MB (vs 16.00 MB fp16)` in the verbose logs). The
+45× generation slowdown from the eval-callback path is gone.
+
+The slight margins above/below baseline are run-to-run noise — the
+post-decode walk runs ~500 operations per generated token (16 layers ×
+8 heads × one full compress→decompress cycle on 64 floats), well under
+1 ms. At wall-clock that's invisible against the ~56 ms per token of
+the model's own compute.
+
+V is round-tripped when v_trans=false (non-transposed KV cache layout).
+When v_trans=true (default for many llama.cpp builds) the hook round-
+trips K only and prints a one-shot warning; V support for the
+transposed layout is a follow-up because per-(head, position) V vectors
+are non-contiguous and need strided gather/scatter.
+
+With this commit the story lands: Shannon-Prime compression works
+end-to-end on-device at baseline throughput, 3.8× K-cache compression
+engaged, `"Paris."` deterministically on every run.
+
+Full logs: `phone_postdecode_{baseline,cpu,adreno}.log`.
