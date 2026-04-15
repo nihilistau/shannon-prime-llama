@@ -1,0 +1,34 @@
+Shannon-Prime VHT2: Exact Spectral KV Cache Compression
+Copyright (C) 2026 Ray Daniels. All Rights Reserved.
+
+DUAL LICENSE
+
+This project is available under two licensing options:
+
+1. OPEN SOURCE LICENSE (AGPLv3)
+   For open-source, academic, and non-proprietary use, this software is
+   licensed under the GNU Affero General Public License version 3 (AGPLv3).
+   See LICENSE_AGPL3.txt for the full license text, or visit:
+   https://www.gnu.org/licenses/agpl-3.0.html
+
+   The AGPLv3 requires that any derivative work, including modifications
+   deployed as a network service (SaaS), must also be released under
+   AGPLv3 with full source code disclosure.
+
+2. COMMERCIAL LICENSE
+   For proprietary integration, closed-source deployment, or use in
+   commercial products/services without AGPLv3 obligations, a separate
+   Commercial License Agreement is required. Contact:
+   Ray Daniels — raydaniels@gmail.com
+
+HISTORICAL NOTE
+   Code released prior to April 12, 2026 (tagged as v1.0-public-domain)
+   was released under a Public Domain waiver. That historical release
+   remains under its original terms. All new development from April 12,
+   2026 onward is governed by this dual-license structure.
+
+UPSTREAM COMPONENTS
+   This project is built on an llama.cpp b8672 snapshot (cloned as
+   framework, not a platform-level fork). Upstream llama.cpp
+   components remain under their original MIT License — see
+   vendor/LICENSE_MIT.
