@@ -1,0 +1,71 @@
+[Shannon-Prime Mobile] Hardware capabilities:
+  NEON:         yes
+  FP16 arith:   yes (Tier 2)
+  Dot product:  yes
+  I8MM:         no
+  SVE/SVE2:     no/no
+  CPU cores:    4 big + 4 little (prime=#7)
+  Adreno:       no
+  Hexagon:      no
+[Shannon-Prime Mobile] Cache: 0.00 MB (vs 0.01 MB fp16, 4.1× compression)
+[Shannon-Prime Mobile] Decode: CPU/FP16, Prefill: CPU/FP16
+[Shannon-Prime Mobile] Cache: 8.50 MB (vs 32.00 MB fp16, 3.8× compression)
+[Shannon-Prime Mobile] Decode: CPU/FP16, Prefill: CPU/FP16
+[Shannon-Prime Mobile] Cache: 0.00 MB (vs 0.01 MB fp16, 4.1× compression)
+[Shannon-Prime Mobile] Decode: CPU/FP16, Prefill: CPU/FP16
+[Shannon-Prime Mobile] Cache: 0.01 MB (vs 0.03 MB fp16, 4.1× compression)
+[Shannon-Prime Mobile] Decode: CPU/FP16, Prefill: CPU/FP16
+[Shannon-Prime Mobile] Cache: 8.50 MB (vs 32.00 MB fp16, 3.8× compression)
+[Shannon-Prime Mobile] Decode: CPU/FP16, Prefill: CPU/FP16
+[Shannon-Prime Mobile] Stats:
+  Writes: 129
+  Reads:  0
+[Shannon-Prime Mobile] Hardware capabilities:
+  NEON:         yes
+  FP16 arith:   yes (Tier 2)
+  Dot product:  yes
+  I8MM:         no
+  SVE/SVE2:     no/no
+  CPU cores:    4 big + 4 little (prime=#7)
+  Adreno:       no
+  Hexagon:      no
+Shannon-Prime Mobile Backend Validation
+========================================
+
+== Hardware Detection ==
+  [[32mPASS[0m] Feature detection runs without crash
+
+== NEON WHT vs Core ==
+  [[32mPASS[0m] NEON WHT hd=32: max_err=0.00e+00
+  [[32mPASS[0m] NEON WHT hd=64: max_err=0.00e+00
+  [[32mPASS[0m] NEON WHT hd=128: max_err=0.00e+00
+
+== fp16 Conversion ==
+  [[32mPASS[0m] f32→f16→f32 roundtrip: max_err=2.4247e-04 (fp16 precision ~1e-3)
+
+== Absmax Reduction ==
+  [[32mPASS[0m] absmax finds planted maximum
+
+== Full Pipeline hd=128 ==
+  [[32mPASS[0m] K pipeline: correlation=0.9897 (need >0.985)
+  [[32mPASS[0m] V pipeline: correlation=0.9702 (need >0.950)
+
+== hd=64 Mobile Path ==
+  [[32mPASS[0m] hd=64 K correlation: 0.9936 (paper: 0.9972)
+
+== fp16 Write Path ==
+  [[32mPASS[0m] fp16→VHT2→f32 K correlation: 0.9868 (need >0.980)
+
+== Thread Affinity ==
+  [[32mPASS[0m] SP_AFFINITY_ANY: set
+
+== Performance Counters ==
+  [[32mPASS[0m] Write counter: 3
+  [[32mPASS[0m] Read counter: 1
+
+== Benchmark ==
+  Writeback: 0.1 ms (paper target: 37-42 ms on ARM)
+  [[32mPASS[0m] Benchmark completes
+
+========================================
+Results: 14/14 passed

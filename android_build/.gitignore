@@ -1,0 +1,8 @@
+# Built binaries (reproducible via build_*.sh). Don't bloat git.
+llama-cli
+llama-cli.exe
+test_adreno
+test_adreno.exe
+*.so
+*.a
+*.o
