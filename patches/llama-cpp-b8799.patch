@@ -14,10 +14,10 @@ index caea48c..cde20f1 100644
  
  if (EMSCRIPTEN)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 121c21f..7d0f39c 100644
+index 121c21f..3b2b68b 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -163,6 +163,27 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+@@ -163,6 +163,43 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
  
  target_link_libraries(llama PUBLIC ggml)
  
@@ -28,16 +28,32 @@ index 121c21f..7d0f39c 100644
 +    if (NOT EXISTS "${SHANNON_PRIME_DIR}/lib/shannon-prime/core/shannon_prime.c")
 +        message(FATAL_ERROR "SHANNON_PRIME_DIR='${SHANNON_PRIME_DIR}' does not contain lib/shannon-prime/core/shannon_prime.c — did you `git submodule update --init` in shannon-prime-llama?")
 +    endif()
-+    add_library(shannon_prime_core STATIC
++
++    set(_SP_SOURCES
 +        ${SHANNON_PRIME_DIR}/lib/shannon-prime/core/shannon_prime.c
 +        ${SHANNON_PRIME_DIR}/lib/shannon-prime/tools/shannon_prime_llama.c
 +    )
++    set(_SP_DEFS LLAMA_SHANNON_PRIME)
++
++    # Pull in the Adreno (ARM NEON) backend on aarch64 builds so the bridge
++    # can pick SP_BACKEND_ADRENO at runtime (SHANNON_PRIME_BACKEND=adreno env).
++    if (ANDROID OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
++        list(APPEND _SP_SOURCES
++            ${SHANNON_PRIME_DIR}/lib/shannon-prime/backends/adreno/shannon_prime_adreno.c)
++        list(APPEND _SP_DEFS SP_HAVE_ADRENO)
++        message(STATUS "Shannon-Prime: linking Adreno NEON backend (SP_HAVE_ADRENO)")
++    endif()
++
++    add_library(shannon_prime_core STATIC ${_SP_SOURCES})
 +    target_include_directories(shannon_prime_core PUBLIC
 +        ${SHANNON_PRIME_DIR}/lib/shannon-prime/core
 +        ${SHANNON_PRIME_DIR}/lib/shannon-prime/tools
++        ${SHANNON_PRIME_DIR}/lib/shannon-prime/backends/adreno
 +    )
++    target_compile_definitions(shannon_prime_core PUBLIC ${_SP_DEFS})
 +    set_property(TARGET shannon_prime_core PROPERTY POSITION_INDEPENDENT_CODE ON)
-+    target_compile_definitions(llama PRIVATE LLAMA_SHANNON_PRIME)
++
++    target_compile_definitions(llama PRIVATE ${_SP_DEFS})
 +    target_sources(llama PRIVATE llama-shannon-prime.cpp)
 +    target_link_libraries(llama PRIVATE shannon_prime_core)
 +endif()
