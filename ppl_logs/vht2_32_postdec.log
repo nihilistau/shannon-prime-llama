@@ -1,0 +1,224 @@
+common_init_result: fitting params to device memory, for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on
+[Shannon-Prime] llama.cpp integration
+  Backend:  CPU
+Shannon-Prime VHT2 Configuration:
+  head_dim:     64
+  n_layers:     16
+  n_heads_kv:   8
+  K bands:      3 (5/4/4)
+  V bands:      1 (3)
+  Möbius mask:  on
+  Vilenkin:     off
+  Compression:  3.8×
+[Shannon-Prime] enabled: head_dim_k=64 head_dim_v=64 n_layers=16 n_heads_kv=8 n_ctx=2048
+llama_params_fit_impl: no devices with dedicated memory found
+llama_params_fit: successfully fit params to free device memory
+llama_params_fit: fitting params to free memory took 0.31 seconds
+llama_model_loader: loaded meta data with 78 key-value pairs and 148 tensors from D:/Files/Models/Dolphin3.0-Llama3.2-1B.Q8_0.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = llama
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = Dolphin 3.0 Llama 3.2 1b
+llama_model_loader: - kv   3:                       general.organization str              = Cognitivecomputations
+llama_model_loader: - kv   4:                           general.basename str              = dolphin-3.0-llama-3.2
+llama_model_loader: - kv   5:                         general.size_label str              = 1B
+llama_model_loader: - kv   6:                            general.license str              = llama3.2
+llama_model_loader: - kv   7:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   8:                  general.base_model.0.name str              = Llama 3.2 1B
+llama_model_loader: - kv   9:          general.base_model.0.organization str              = Meta Llama
+llama_model_loader: - kv  10:              general.base_model.0.repo_url str              = https://huggingface.co/meta-llama/Lla...
+llama_model_loader: - kv  11:                      general.dataset.count u32              = 13
+llama_model_loader: - kv  12:                     general.dataset.0.name str              = Opc Sft Stage1
+llama_model_loader: - kv  13:             general.dataset.0.organization str              = OpenCoder LLM
+llama_model_loader: - kv  14:                 general.dataset.0.repo_url str              = https://huggingface.co/OpenCoder-LLM/...
+llama_model_loader: - kv  15:                     general.dataset.1.name str              = Opc Sft Stage2
+llama_model_loader: - kv  16:             general.dataset.1.organization str              = OpenCoder LLM
+llama_model_loader: - kv  17:                 general.dataset.1.repo_url str              = https://huggingface.co/OpenCoder-LLM/...
+llama_model_loader: - kv  18:                     general.dataset.2.name str              = Orca Agentinstruct 1M v1
+llama_model_loader: - kv  19:                  general.dataset.2.version str              = v1
+llama_model_loader: - kv  20:             general.dataset.2.organization str              = Microsoft
+llama_model_loader: - kv  21:                 general.dataset.2.repo_url str              = https://huggingface.co/microsoft/orca...
+llama_model_loader: - kv  22:                     general.dataset.3.name str              = Orca Math Word Problems 200k
+llama_model_loader: - kv  23:             general.dataset.3.organization str              = Microsoft
+llama_model_loader: - kv  24:                 general.dataset.3.repo_url str              = https://huggingface.co/microsoft/orca...
+llama_model_loader: - kv  25:                     general.dataset.4.name str              = Hermes Function Calling v1
+llama_model_loader: - kv  26:                  general.dataset.4.version str              = v1
+llama_model_loader: - kv  27:             general.dataset.4.organization str              = NousResearch
+llama_model_loader: - kv  28:                 general.dataset.4.repo_url str              = https://huggingface.co/NousResearch/h...
+llama_model_loader: - kv  29:                     general.dataset.5.name str              = NuminaMath CoT
+llama_model_loader: - kv  30:             general.dataset.5.organization str              = AI MO
+llama_model_loader: - kv  31:                 general.dataset.5.repo_url str              = https://huggingface.co/AI-MO/NuminaMa...
+llama_model_loader: - kv  32:                     general.dataset.6.name str              = NuminaMath TIR
+llama_model_loader: - kv  33:             general.dataset.6.organization str              = AI MO
+llama_model_loader: - kv  34:                 general.dataset.6.repo_url str              = https://huggingface.co/AI-MO/NuminaMa...
+llama_model_loader: - kv  35:                     general.dataset.7.name str              = Tulu 3 Sft Mixture
+llama_model_loader: - kv  36:             general.dataset.7.organization str              = Allenai
+llama_model_loader: - kv  37:                 general.dataset.7.repo_url str              = https://huggingface.co/allenai/tulu-3...
+llama_model_loader: - kv  38:                     general.dataset.8.name str              = Dolphin Coder
+llama_model_loader: - kv  39:             general.dataset.8.organization str              = Cognitivecomputations
+llama_model_loader: - kv  40:                 general.dataset.8.repo_url str              = https://huggingface.co/cognitivecompu...
+llama_model_loader: - kv  41:                     general.dataset.9.name str              = Smoltalk
+llama_model_loader: - kv  42:             general.dataset.9.organization str              = HuggingFaceTB
+llama_model_loader: - kv  43:                 general.dataset.9.repo_url str              = https://huggingface.co/HuggingFaceTB/...
+llama_model_loader: - kv  44:                    general.dataset.10.name str              = Samantha Data
+llama_model_loader: - kv  45:            general.dataset.10.organization str              = Cognitivecomputations
+llama_model_loader: - kv  46:                general.dataset.10.repo_url str              = https://huggingface.co/cognitivecompu...
+llama_model_loader: - kv  47:                    general.dataset.11.name str              = CodeFeedback Filtered Instruction
+llama_model_loader: - kv  48:            general.dataset.11.organization str              = M A P
+llama_model_loader: - kv  49:                general.dataset.11.repo_url str              = https://huggingface.co/m-a-p/CodeFeed...
+llama_model_loader: - kv  50:                    general.dataset.12.name str              = Code Feedback
+llama_model_loader: - kv  51:            general.dataset.12.organization str              = M A P
+llama_model_loader: - kv  52:                general.dataset.12.repo_url str              = https://huggingface.co/m-a-p/Code-Fee...
+llama_model_loader: - kv  53:                          general.languages arr[str,1]       = ["en"]
+llama_model_loader: - kv  54:                          llama.block_count u32              = 16
+llama_model_loader: - kv  55:                       llama.context_length u32              = 131072
+llama_model_loader: - kv  56:                     llama.embedding_length u32              = 2048
+llama_model_loader: - kv  57:                  llama.feed_forward_length u32              = 8192
+llama_model_loader: - kv  58:                 llama.attention.head_count u32              = 32
+llama_model_loader: - kv  59:              llama.attention.head_count_kv u32              = 8
+llama_model_loader: - kv  60:                       llama.rope.freq_base f32              = 500000.000000
+llama_model_loader: - kv  61:     llama.attention.layer_norm_rms_epsilon f32              = 0.000010
+llama_model_loader: - kv  62:                 llama.attention.key_length u32              = 64
+llama_model_loader: - kv  63:               llama.attention.value_length u32              = 64
+llama_model_loader: - kv  64:                           llama.vocab_size u32              = 128258
+llama_model_loader: - kv  65:                 llama.rope.dimension_count u32              = 64
+llama_model_loader: - kv  66:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  67:                         tokenizer.ggml.pre str              = llama-bpe
+llama_model_loader: - kv  68:                      tokenizer.ggml.tokens arr[str,128258]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  69:                  tokenizer.ggml.token_type arr[i32,128258]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  70:                      tokenizer.ggml.merges arr[str,280147]  = ["Ġ Ġ", "Ġ ĠĠĠ", "ĠĠ ĠĠ", "...
+llama_model_loader: - kv  71:                tokenizer.ggml.bos_token_id u32              = 128000
+llama_model_loader: - kv  72:                tokenizer.ggml.eos_token_id u32              = 128256
+llama_model_loader: - kv  73:            tokenizer.ggml.padding_token_id u32              = 128001
+llama_model_loader: - kv  74:               tokenizer.ggml.add_bos_token bool             = true
+llama_model_loader: - kv  75:                    tokenizer.chat_template str              = {%- if tools %}\n    {{- '<|im_start|>...
+llama_model_loader: - kv  76:               general.quantization_version u32              = 2
+llama_model_loader: - kv  77:                          general.file_type u32              = 7
+llama_model_loader: - type  f32:   34 tensors
+llama_model_loader: - type q8_0:  114 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = Q8_0
+print_info: file size   = 1.48 GiB (8.50 BPW) 
+load: 0 unused tokens
+load: printing all EOG tokens:
+load:   - 128001 ('<|end_of_text|>')
+load:   - 128008 ('<|eom_id|>')
+load:   - 128009 ('<|eot_id|>')
+load:   - 128256 ('<|im_end|>')
+load: special tokens cache size = 258
+load: token to piece cache size = 0.7999 MB
+print_info: arch                  = llama
+print_info: vocab_only            = 0
+print_info: no_alloc              = 0
+print_info: n_ctx_train           = 131072
+print_info: n_embd                = 2048
+print_info: n_embd_inp            = 2048
+print_info: n_layer               = 16
+print_info: n_head                = 32
+print_info: n_head_kv             = 8
+print_info: n_rot                 = 64
+print_info: n_swa                 = 0
+print_info: is_swa_any            = 0
+print_info: n_embd_head_k         = 64
+print_info: n_embd_head_v         = 64
+print_info: n_gqa                 = 4
+print_info: n_embd_k_gqa          = 512
+print_info: n_embd_v_gqa          = 512
+print_info: f_norm_eps            = 0.0e+00
+print_info: f_norm_rms_eps        = 1.0e-05
+print_info: f_clamp_kqv           = 0.0e+00
+print_info: f_max_alibi_bias      = 0.0e+00
+print_info: f_logit_scale         = 0.0e+00
+print_info: f_attn_scale          = 0.0e+00
+print_info: n_ff                  = 8192
+print_info: n_expert              = 0
+print_info: n_expert_used         = 0
+print_info: n_expert_groups       = 0
+print_info: n_group_used          = 0
+print_info: causal attn           = 1
+print_info: pooling type          = -1
+print_info: rope type             = 0
+print_info: rope scaling          = linear
+print_info: freq_base_train       = 500000.0
+print_info: freq_scale_train      = 1
+print_info: n_ctx_orig_yarn       = 131072
+print_info: rope_yarn_log_mul     = 0.0000
+print_info: rope_finetuned        = unknown
+print_info: model type            = 1B
+print_info: model params          = 1.50 B
+print_info: general.name          = Dolphin 3.0 Llama 3.2 1b
+print_info: vocab type            = BPE
+print_info: n_vocab               = 128258
+print_info: n_merges              = 280147
+print_info: BOS token             = 128000 '<|begin_of_text|>'
+print_info: EOS token             = 128256 '<|im_end|>'
+print_info: EOT token             = 128256 '<|im_end|>'
+print_info: EOM token             = 128008 '<|eom_id|>'
+print_info: PAD token             = 128001 '<|end_of_text|>'
+print_info: LF token              = 198 'Ċ'
+print_info: EOG token             = 128001 '<|end_of_text|>'
+print_info: EOG token             = 128008 '<|eom_id|>'
+print_info: EOG token             = 128009 '<|eot_id|>'
+print_info: EOG token             = 128256 '<|im_end|>'
+print_info: max token length      = 256
+load_tensors: loading model tensors, this can take a while... (mmap = true, direct_io = false)
+load_tensors:   CPU_Mapped model buffer size =  1518.58 MiB
+.............................................................
+common_init_result: added <|end_of_text|> logit bias = -inf
+common_init_result: added <|eom_id|> logit bias = -inf
+common_init_result: added <|eot_id|> logit bias = -inf
+common_init_result: added <|im_end|> logit bias = -inf
+llama_context: constructing llama_context
+llama_context: n_seq_max     = 1
+llama_context: n_ctx         = 2048
+llama_context: n_ctx_seq     = 2048
+llama_context: n_batch       = 512
+llama_context: n_ubatch      = 512
+llama_context: causal_attn   = 1
+llama_context: flash_attn    = disabled
+llama_context: kv_unified    = false
+llama_context: freq_base     = 500000.0
+llama_context: freq_scale    = 1
+llama_context: n_ctx_seq (2048) < n_ctx_train (131072) -- the full capacity of the model will not be utilized
+llama_context:        CPU  output buffer size =     0.49 MiB
+llama_kv_cache:        CPU KV buffer size =    64.00 MiB
+llama_kv_cache: size =   64.00 MiB (  2048 cells,  16 layers,  1/1 seqs), K (f16):   32.00 MiB, V (f16):   32.00 MiB
+llama_kv_cache: attn_rot_k = 0, n_embd_head_k_all = 64
+llama_kv_cache: attn_rot_v = 0, n_embd_head_k_all = 64
+sched_reserve: reserving ...
+sched_reserve: resolving fused Gated Delta Net support:
+sched_reserve: fused Gated Delta Net (autoregressive) enabled
+sched_reserve: fused Gated Delta Net (chunked) enabled
+sched_reserve:        CPU compute buffer size =   258.51 MiB
+sched_reserve: graph nodes  = 582
+sched_reserve: graph splits = 1
+sched_reserve: reserve took 1.21 ms, sched copies = 1
+[Shannon-Prime] llama.cpp integration
+  Backend:  CPU
+Shannon-Prime VHT2 Configuration:
+  head_dim:     64
+  n_layers:     16
+  n_heads_kv:   8
+  K bands:      3 (5/4/4)
+  V bands:      1 (3)
+  Möbius mask:  on
+  Vilenkin:     off
+  Compression:  3.8×
+[Shannon-Prime] enabled: head_dim_k=64 head_dim_v=64 n_layers=16 n_heads_kv=8 n_ctx=2048
+common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+
+system_info: n_threads = 16 (n_threads_batch = 16) / 16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | AVX512_VBMI = 1 | AVX512_VNNI = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+perplexity: tokenizing the input ..
+perplexity: tokenization took 159.094 ms
+perplexity: calculating perplexity over 32 chunks, n_ctx=2048, batch_size=512, n_seq=1
+perplexity: 11.51 seconds per pass - ETA 6.13 minutes
+[1]103.7722,[2]98.1126,[3]127.2056,[4]121.1237,[5]124.6676,[6]102.0523,[7]101.4370,[8]101.0147,[9]115.3109,[10]114.2306,[11]115.1733,[12]108.4934,[13]106.0218,[14]103.2097,[15]104.5819,[16]105.1681,[17]103.5746,[18]106.8108,[19]107.0585,[20]105.7947,[21]106.0017,[22]109.7222,[23]110.0805,[24]107.7553,[25]106.9584,[26]105.7286,[27]106.0062,[28]105.3044,[29]105.9940,[30]104.3490,[31]104.2787,[32]105.0029,
+Final estimate: PPL = 105.0029 +/- 2.34679
+
+llama_perf_context_print:        load time =     763.16 ms
+llama_perf_context_print: prompt eval time =  355693.35 ms / 65536 tokens (    5.43 ms per token,   184.25 tokens per second)
+llama_perf_context_print:        eval time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
+llama_perf_context_print:       total time =  362601.84 ms / 65537 tokens
+llama_perf_context_print:    graphs reused =          0
+llama_memory_breakdown_print: | memory breakdown [MiB] | total   free    self   model   context   compute    unaccounted |
+llama_memory_breakdown_print: |   - Host               |                 1841 =  1518 +      64 +     258                |

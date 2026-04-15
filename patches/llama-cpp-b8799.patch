@@ -167,10 +167,10 @@ index 0b62dc7..b01d22e 100644
  
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
-index 0000000..3cb8a19
+index 0000000..8ae100e
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,238 @@
+@@ -0,0 +1,310 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -296,6 +296,14 @@ index 0000000..3cb8a19
 +                                      const struct llama_ubatch * ubatch) {
 +    if (!g_sp.ctx || !mctx || !ubatch) return;
 +
++    // Diagnostic toggles. SHANNON_PRIME_SKIP_K / SKIP_V can bypass one side
++    // of the round-trip for isolating which half is responsible for a
++    // quality regression.
++    static const char * sk_env  = std::getenv("SHANNON_PRIME_SKIP_K");
++    static const char * sv_env  = std::getenv("SHANNON_PRIME_SKIP_V");
++    static const bool   skip_k  = sk_env && sk_env[0] == '1';
++    static const bool   skip_v  = sv_env && sv_env[0] == '1';
++
 +    // Only the unified KV cache path is handled. ISWA / hybrid caches are
 +    // out of scope for the first post-decode hook iteration.
 +    auto * kvc = dynamic_cast<const llama_kv_cache_context *>(mctx);
@@ -313,6 +321,21 @@ index 0000000..3cb8a19
 +    const int hd_k = g_sp.head_dim_k;
 +    const int hd_v = g_sp.head_dim_v;
 +    const int nhk  = g_sp.n_heads_kv;
++
++    // One-shot diagnostic: log what V path we're taking so we can tell
++    // contiguous-per-position from the v_trans strided variant apart.
++    static std::atomic<bool> vpath_logged{false};
++    if (!layers.empty() && layers[0].v) {
++        bool expected = false;
++        if (vpath_logged.compare_exchange_strong(expected, true)) {
++            bool vcp = (size_t)layers[0].v->nb[1] <= (size_t)layers[0].v->nb[2];
++            std::fprintf(stderr,
++                "[Shannon-Prime] V path: %s (v->nb[1]=%zu, v->nb[2]=%zu) skip_k=%d skip_v=%d\n",
++                vcp ? "CONTIGUOUS-PER-POS" : "STRIDED-V_TRANS",
++                (size_t)layers[0].v->nb[1], (size_t)layers[0].v->nb[2],
++                skip_k ? 1 : 0, skip_v ? 1 : 0);
++        }
++    }
 +
 +    float * gather = get_scratch(tl_gather, (size_t)(hd_k > hd_v ? hd_k : hd_v));
 +    float * recon  = get_scratch(tl_recon,  (size_t)(hd_k > hd_v ? hd_k : hd_v));
@@ -344,6 +367,8 @@ index 0000000..3cb8a19
 +        // the store; Shannon-Prime only lends its compress/decompress).
 +        uint8_t * kdata = (uint8_t *)k->data;
 +
++        if (skip_k) goto do_v;
++
 +        for (int t = 0; t < n_tokens; ++t) {
 +            uint32_t slot = sinfo.idxs[0][t];
 +            const size_t pos_off = (size_t)slot * k_pos_stride;
@@ -361,6 +386,8 @@ index 0000000..3cb8a19
 +
 +        // V — only when not transposed. The adjacency check matches
 +        // llama_kv_cache::get_v's v_trans=false branch.
++        do_v:
++        if (skip_v) continue;
 +        if (v && v->data) {
 +            const ggml_type tv = v->type;
 +            const size_t    ev = ggml_type_size(tv);
@@ -391,17 +418,62 @@ index 0000000..3cb8a19
 +                    }
 +                }
 +            } else {
-+                // v_trans=true path — vector for (h, pos) is strided by
-+                // kv_size elements per head_dim component. Out of scope
-+                // for the first post-decode hook; document.
-+                static std::atomic<bool> warned{false};
-+                bool expected = false;
-+                if (warned.compare_exchange_strong(expected, true)) {
-+                    std::fprintf(stderr,
-+                        "[Shannon-Prime] V cache has v_trans=true layout; "
-+                        "V round-trip is not yet implemented in the post-decode hook. "
-+                        "K is still round-tripped. Set cache_type_v to the non-transposed "
-+                        "layout when creating the context to enable V as well.\n");
++                // v_trans=true path: storage layout is
++                //   v[stream, head, head_dim_idx, position]
++                // with `position` innermost (stride = element_size),
++                // `head_dim_idx` at stride kv_size elements,
++                // `head`        at stride kv_size*head_dim elements.
++                // So for a fixed (head h, position p) the hd floats that
++                // make up the V vector live at a *strided* set of offsets.
++                // We gather hd elements into a contiguous scratch, run the
++                // shannon-prime round-trip, scatter back.
++                const size_t n_embd_v_gqa = (size_t)v->ne[0]; // head_dim * nhk
++                if (n_embd_v_gqa == (size_t)hd_v * (size_t)nhk) {
++                    const uint32_t kv_size = kv->get_size();
++                    const size_t   head_stride_elts  = (size_t)kv_size * hd_v;  // elements between heads
++                    const size_t   inner_stride_elts = (size_t)kv_size;          // elements between head_dim indices
++                    uint8_t *      vdata = (uint8_t *)v->data;
++
++                    for (int t = 0; t < n_tokens; ++t) {
++                        uint32_t slot = sinfo.idxs[0][t];
++                        const size_t slot_off_elts = (size_t)slot;
++
++                        for (int h = 0; h < nhk; ++h) {
++                            const size_t head_off_elts = (size_t)h * head_stride_elts;
++
++                            // Gather hd strided floats from the cache.
++                            if (tv == GGML_TYPE_F32) {
++                                const float * vp = (const float *)vdata;
++                                for (int i = 0; i < hd_v; ++i) {
++                                    gather[i] = vp[head_off_elts + (size_t)i * inner_stride_elts + slot_off_elts];
++                                }
++                            } else if (tv == GGML_TYPE_F16) {
++                                const ggml_fp16_t * vp = (const ggml_fp16_t *)vdata;
++                                for (int i = 0; i < hd_v; ++i) {
++                                    gather[i] = ggml_fp16_to_fp32(vp[head_off_elts + (size_t)i * inner_stride_elts + slot_off_elts]);
++                                }
++                            } else {
++                                continue;
++                            }
++
++                            sp_llama_write_v(g_sp.ctx, il, h, 0, gather);
++                            sp_llama_read_v (g_sp.ctx, il, h, 0, recon);
++
++                            // Scatter the reconstructed values back to the
++                            // same strided locations.
++                            if (tv == GGML_TYPE_F32) {
++                                float * vp = (float *)vdata;
++                                for (int i = 0; i < hd_v; ++i) {
++                                    vp[head_off_elts + (size_t)i * inner_stride_elts + slot_off_elts] = recon[i];
++                                }
++                            } else if (tv == GGML_TYPE_F16) {
++                                ggml_fp16_t * vp = (ggml_fp16_t *)vdata;
++                                for (int i = 0; i < hd_v; ++i) {
++                                    vp[head_off_elts + (size_t)i * inner_stride_elts + slot_off_elts] = ggml_fp32_to_fp16(recon[i]);
++                                }
++                            }
++                        }
++                    }
 +                }
 +            }
 +        }
