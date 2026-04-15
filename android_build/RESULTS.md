@@ -136,3 +136,72 @@ The callback refactor committed here is still the right shape for that
 future work — once the backends gain real batch ops, the bridge wrappers
 become one-line pass-throughs and the callback automatically benefits
 without further changes.
+
+## Update 2 — real backend batch + hoisted mallocs (still 0.4 t/s, real cause found)
+
+Next commit landed on shannon-prime (`a6b14e8`):
+
+- `sp_mobius_reorder_ex` / `sp_mobius_unreorder_ex` accepting caller-owned
+  scratch. Hot-path callers switched to these.
+- `sp_shadow_cache_t` gained persistent `mobius_scratch` + `read_scratch`
+  fields. `sp_shadow_write_k/_v` and `sp_shadow_read_k/_v` now do **zero
+  mallocs** per call.
+- Adreno hot path switched to the `_ex` variants using `ac->scratch_b`.
+  Adreno write_k / read_k and their f16 variants are now malloc-free.
+- Real `sp_shadow_*_batch` and `sp_adreno_*_batch` entry points in the
+  backends (tight loop over the persistent scratch).
+- Bridge `sp_llama_*_batch` wrappers switched to single-dispatch into the
+  real backend batches instead of looping singletons.
+
+All 115/116 tests on shannon-prime still pass (unchanged MinGW flake).
+
+Reran the S22 Ultra:
+
+| Run | Prompt (t/s) | Generation (t/s) |
+|---|---|---|
+| Baseline (vanilla) | 141.3 | **18.5** |
+| SP CPU (batch + no-malloc) | 11.2 | 0.4 |
+| SP Adreno (batch + no-malloc) | 11.2 | 0.4 |
+| SP Adreno, K=8/V=8 lossless | 11.7 | 0.4 |
+| SP Adreno, Möbius OFF | 11.1 | 0.4 |
+| SP Adreno, BYPASS=1 (callback is a pure return) | 10.7 | 0.4 |
+
+**Generation is 0.4 t/s across every configuration — including when the
+eval callback is a pure early-return that touches no data.** That is the
+smoking gun: the overhead is **not in Shannon-Prime at all**. It is in
+the mere act of having `ggml_backend_sched_set_eval_callback` installed.
+
+Installing an eval callback forces the ggml scheduler into a per-tensor
+synchronous mode. The Llama 1B graph has ~1,600 tensor operations per
+generation step; at a few hundred microseconds per callback-induced
+sync + dispatch, that lands exactly on the ~2.4 s/token overhead we
+observe. Whether the callback returns immediately or runs a 1 µs
+shannon-prime round-trip is irrelevant — the sync cost is fixed per
+tensor evaluation.
+
+## The actual fix
+
+The eval-callback hook strategy is wrong for performance. The right
+integration for production mobile throughput is to hook **after**
+`llama_decode` finishes its forward pass, at a higher level, where we
+can process the KV cache in one pass per token (or per batch) without
+forcing per-tensor sync. Three concrete options:
+
+1. Hook `llama_kv_cache_unified::cpy_k` / `cpy_v` directly by subclassing
+   or by patching the graph-construction site to insert a custom ggml
+   op. The custom op IS the compress/decompress — no per-tensor sync
+   because it's part of the graph, not a sideband callback.
+2. Intercept inside `llama_context::decode` after `graph_compute` returns.
+   Walk the kv_cache's `k_l[il]` / `v_l[il]` tensor data for the newly-
+   written positions and round-trip in place. One sync per decode call,
+   not per tensor.
+3. Replace the live KV cache storage with a compressed shadow cache
+   (write path compresses directly into the shadow, read path
+   reconstructs into a scratch used by attention). Biggest change,
+   also the largest memory win.
+
+(2) is the smallest change and closes the 45× generation gap.
+That's the next integration patch — distinct from the core improvements
+landed here. The core `a6b14e8` changes (malloc-free hot path, real
+backend batches) are still prerequisites: any of the three fixes above
+call the same singleton/batch entry points we just fixed.
