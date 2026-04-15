@@ -110,10 +110,10 @@ index ee0c292..e3a0abe 100644
  
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
-index 0000000..f48045f
+index 0000000..6084b40
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,179 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -189,21 +189,42 @@ index 0000000..f48045f
 +    float * base = (float *)t->data;
 +    if (!base) return;
 +
-+    std::vector<float> recon(hd);
-+    for (int tok = 0; tok < nt; ++tok) {
-+        for (int h = 0; h < nhk; ++h) {
-+            float * v = base + (size_t)(tok * nhk + h) * hd;
++    // Batch path: for each head, gather its nt strided vectors into a
++    // contiguous [nt × hd] slab, call the bridge's batch write+read once,
++    // scatter the reconstructed values back. Replaces the old per-
++    // (token, head) singleton loop. Cache slots 0..nt-1 are scratch
++    // (each round-trip pair overwrites its own slot before we read it).
++    //
++    // Tensor layout is [hd=ne0, nhk=ne1, nt=ne2] row-major via nb strides;
++    // for fixed head h, vectors at adjacent tokens are nhk*hd apart in
++    // floats — not contiguous, hence the gather/scatter.
++    static thread_local std::vector<float> slab;
++    static thread_local std::vector<float> recon;
++    const size_t n_elts = (size_t)nt * hd;
++    if (slab.size()  < n_elts) slab.resize(n_elts);
++    if (recon.size() < n_elts) recon.resize(n_elts);
 +
-+            // Slot 0 is scratch. Each iteration overwrites it.
-+            const int pos = 0;
-+            if (is_v) {
-+                sp_llama_write_v(g_sp.ctx, il, h, pos, v);
-+                sp_llama_read_v (g_sp.ctx, il, h, pos, recon.data());
-+            } else {
-+                sp_llama_write_k(g_sp.ctx, il, h, pos, v);
-+                sp_llama_read_k (g_sp.ctx, il, h, pos, recon.data());
-+            }
-+            std::memcpy(v, recon.data(), hd * sizeof(float));
++    for (int h = 0; h < nhk; ++h) {
++        // Gather: base[(tok*nhk + h)*hd .. +hd] → slab[tok*hd .. +hd]
++        for (int tok = 0; tok < nt; ++tok) {
++            std::memcpy(slab.data() + (size_t)tok * hd,
++                        base + ((size_t)tok * nhk + h) * hd,
++                        hd * sizeof(float));
++        }
++
++        if (is_v) {
++            sp_llama_write_v_batch(g_sp.ctx, il, h, 0, nt, slab.data());
++            sp_llama_read_v_batch (g_sp.ctx, il, h, 0, nt, recon.data());
++        } else {
++            sp_llama_write_k_batch(g_sp.ctx, il, h, 0, nt, slab.data());
++            sp_llama_read_k_batch (g_sp.ctx, il, h, 0, nt, recon.data());
++        }
++
++        // Scatter: recon[tok*hd..] → base[(tok*nhk + h)*hd..]
++        for (int tok = 0; tok < nt; ++tok) {
++            std::memcpy(base + ((size_t)tok * nhk + h) * hd,
++                        recon.data() + (size_t)tok * hd,
++                        hd * sizeof(float));
 +        }
 +    }
 +}

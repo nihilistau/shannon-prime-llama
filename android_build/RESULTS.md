@@ -78,3 +78,61 @@ These are local changes to `llama-shannon-prime.cpp` (the callback
 implementation) plus a light extension to the bridge. Out of scope for
 this task — the goal was to prove the bridge can dispatch to the NEON
 path and capture the honest performance number. Both done.
+
+## Update — callback now uses the batch API (commit follow-up)
+
+`llama-shannon-prime.cpp::round_trip_tensor` was refactored to replace the
+old per-(token, head) singleton loop with `sp_llama_write_k_batch` +
+`sp_llama_read_k_batch` calls per head (gather strided per-head vectors
+into a contiguous `[nt × hd]` slab, one batch call, scatter back).
+
+Rerun on the same S22 Ultra:
+
+| Run | Prompt (t/s) | Generation (t/s) |
+|---|---|---|
+| Baseline (vanilla) | 116.5 | **17.8** |
+| SP CPU singletons (prior) | 11.2 | 0.4 |
+| SP Adreno singletons (prior) | 10.7 | 0.4 |
+| **SP CPU via batch API** | **10.5** | **0.4** |
+| **SP Adreno via batch API** | **12.1** | **0.4** |
+
+Generation unchanged. Prompt eval moved within run-to-run noise. All three
+VHT2 runs continue to emit `"Paris."`.
+
+Why no movement? The bridge's `_batch` functions (in
+`lib/shannon-prime/tools/shannon_prime_llama.c:230-248, 286-304`) are
+thin wrappers that call the singleton write/read in a loop:
+
+```c
+void sp_llama_write_k_batch(...) {
+    for (int i = 0; i < n_pos; i++)
+        sp_llama_write_k(ctx, layer, head, start_pos + i, k_vecs + i * hd);
+}
+```
+
+And the backends (`sp_shadow_write_k` in core, `sp_adreno_write_k` in the
+ARM NEON backend) expose no batch entry point — they're singleton-only.
+So "switching to the batch API" moves the loop one level deeper in the
+call stack but doesn't eliminate any of the per-vector work it was
+supposed to amortize:
+
+- `sp_shadow_write_k` still allocates a fresh `malloc(n * sizeof(float))`
+  per call inside `sp_mobius_reorder` (core/shannon_prime.c:234) and
+  again inside `sp_shadow_read_k`'s scratch (core/shannon_prime.c:690) —
+  that's **3 mallocs per vector round-trip**, times ~15k calls per
+  generation.
+- Neither backend reuses WHT scratch across calls.
+- The `switch (active_backend)` dispatch still fires per-vector.
+
+The actual fix requires backend-level batch implementations: a real
+`sp_shadow_write_k_batch` in core/shannon_prime.c and
+`sp_adreno_write_k_batch` in backends/adreno/shannon_prime_adreno.c
+that each hoist the scratch allocation, reuse the Möbius mask, and
+(for Adreno) keep the NEON pipeline warm across the batch. That's a
+shannon-prime change (not a shannon-prime-llama change) and is the
+next patch.
+
+The callback refactor committed here is still the right shape for that
+future work — once the backends gain real batch ops, the bridge wrappers
+become one-line pass-throughs and the callback automatically benefits
+without further changes.
