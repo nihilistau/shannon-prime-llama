@@ -35,5 +35,3 @@ See [docs/INTEGRATION.md](docs/INTEGRATION.md) for full guide including architec
 ## License
 
 AGPLv3 / Commercial dual license. See [LICENSE](LICENSE).
-
-Copyright (C) 2026 Ray Daniels. Contact: raydaniels@gmail.com
