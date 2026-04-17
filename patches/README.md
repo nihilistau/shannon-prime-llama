@@ -86,5 +86,5 @@ through untouched (with a one-shot warning to stderr).
 
 | Patch | Upstream tag | Date | Notes |
 |---|---|---|---|
-| `llama-cpp-b8799.patch` | b8799 | 2026-04-16 | First end-to-end VHT2 hook + CMake integration (WHT ship path only). CPU-only. |
-| `llama-cpp-b8799-sqfree.patch` | b8799 | 2026-04-17 | Superset of the above — same WHT ship path plus sqfree + spinor wire-up, gated on `SHANNON_PRIME_SQFREE=1`. Links `core/shannon_prime_sqfree.c` from the submodule and branches the post-decode hook on the env var. Validated on Qwen3-8B Q8 hd=128 (`SQFREE=1 SPINOR=1 K_BITS=3,3,3,3,3 RESIDUAL_BITS=3`) at 2-chunk PPL 10.20 (on trajectory for the 32-chunk target 7.32 @ 3.3×). |
+| `llama-cpp-b8799.patch` | b8799 | 2026-04-16 | First end-to-end VHT2 hook + CMake integration (VHT2 ship path only). CPU-only. |
+| `llama-cpp-b8799-sqfree.patch` | b8799 | 2026-04-17 | Superset of the above — same VHT2 ship path plus sqfree + spinor wire-up, gated on `SHANNON_PRIME_SQFREE=1`. Links `core/shannon_prime_sqfree.c` from the submodule and branches the post-decode hook on the env var. Validated on Qwen3-8B Q8 hd=128 (`SQFREE=1 SPINOR=1 K_BITS=3,3,3,3,3 RESIDUAL_BITS=3`) at 2-chunk PPL 10.20 (on trajectory for the 32-chunk target 7.32 @ 3.3×). |

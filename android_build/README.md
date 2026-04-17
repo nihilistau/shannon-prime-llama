@@ -36,7 +36,7 @@ Detected silicon features at runtime via `test_adreno`:
 ```
 
 `test_adreno` on-device result: **14 / 14 tests passed**, including:
-- NEON WHT exactly matches C core on hd=32/64/128 (max_err = 0.00e+00)
+- NEON VHT2 exactly matches C core on hd=32/64/128 (max_err = 0.00e+00)
 - fp16 round-trip error 2.42e-04 (~fp16 precision)
 - hd=64 K correlation 0.9936 (paper reference 0.9972)
 - fp16 write path K correlation 0.9868 (>0.980 threshold)

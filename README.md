@@ -6,8 +6,8 @@ Adds spectral KV cache compression to llama.cpp via a post-decode hook that
 round-trips K (and V when contiguous per position) through the VHT2 shadow
 cache in place. Single sync per decode call — no per-tensor eval callback
 penalty. The core transform is **VHT2** (Vilenkin-Hartley Transform),
-self-inverse with 1/√p per stage; on power-of-2 head_dim it reduces to the
-WHT butterfly.
+self-inverse with 1/√p per stage; at n=2^k it reduces to the classical
+Walsh-Hadamard butterfly.
 
 - **Ship path**: 3.4–3.8× KV compression at <1.25% PPL cost, zero retraining.
 - **Sqfree+spinor aggressive**: 3.3× at MOBIUS-default quality on Q8+ backbones
@@ -15,7 +15,7 @@ WHT butterfly.
 
 Validated on desktop CPU (32-chunk wiki.test PPL matches reference logs
 bit-identical) and on a Samsung S22 Ultra via wireless adb (baseline 121.4 t/s
-prompt, 17.7 t/s gen; post-decode WHT at parity +2–3%).
+prompt, 17.7 t/s gen; post-decode VHT2 at parity +2–3%).
 
 ## Quick Start
 

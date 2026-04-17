@@ -8,9 +8,9 @@ Core library lives in the `shannon-prime` repo, pulled in as a submodule at
 `lib/shannon-prime/`. Never duplicate core code here; import it.
 
 VHT2 (Vilenkin-Hartley Transform) is the single transform used throughout
-the project — at power-of-2 head_dim it reduces to the WHT butterfly scaled
-by 1/√2 per stage (self-inverse, no 1/N), and at sqfree-padded dimensions it
-extends naturally to primes {2, 3, 5, 7, 11}. Two runtime configurations use
+the project — at n=2^k it reduces to the classical Walsh-Hadamard Transform
+butterfly scaled by 1/√2 per stage (self-inverse, no 1/N), and at sqfree-padded
+dimensions it extends naturally to primes {2, 3, 5, 7, 11}. Two runtime configurations use
 the same pipeline:
 
 - **Ship path** (default): VHT2 → Möbius reorder → 5/5/4/3 band quantize → store.
@@ -67,7 +67,7 @@ Both patches target the same upstream llama.cpp tag (`b8799`):
 git clone --branch b8799 --depth 1 https://github.com/ggml-org/llama.cpp /path/to/llama-cpp-sp
 cd /path/to/llama-cpp-sp
 
-# Ship path only (smaller, WHT ship config)
+# Ship path only (smaller, VHT2 ship config)
 git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8799.patch
 
 # OR ship + sqfree+spinor opt-in (superset)

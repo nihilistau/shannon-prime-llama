@@ -27,7 +27,7 @@ Decode: CPU/FP16` line appears in `phone_vht2_adreno.log`, and `test_adreno`
 separately confirmed `FP16 arith: yes (Tier 2)`). But the **total** VHT2
 throughput is unchanged: both backends land at 0.4 t/s.
 
-That's because the NEON win is confined to the inner compute — WHT butterfly,
+That's because the NEON win is confined to the inner compute — VHT2 butterfly,
 Möbius gather, banded quant — which for `head_dim=64` is only ~100 NEON ops
 per call. What's left (per-call fixed overhead) dominates:
 
@@ -121,7 +121,7 @@ supposed to amortize:
   again inside `sp_shadow_read_k`'s scratch (core/shannon_prime.c:690) —
   that's **3 mallocs per vector round-trip**, times ~15k calls per
   generation.
-- Neither backend reuses WHT scratch across calls.
+- Neither backend reuses VHT2 scratch across calls.
 - The `switch (active_backend)` dispatch still fires per-vector.
 
 The actual fix requires backend-level batch implementations: a real
