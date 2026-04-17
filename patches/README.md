@@ -65,16 +65,26 @@ through untouched (with a one-shot warning to stderr).
 
 ## Validation env vars
 
+### Ship path (VHT2 on power-of-2 head_dim)
 | Variable | Default | Effect |
 |---|---|---|
-| `SHANNON_PRIME_ENABLED` | unset | `1` enables the eval callback. |
+| `SHANNON_PRIME_ENABLED` | unset | `1` enables the post-decode hook. |
 | `SHANNON_PRIME_K_BITS` | `5,5,4,3` | Per-band K bit allocation (4 bands). |
 | `SHANNON_PRIME_V_BITS` | `3` | Flat V bit width (1 band). |
 | `SHANNON_PRIME_MOBIUS` | `1` | Möbius squarefree-first reordering on K. |
 | `SHANNON_PRIME_VERBOSE` | `0` | Print Shannon-Prime config + init line at startup. |
 
+### Aggressive path (sqfree + spinor, opt-in, requires `llama-cpp-b8799-sqfree.patch`)
+| Variable | Default | Effect |
+|---|---|---|
+| `SHANNON_PRIME_SQFREE` | `0` | `1` enables squarefree prime-Hartley basis (pads hd to 66/154/330). |
+| `SHANNON_PRIME_SPINOR` | `0` | `1` enables the SU(2) sheet bit; auto-enables SQFREE. |
+| `SHANNON_PRIME_RESIDUAL_BITS` | `3` | N-bit residual quantization (1–4; 3 is the Pareto point). |
+| `SHANNON_PRIME_K_BITS` | `5,4,4,4,5` | 5-band torus-aligned allocation (when SQFREE=1). |
+
 ## Patches in this directory
 
 | Patch | Upstream tag | Date | Notes |
 |---|---|---|---|
-| `llama-cpp-b8799.patch` | b8799 | 2026-04-16 | First end-to-end VHT2 hook + CMake integration. CPU-only. See `../ppl_logs/` for the headline PPL numbers. |
+| `llama-cpp-b8799.patch` | b8799 | 2026-04-16 | First end-to-end VHT2 hook + CMake integration (WHT ship path only). CPU-only. |
+| `llama-cpp-b8799-sqfree.patch` | b8799 | 2026-04-17 | Superset of the above — same WHT ship path plus sqfree + spinor wire-up, gated on `SHANNON_PRIME_SQFREE=1`. Links `core/shannon_prime_sqfree.c` from the submodule and branches the post-decode hook on the env var. Validated on Qwen3-8B Q8 hd=128 (`SQFREE=1 SPINOR=1 K_BITS=3,3,3,3,3 RESIDUAL_BITS=3`) at 2-chunk PPL 10.20 (on trajectory for the 32-chunk target 7.32 @ 3.3×). |
