@@ -80,4 +80,13 @@ hook architecture, GQA support, and validation numbers.
 
 ## License
 
-AGPLv3 / Commercial dual license. See [LICENSE](LICENSE).
+**AGPLv3** for open-source, academic, and non-proprietary use.
+Everyone can use it and benefit. Derivative works must share alike.
+
+**Dual License** — the primary goal is that the work belongs to the
+commons and is protected from closure. A commercial license is
+available for proprietary integration. See [LICENSE](LICENSE).
+
+## Contact
+
+Email: raydaniels@gmail.com

@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# Internal templates not for the published repo
+COPYRIGHT_HEADER.txt
