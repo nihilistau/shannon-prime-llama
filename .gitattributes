@@ -1,0 +1,38 @@
+# Cross-platform line-ending policy.
+# Everything git-managed as text normalizes to LF in the repo AND on checkout.
+# Prevents the Windows-CRLF / Linux-LF drift that made `git status` noisy
+# (also fixes the phone_*.log and ppl_logs/*.log diffs from Android adb pulls).
+* text=auto eol=lf
+
+# Windows-specific scripts need CRLF to run correctly under cmd.exe / powershell.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Explicit text.
+*.c    text
+*.h    text
+*.cpp  text
+*.hpp  text
+*.py   text
+*.md   text
+*.sh   text
+*.log  text
+*.patch text
+
+# Binary files (never line-end convert).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.7z  binary
+*.tar binary
+*.gz  binary
+*.tgz binary
+*.gguf binary
+*.bin binary
+*.so  binary
+*.dll binary
+*.exe binary
