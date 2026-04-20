@@ -59,7 +59,24 @@ SHANNON_PRIME_ENABLED=1 ./build/bin/llama-server -m model.gguf -c 32768
 | `SHANNON_PRIME_SQFREE` | 0 | Enable sqfree prime-Hartley basis |
 | `SHANNON_PRIME_SPINOR` | 0 | Enable SU(2) sheet bit (auto-enables SQFREE) |
 | `SHANNON_PRIME_RESIDUAL_BITS` | 3 | Residual depth (1–4; 3 is the Pareto point) |
+| `SHANNON_PRIME_SK_FRAC` | 0.75 | Skeleton fraction of pad_dim (Knight skeleton size) |
 | `SHANNON_PRIME_K_BITS` | 5,4,4,4,5 | 5-band torus-aligned (override as needed) |
+
+## Model-pack (auto-select defaults by architecture)
+
+The core library ships a registry of compression defaults keyed by
+GGUF `general.architecture` — running a Qwen-3 MoE model gets Qwen-3
+MoE-tuned bits, not Llama-3 defaults. The registry is
+`core/shannon_prime_modelpack.c` in the submodule; full entry rationale
+and promotion recipe live in
+[shannon-prime/docs/MODEL-PACK.md](https://github.com/nihilistau/shannon-prime/blob/main/docs/MODEL-PACK.md).
+
+Currently four PROVISIONAL entries: `qwen3-moe`, `qwen3`, `gemma3`,
+`llama-3`. The llama.cpp hook patch doesn't yet call
+`sp_model_preset_resolve` — env-var overrides are the only way to
+match a preset right now. Resolver wire-up is tracked in the
+shannon-prime MODEL-PACK.md roadmap; until it lands, use the preset
+table there as a copy-paste reference for your env vars.
 
 ## Android / mobile
 
