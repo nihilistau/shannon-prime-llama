@@ -71,10 +71,15 @@ MoE-tuned bits, not Llama-3 defaults. The registry is
 and promotion recipe live in
 [shannon-prime/docs/MODEL-PACK.md](https://github.com/nihilistau/shannon-prime/blob/main/docs/MODEL-PACK.md).
 
-Currently four PROVISIONAL entries: `qwen3-moe`, `qwen3`, `gemma3`,
-`llama-3`. The llama.cpp hook patch doesn't yet call
-`sp_model_preset_resolve` — env-var overrides are the only way to
-match a preset right now. Resolver wire-up is tracked in the
+Seven entries in the registry (one CALIBRATED, six PROVISIONAL):
+`phi3` is `SP_PRESET_CALIBRATED` after the 2026-04-21 ship-path
+validation; `qwen3-next`, `qwen3-moe`, `qwen3`, `gemma4`, `gemma3`,
+and `llama-3` remain PROVISIONAL pending their own calibration runs.
+Registry order is load-bearing (`qwen3-next` must precede `qwen3-moe`
+which must precede `qwen3`) so arch-name prefix matches don't bind
+a MoE model to a dense preset. The llama.cpp hook patch doesn't yet
+call `sp_model_preset_resolve` — env-var overrides are the only way
+to match a preset right now. Resolver wire-up is tracked in the
 shannon-prime MODEL-PACK.md roadmap; until it lands, use the preset
 table there as a copy-paste reference for your env vars.
 
