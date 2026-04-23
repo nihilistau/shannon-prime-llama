@@ -1,21 +1,27 @@
 # shannon-prime-llama
 
-**Shannon-Prime VHT2 integration for llama.cpp**
+**Shannon-Prime full engine integration for llama.cpp**
 
-Adds spectral KV cache compression to llama.cpp via a post-decode hook that
-round-trips K (and V when contiguous per position) through the VHT2 shadow
-cache in place. Single sync per decode call — no per-tensor eval callback
-penalty. The core transform is **VHT2** (Vilenkin-Hartley Transform),
-self-inverse with 1/√p per stage; at n=2^k it reduces to the classical
-Walsh-Hadamard butterfly.
+Adds spectral KV cache compression to llama.cpp via the full Shannon-Prime
+engine. The recommended patch (`llama-cpp-b8733-full-engine.patch`) compiles
+the complete VHT2 stack — ship, sqfree+spinor, hierarchical Vilenkin, System
+1/2 switching, and multi-GPU sharding — into `llama.dll` / `libllama.so` as
+internal static libraries. Four backends: CPU, CUDA, Vulkan, and Adreno.
 
 - **Ship path**: 3.4–3.8× KV compression at <1.25% PPL cost, zero retraining.
-- **Sqfree+spinor aggressive**: 3.3× at MOBIUS-default quality on Q8+ backbones
-  (e.g. Qwen3-8B Q8 hd=128 → PPL 7.32 matching 7.31 baseline).
+- **Sqfree+spinor aggressive**: 2.8× at MOBIUS-default quality on Q8+ backbones.
+- **LM Studio validated**: Qwen3.6-35B-A3B (MoE) at **26.92 tok/sec** with the
+  Shannon-Prime KV cache active (LM Studio v2.13.0, custom runtime DLLs).
 
-Validated on desktop CPU (32-chunk wiki.test PPL matches reference logs
-bit-identical) and on a Samsung S22 Ultra via wireless adb (baseline 121.4 t/s
-prompt, 17.7 t/s gen; post-decode VHT2 at parity +2–3%).
+### New in this build (2026-04-22)
+
+1. **Full-engine b8733 patch.** Targets b8733 (LM Studio v2.13.0 base). Supersedes all b8799 patches. Integrates VHT2 ship + sqfree+spinor + hierarchical + System 1/2 + multi-GPU.
+2. **LM Studio runtime builder.** `lmstudio/build.bat` produces drop-in `llama.dll` + `ggml.dll` for LM Studio. SP_CUDA compiles independently of GGML_CUDA (avoids MSVC template errors).
+3. **Engine + backend sources ported.** All engine subsystems (KV cache manager, GDN state) and all 4 backend implementations now live in `src/` in this repo.
+4. **Dual-GPU Vulkan.** RTX 2060 (K=0.9920, V=0.9730) + Intel UHD (identical fidelity), cross-device correlation 1.0000.
+5. **24/24 advanced CUDA tests.** sqfree GPU, spinor, batch read, hierarchical, cold storage, stress — all passing.
+6. **151/152 total tests** across all suites (1 known synthetic-K flake).
+7. **KV cache sizing with VHT2**: 8K→39MB, 32K→156MB, 131K→624MB, 262K→4.88GB.
 
 ## Quick Start
 
@@ -24,22 +30,30 @@ prompt, 17.7 t/s gen; post-decode VHT2 at parity +2–3%).
 git clone --recursive https://github.com/nihilistau/shannon-prime-llama.git
 
 # Fetch llama.cpp at the patch's target tag
-git clone --branch b8799 --depth 1 https://github.com/ggml-org/llama.cpp llama-cpp-sp
+git clone --branch b8733 --depth 1 https://github.com/ggml-org/llama.cpp llama-cpp-sp
 cd llama-cpp-sp
 
-# Pick a patch:
-#   llama-cpp-b8799.patch         — ship path only
-#   llama-cpp-b8799-sqfree.patch  — ship path + sqfree+spinor wire-up
-git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8799-sqfree.patch
+# Apply the full-engine patch
+git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8733-full-engine.patch
 
-cmake -S . -B build \
-  -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF \
+# Build (SP_CUDA=ON is auto-detected if nvcc is found)
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DGGML_CUDA=OFF -DLLAMA_BUILD_TESTS=OFF \
   -DLLAMA_SHANNON_PRIME=ON \
   -DSHANNON_PRIME_DIR=/path/to/shannon-prime-llama
-cmake --build build --target llama-perplexity -j
+cmake --build build -j
 
 # Ship path
 SHANNON_PRIME_ENABLED=1 ./build/bin/llama-server -m model.gguf -c 32768
+```
+
+### LM Studio (Windows)
+
+```cmd
+REM See lmstudio/README.md for full instructions
+lmstudio\build.bat C:\llama-cpp-sp C:\shannon-prime-llama
+REM Copy output\llama.dll and output\ggml.dll into LM Studio runtime folder
 ```
 
 ## Configuration
@@ -97,8 +111,36 @@ adb shell 'cd /data/local/tmp/sp && LD_LIBRARY_PATH=./lib \
 ```
 
 See [patches/README.md](patches/README.md) for build+run recipes and the
-full env-var table, and [docs/INTEGRATION.md](docs/INTEGRATION.md) for the
-hook architecture, GQA support, and validation numbers.
+full env-var table, [lmstudio/README.md](lmstudio/README.md) for the LM Studio
+runtime builder, and [docs/INTEGRATION.md](docs/INTEGRATION.md) for the hook
+architecture, GQA support, and validation numbers.
+
+## Project Structure
+
+```
+shannon-prime-llama/
+├── lib/shannon-prime/          ← git submodule → nihilistau/shannon-prime (core math)
+├── src/
+│   ├── backends/
+│   │   ├── cuda/               CUDA kernels (ship, sqfree, hierarchical)
+│   │   ├── vulkan/             Vulkan compute shaders
+│   │   └── adreno/             Qualcomm NEON + Hexagon HVX
+│   ├── engine/
+│   │   ├── kv_cache.{h,cpp}    KV cache manager (wraps sp_shadow_cache_t)
+│   │   └── gdn_state.{h,cpp}   GDN state for System 1/2 switching
+│   └── tools/
+│       ├── shannon_prime_llama.{h,c}       Bridge to llama.cpp
+│       └── shannon_prime_llama_sqfree.c    Sqfree bridge
+├── patches/
+│   ├── llama-cpp-b8733-full-engine.patch   ← CURRENT: full engine, b8733
+│   └── llama-cpp-b8799-*.patch             ← legacy patches
+├── lmstudio/
+│   ├── build.bat               Windows build script for LM Studio DLLs
+│   └── README.md               LM Studio integration guide
+├── android_build/              Cross-compile scripts for aarch64
+├── docs/                       Integration docs
+└── tests/                      Integration test suite
+```
 
 ## License
 
