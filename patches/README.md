@@ -5,20 +5,21 @@ Each patch in this directory applies cleanly against upstream
 
 ## Recommended patch
 
-**`llama-cpp-b8733-full-engine.patch`** is the current recommended patch. It
-targets b8733 (the commit behind LM Studio v2.13.0) and integrates the full
-Shannon-Prime engine: VHT2 ship + sqfree+spinor + hierarchical Vilenkin +
-System 1/2 switching + multi-GPU sharding. All four backends (CPU, CUDA,
-Vulkan, Adreno) are compiled from sources in `shannon-prime-llama/src/`.
+**`llama-cpp-b8861-full-engine.patch`** is the current recommended patch. It
+targets b8861 (commit cf8b0db, the base for LM Studio v2.14.0) and integrates
+the full Shannon-Prime engine: VHT2 ship + sqfree+spinor + hierarchical
+Vilenkin + System 1/2 switching + multi-GPU sharding. All four backends (CPU,
+CUDA, Vulkan, Adreno) are compiled from sources in `shannon-prime-llama/src/`.
 
-The older b8799 patches below are retained for reference but are superseded.
+The b8733 patch (LM Studio v2.13.0) and older b8799 patches are retained for
+reference but are superseded.
 
-## How to apply (full-engine patch, b8733)
+## How to apply (full-engine patch, b8861)
 
 ```bash
-git clone --branch b8733 --depth 1 https://github.com/ggml-org/llama.cpp /path/to/llama-cpp-sp
+git clone --branch b8861 --depth 1 https://github.com/ggml-org/llama.cpp /path/to/llama-cpp-sp
 cd /path/to/llama-cpp-sp
-git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8733-full-engine.patch
+git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
 ```
 
 ## How to build

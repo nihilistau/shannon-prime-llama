@@ -1,6 +1,6 @@
 # LM Studio Integration
 
-**Drop-in Shannon-Prime runtime for LM Studio v2.13.0+**
+**Drop-in Shannon-Prime runtime for LM Studio v2.14.0+**
 
 Builds a custom `llama.dll` and `ggml.dll` that replace the stock LM Studio
 runtime with a Shannon-Prime-enabled build. The full VHT2 engine (ship,
@@ -28,21 +28,21 @@ Only two DLLs are replaced. Everything else stays stock:
   (the build script auto-detects VS 2019 or 2022)
 - **CUDA Toolkit 12.x+** — `nvcc` (optional; builds without CUDA if not found)
 - **CMake 3.14+** and **Ninja**
-- **llama.cpp checkout at b8733** with the full-engine patch applied
+- **llama.cpp checkout at b8861** with the full-engine patch applied
   (see instructions below)
 
 ## Quick start
 
 ```cmd
 REM 1. Clone llama.cpp at the LM Studio base tag
-git clone --branch b8733 --depth 1 https://github.com/ggml-org/llama.cpp C:\llama-cpp-sp
+git clone --branch b8861 --depth 1 https://github.com/ggml-org/llama.cpp C:\llama-cpp-sp
 cd C:\llama-cpp-sp
 
 REM 2. Clone shannon-prime-llama (with submodule)
 git clone --recursive https://github.com/nihilistau/shannon-prime-llama C:\shannon-prime-llama
 
 REM 3. Apply the full-engine patch
-git apply C:\shannon-prime-llama\patches\llama-cpp-b8733-full-engine.patch
+git apply C:\shannon-prime-llama\patches\llama-cpp-b8861-full-engine.patch
 
 REM 4. Build the runtime DLLs
 C:\shannon-prime-llama\lmstudio\build.bat C:\llama-cpp-sp C:\shannon-prime-llama
@@ -60,7 +60,7 @@ build.bat <llama-cpp-dir> <shannon-prime-llama-dir> [output-dir]
 
 | Argument | Description |
 |----------|-------------|
-| `llama-cpp-dir` | Path to patched llama.cpp checkout (b8733 + full-engine patch) |
+| `llama-cpp-dir` | Path to patched llama.cpp checkout (b8861 + full-engine patch) |
 | `shannon-prime-llama-dir` | Path to this repo (shannon-prime-llama) |
 | `output-dir` | Where to put the DLLs (default: `.\output`) |
 

@@ -3,7 +3,7 @@ REM Shannon-Prime LM Studio runtime builder
 REM Copyright (C) 2026 Ray Daniels. All Rights Reserved.
 REM Licensed under AGPLv3.
 REM
-REM Produces a drop-in llama.dll + ggml.dll for LM Studio v2.13.0+.
+REM Produces a drop-in llama.dll + ggml.dll for LM Studio v2.14.0+.
 REM Stock ggml-base.dll, ggml-cpu.dll, and ggml-cuda.dll from LM Studio
 REM are retained — only llama.dll and ggml.dll are replaced.
 REM
@@ -11,7 +11,7 @@ REM Prerequisites:
 REM   - Visual Studio 2019+ Build Tools (cl.exe, link.exe, rc.exe)
 REM   - CUDA Toolkit 12.x+ (nvcc)
 REM   - CMake 3.14+ and Ninja
-REM   - llama.cpp checkout at b8733 with the full-engine patch applied
+REM   - llama.cpp checkout at b8861 with the full-engine patch applied
 REM
 REM Usage:
 REM   build.bat <llama-cpp-dir> <shannon-prime-llama-dir> [output-dir]
@@ -24,7 +24,7 @@ setlocal enabledelayedexpansion
 if "%~1"=="" (
     echo Usage: build.bat ^<llama-cpp-dir^> ^<shannon-prime-llama-dir^> [output-dir]
     echo.
-    echo   llama-cpp-dir          Path to patched llama.cpp checkout (b8733 + full-engine patch)
+    echo   llama-cpp-dir          Path to patched llama.cpp checkout (b8861 + full-engine patch)
     echo   shannon-prime-llama-dir Path to this repo (shannon-prime-llama)
     echo   output-dir             Where to put the DLLs (default: .\output)
     exit /b 1
@@ -112,7 +112,7 @@ echo [SP]   %OUT_DIR%\llama.dll
 echo [SP]   %OUT_DIR%\ggml.dll
 echo.
 echo [SP] LM Studio runtime folder is typically:
-echo [SP]   %%USERPROFILE%%\.cache\lm-studio\extensions\backends\llama.cpp-win-x86_64-nvidia-cuda12-avx2-2.13.0\
+echo [SP]   %%USERPROFILE%%\.cache\lm-studio\extensions\backends\llama.cpp-win-x86_64-nvidia-cuda12-avx2-2.14.0\
 echo.
 echo [SP] Keep the stock ggml-base.dll, ggml-cpu.dll, and ggml-cuda.dll from LM Studio.
 echo [SP] Only replace llama.dll and ggml.dll with the ones built here.
