@@ -22,6 +22,18 @@ internal static libraries. Four backends: CPU, CUDA, Vulkan, and Adreno.
 5. **Dual-GPU Vulkan.** RTX 2060 (K=0.9920, V=0.9730) + Intel UHD (identical fidelity), cross-device correlation 1.0000.
 6. **Model-pack registry.** Per-architecture compression defaults. phi3 CALIBRATED, 7 architectures PROVISIONAL.
 
+### Ecosystem
+
+Shannon-Prime's VHT2 compression extends beyond LLMs. The same math core
+vendored here powers generative media via
+[shannon-prime-comfyui](https://github.com/nihilistau/shannon-prime-comfyui)
+(16 nodes for video/image/audio/TTS) and Voxtral TTS forks
+([Python](https://github.com/nihilistau/ComfyUI-FL-VoxtralTTS),
+[Rust](https://github.com/nihilistau/voxtral-mini-realtime-rs),
+[C](https://github.com/nihilistau/voxtral-tts.c)). The standalone
+[shannon-prime-engine](https://github.com/nihilistau/shannon-prime-engine) is
+the hook-free reference measurement surface.
+
 ### Previous (b8733, LM Studio v2.13.0)
 
 The b8733 patch remains in `patches/` for users on LM Studio v2.13.0.
