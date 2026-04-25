@@ -34,6 +34,10 @@
 //   SHANNON_PRIME_HIER_W_PATH=<f>  Path to precomputed W sidecar (.sp_hier_W.bin)
 //                                   Skips cold-start calibration when provided
 //   SHANNON_PRIME_FP8=1             Use FP8 (E4M3) for band quantization (Ada+ GPU)
+//   SHANNON_PRIME_PE=1              Enable PrimePE lattice RoPE injection (default: on)
+//   SHANNON_PRIME_PE=0              Disable PrimePE (use standard geometric RoPE)
+//   SHANNON_PRIME_PE_ALPHA=0.17     Lattice blend ratio (default: 0.17, range 0.15-0.22)
+//   SHANNON_PRIME_FREQ_BASE=10000   Override rope_freq_base (auto-detected when possible)
 //
 // Activation:
 //   #include "shannon_prime_llama.h"
@@ -191,6 +195,31 @@ float sp_llama_validate_k(sp_llama_ctx_t *ctx,
 
 // Print configuration to stderr
 void sp_llama_print_config(const sp_llama_ctx_t *ctx);
+
+// ============================================================================
+// PrimePE — Lattice-Aligned RoPE Frequency Auto-Injection
+// ============================================================================
+//
+// Returns a malloc'd float array of length n_freqs containing per-dimension
+// frequency multipliers for ggml_rope_ext. The caller (llama.cpp patch)
+// writes these into model.layers[*].rope_freqs at model load time.
+//
+// When SHANNON_PRIME_ENABLED=1, this is called automatically during
+// sp_llama_init() and the factors are stored on the context. The llama.cpp
+// patch retrieves them via sp_llama_get_freq_factors() and injects them
+// into the model's RoPE path — zero user action required.
+//
+// Environment variables:
+//   SHANNON_PRIME_PE=1          Enable PrimePE injection (default: on when SP enabled)
+//   SHANNON_PRIME_PE=0          Disable (use pure geometric RoPE)
+//   SHANNON_PRIME_PE_ALPHA=0.17 Blend ratio (default: 0.17)
+//
+// Returns NULL if PrimePE is disabled or context has no freq factors.
+// The returned pointer is owned by the context — do NOT free it.
+const float *sp_llama_get_freq_factors(const sp_llama_ctx_t *ctx);
+
+// Number of frequency factors (= head_dim / 2). Returns 0 if ctx is NULL.
+int sp_llama_get_n_freqs(const sp_llama_ctx_t *ctx);
 
 #ifdef __cplusplus
 }

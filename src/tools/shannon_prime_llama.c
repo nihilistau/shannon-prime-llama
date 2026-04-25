@@ -36,6 +36,10 @@ struct sp_llama_ctx_s {
 
     int active_backend;  // Which backend is in use
     int n_positions;     // Current max written position
+
+    // PrimePE frequency factors (owned by context, freed on sp_llama_free)
+    float *freq_factors;   // length = head_dim/2, or NULL if disabled
+    int    n_freqs;        // head_dim / 2
 };
 
 // ============================================================================
@@ -165,7 +169,47 @@ sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params) {
 #endif
     }
 
-    return sp_llama_init_config(&p, &cfg);
+    sp_llama_ctx_t *ctx = sp_llama_init_config(&p, &cfg);
+    if (!ctx) return ctx;
+
+    // ── PrimePE auto-injection ──────────────────────────────────────────
+    // Compute lattice-aligned freq_factors at init. The llama.cpp patch
+    // retrieves these via sp_llama_get_freq_factors() and writes them
+    // into model.layers[*].rope_freqs. Zero per-token cost.
+    int pe_enabled = parse_env_bool("SHANNON_PRIME_PE", 1);  // on by default
+    if (pe_enabled && params->head_dim > 0) {
+        float pe_alpha = 0.17f;
+        const char *alpha_str = getenv("SHANNON_PRIME_PE_ALPHA");
+        if (alpha_str) pe_alpha = (float)atof(alpha_str);
+
+        // freq_base: default 10000.0, but models vary (500000 for Qwen, etc.)
+        // The caller should set this from hparams.rope_freq_base. If not
+        // available, 10000.0 is safe — the factors are multipliers on
+        // whatever base the model uses, and the lattice normalization
+        // adapts to the geometric range.
+        float freq_base = 10000.0f;
+        const char *fb_str = getenv("SHANNON_PRIME_FREQ_BASE");
+        if (fb_str) freq_base = (float)atof(fb_str);
+
+        int n_freqs = params->head_dim / 2;
+        ctx->freq_factors = sp_prime_pe_freq_factors(n_freqs, freq_base, pe_alpha);
+        ctx->n_freqs = (ctx->freq_factors != NULL) ? n_freqs : 0;
+
+        if (ctx->freq_factors) {
+            int verbose = parse_env_bool("SHANNON_PRIME_VERBOSE", 0);
+            if (verbose) {
+                fprintf(stderr, "[Shannon-Prime] PrimePE enabled: α=%.2f, "
+                        "freq_base=%.0f, %d freq pairs\n",
+                        pe_alpha, freq_base, n_freqs);
+                fprintf(stderr, "[Shannon-Prime] PrimePE factor range: "
+                        "[%.4f, %.4f]\n",
+                        ctx->freq_factors[0],
+                        ctx->freq_factors[n_freqs - 1]);
+            }
+        }
+    }
+
+    return ctx;
 }
 
 sp_llama_ctx_t *sp_llama_init_config(const sp_llama_params_t *params,
@@ -244,7 +288,22 @@ void sp_llama_free(sp_llama_ctx_t *ctx) {
 #endif
     }
 
+    free(ctx->freq_factors);
     free(ctx);
+}
+
+// ============================================================================
+// PrimePE getters
+// ============================================================================
+
+const float *sp_llama_get_freq_factors(const sp_llama_ctx_t *ctx) {
+    if (!ctx) return NULL;
+    return ctx->freq_factors;
+}
+
+int sp_llama_get_n_freqs(const sp_llama_ctx_t *ctx) {
+    if (!ctx) return 0;
+    return ctx->n_freqs;
 }
 
 // ============================================================================
