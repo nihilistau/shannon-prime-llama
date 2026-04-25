@@ -537,28 +537,11 @@ index 0000000..a36e8cb
 +
 +} // namespace
 +
-+extern "C" void llama_sp_maybe_apply_rope_sidecar(const struct llama_model * model) {
-+    const char * sidecar_env = std::getenv("SHANNON_PRIME_SIDECAR");
-+    if (!sidecar_env || !*sidecar_env || !model) return;
-+
-+    std::vector<float> sidecar;
-+    size_t n_sidecar = load_sidecar_fp32(sidecar_env, sidecar);
-+    if (n_sidecar == 0) {
-+        std::fprintf(stderr,
-+            "[Shannon-Prime] sidecar '%s' unreadable or empty — skipping\n",
-+            sidecar_env);
-+        return;
-+    }
-+
-+    const char * alpha_env = std::getenv("SHANNON_PRIME_ALPHA");
-+    float alpha = alpha_env ? (float)std::atof(alpha_env) : 1.0f;
-+    if (alpha < 0.0f) alpha = 0.0f;
-+    if (alpha > 1.0f) alpha = 1.0f;
-+
-+    // sp_inject_freqs.py writes pre-blended factors; in-process alpha is an
-+    // over-blend against the model's current rope factors. alpha=1 overwrites
-+    // (the usual case); alpha=0 is a no-op; 0<alpha<1 interpolates.
-+
++// Shared: write freq_factors into all rope tensors across model layers.
++// factors must point to n_factors floats. alpha blends against existing values.
++static void apply_rope_factors(const struct llama_model * model,
++                               const float * factors, size_t n_factors,
++                               float alpha, const char * source_tag) {
 +    int patched  = 0;
 +    int skipped  = 0;
 +    int mismatch = 0;
@@ -567,39 +550,71 @@ index 0000000..a36e8cb
 +    for (size_t il = 0; il < model->layers.size(); il++) {
 +        ggml_tensor * t = pick_rope_tensor(model->layers[il]);
 +        if (!t) { skipped++; continue; }
-+        // Skip tensors whose backend buffer isn't bound yet (e.g. graph-time
-+        // scratch tensors that look real but have no host/device data).
-+        // ggml_backend_tensor_set would assert on null data.
 +        if (!t->buffer || !t->data) { skipped++; continue; }
-+        if ((size_t)t->ne[0] != n_sidecar || t->ne[1] != 1 || t->type != GGML_TYPE_F32) {
++        if ((size_t)t->ne[0] != n_factors || t->ne[1] != 1 || t->type != GGML_TYPE_F32) {
 +            if (mismatch == 0) {
 +                std::fprintf(stderr,
-+                    "[Shannon-Prime] sidecar layout mismatch at layer %zu: "
-+                    "tensor ne=[%lld,%lld,%lld,%lld] type=%d, sidecar n=%zu — skipping\n",
-+                    il, (long long)t->ne[0], (long long)t->ne[1],
-+                    (long long)t->ne[2], (long long)t->ne[3], (int)t->type, n_sidecar);
++                    "[Shannon-Prime] %s layout mismatch at layer %zu: "
++                    "tensor ne=[%lld,%lld,%lld,%lld] type=%d, factors n=%zu — skipping\n",
++                    source_tag, il, (long long)t->ne[0], (long long)t->ne[1],
++                    (long long)t->ne[2], (long long)t->ne[3], (int)t->type, n_factors);
 +            }
 +            mismatch++;
 +            continue;
 +        }
 +
 +        if (alpha == 1.0f) {
-+            ggml_backend_tensor_set(t, sidecar.data(), 0, n_sidecar * sizeof(float));
++            ggml_backend_tensor_set(t, factors, 0, n_factors * sizeof(float));
 +        } else {
-+            scratch.resize(n_sidecar);
-+            ggml_backend_tensor_get(t, scratch.data(), 0, n_sidecar * sizeof(float));
-+            for (size_t i = 0; i < n_sidecar; i++) {
-+                scratch[i] = (1.0f - alpha) * scratch[i] + alpha * sidecar[i];
++            scratch.resize(n_factors);
++            ggml_backend_tensor_get(t, scratch.data(), 0, n_factors * sizeof(float));
++            for (size_t i = 0; i < n_factors; i++) {
++                scratch[i] = (1.0f - alpha) * scratch[i] + alpha * factors[i];
 +            }
-+            ggml_backend_tensor_set(t, scratch.data(), 0, n_sidecar * sizeof(float));
++            ggml_backend_tensor_set(t, scratch.data(), 0, n_factors * sizeof(float));
 +        }
 +        patched++;
 +    }
 +
 +    std::fprintf(stderr,
-+        "[Shannon-Prime] sidecar applied: path=%s alpha=%.3f n_freqs=%zu "
++        "[Shannon-Prime] %s applied: alpha=%.3f n_freqs=%zu "
 +        "patched=%d skipped=%d mismatched=%d\n",
-+        sidecar_env, alpha, n_sidecar, patched, skipped, mismatch);
++        source_tag, alpha, n_factors, patched, skipped, mismatch);
++}
++
++extern "C" void llama_sp_maybe_apply_rope_sidecar(const struct llama_model * model) {
++    if (!model) return;
++
++    // Priority 1: explicit sidecar file (pre-baked factors from sp_inject_freqs.py)
++    const char * sidecar_env = std::getenv("SHANNON_PRIME_SIDECAR");
++    if (sidecar_env && *sidecar_env) {
++        std::vector<float> sidecar;
++        size_t n_sidecar = load_sidecar_fp32(sidecar_env, sidecar);
++        if (n_sidecar == 0) {
++            std::fprintf(stderr,
++                "[Shannon-Prime] sidecar '%s' unreadable or empty — skipping\n",
++                sidecar_env);
++            return;
++        }
++
++        const char * alpha_env = std::getenv("SHANNON_PRIME_ALPHA");
++        float alpha = alpha_env ? (float)std::atof(alpha_env) : 1.0f;
++        if (alpha < 0.0f) alpha = 0.0f;
++        if (alpha > 1.0f) alpha = 1.0f;
++
++        apply_rope_factors(model, sidecar.data(), n_sidecar, alpha, "sidecar");
++        return;
++    }
++
++    // Priority 2: live-computed PrimePE factors from sp_llama_init()
++    if (g_sp.ctx) {
++        const float * factors = sp_llama_get_freq_factors(g_sp.ctx);
++        int n_freqs = sp_llama_get_n_freqs(g_sp.ctx);
++        if (factors && n_freqs > 0) {
++            apply_rope_factors(model, factors, (size_t)n_freqs, 1.0f, "PrimePE");
++            return;
++        }
++    }
 +}
 +
 +extern "C" void llama_sp_post_compute(const struct llama_memory_context_i * mctx,
@@ -885,12 +900,15 @@ index 0000000..4f096dd
 +// SHANNON_PRIME_ENABLED is not set.
 +void llama_sp_maybe_init(const struct llama_model * model, int n_ctx);
 +
-+// Load the .sp_freq_factors.bin sidecar emitted by tools/sp_inject_freqs.py
-+// and blend it into the per-layer RoPE factor tensors in-place. Gated on
-+// SHANNON_PRIME_SIDECAR=<path> (optional: SHANNON_PRIME_ALPHA=0..1, default 1).
-+// Safe no-op when env is unset, sidecar length mismatches, or no layer has
-+// a rope_freqs / rope_long / rope_short tensor to patch. Intended to be
-+// called exactly once, after model weights are fully loaded.
++// Apply lattice-aligned RoPE frequency factors to model rope tensors.
++// Two sources, in priority order:
++//   1. SHANNON_PRIME_SIDECAR=<path>  — pre-baked .sp_freq_factors.bin file
++//      (optional: SHANNON_PRIME_ALPHA=0..1, default 1)
++//   2. Live-computed PrimePE factors from sp_llama_init() context
++//      (automatic when SHANNON_PRIME_ENABLED=1, controlled by
++//       SHANNON_PRIME_PE=1 and SHANNON_PRIME_PE_ALPHA=0.17)
++// Safe no-op when neither source is active, or no layer has a
++// rope_freqs / rope_long / rope_short tensor. Called once after model load.
 +void llama_sp_maybe_apply_rope_sidecar(const struct llama_model * model);
 +
 +// Tear down the global context. Idempotent.
