@@ -29,6 +29,11 @@
 //   SHANNON_PRIME_V_BITS=3          V bit allocation (flat)
 //   SHANNON_PRIME_MOBIUS=1          Enable Möbius mask (default on)
 //   SHANNON_PRIME_VERBOSE=1         Print diagnostics
+//   SHANNON_PRIME_HIERARCHICAL=1    Enable hierarchical Kronecker sub-projection
+//                                   (maximum compression path, requires >=24 token prompt)
+//   SHANNON_PRIME_HIER_W_PATH=<f>  Path to precomputed W sidecar (.sp_hier_W.bin)
+//                                   Skips cold-start calibration when provided
+//   SHANNON_PRIME_FP8=1             Use FP8 (E4M3) for band quantization (Ada+ GPU)
 //
 // Activation:
 //   #include "shannon_prime_llama.h"
