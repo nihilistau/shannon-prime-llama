@@ -24,7 +24,7 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 310a3dc..061294a 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -33,6 +33,20 @@ endif()
+@@ -33,6 +33,28 @@ endif()
  
  option(LLAMA_USE_SYSTEM_GGML "Use system libggml" OFF)
  
@@ -41,6 +41,14 @@ index 310a3dc..061294a 100644
 +    endif()
 +endif()
 +set(SHANNON_PRIME_DIR "${SHANNON_PRIME_DIR}" CACHE PATH "Path to shannon-prime-llama checkout")
++# Auto-enable Vulkan if Vulkan SDK is found and user hasn't explicitly set GGML_VULKAN
++if (LLAMA_SHANNON_PRIME AND NOT DEFINED CACHE{GGML_VULKAN})
++    find_package(Vulkan QUIET)
++    if (Vulkan_FOUND)
++        set(GGML_VULKAN ON CACHE BOOL "ggml: enable Vulkan (auto-detected by Shannon-Prime)" FORCE)
++        message(STATUS "Shannon-Prime: Vulkan SDK found, enabling GGML_VULKAN")
++    endif()
++endif()
 +
  option(LLAMA_WASM_MEM64 "llama: use 64-bit memory in WASM builds" ON)
  
@@ -49,7 +57,7 @@ diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index 7b1fcfc..75c9e31 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -53,6 +53,169 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+@@ -53,6 +53,170 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
  
  target_link_libraries(llama PUBLIC ggml)
  
@@ -125,6 +133,7 @@ index 7b1fcfc..75c9e31 100644
 +
 +    # --- Vulkan backend ---
 +    if (GGML_VULKAN)
++        find_package(Vulkan REQUIRED)
 +        list(APPEND _SP_CORE_SOURCES ${_SP_BACK}/vulkan/shannon_prime_vulkan.c)
 +        list(APPEND _SP_DEFS SP_HAVE_VULKAN)
 +        message(STATUS "Shannon-Prime: linking Vulkan backend (SP_HAVE_VULKAN)")
