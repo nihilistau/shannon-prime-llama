@@ -5,7 +5,7 @@ REM Licensed under AGPLv3.
 REM
 REM Produces a drop-in llama.dll + ggml.dll for LM Studio v2.14.0+.
 REM Stock ggml-base.dll, ggml-cpu.dll, and ggml-cuda.dll from LM Studio
-REM are retained — only llama.dll and ggml.dll are replaced.
+REM are retained ? only llama.dll and ggml.dll are replaced.
 REM
 REM Prerequisites:
 REM   - Visual Studio 2019+ Build Tools (cl.exe, link.exe, rc.exe)
@@ -19,21 +19,13 @@ REM
 REM Example:
 REM   build.bat C:\llama-cpp-sp C:\shannon-prime-llama C:\lmstudio-runtime
 
-setlocal enabledelayedexpansion
+if "%~1"=="" goto :usage
 
-if "%~1"=="" (
-    echo Usage: build.bat ^<llama-cpp-dir^> ^<shannon-prime-llama-dir^> [output-dir]
-    echo.
-    echo   llama-cpp-dir          Path to patched llama.cpp checkout ^(b8861 + full-engine patch^)
-    echo   shannon-prime-llama-dir Path to this repo ^(shannon-prime-llama^)
-    echo   output-dir             Where to put the DLLs ^(default: .\output^)
-    exit /b 1
-)
-
-set LLAMA_DIR=%~1
-set SP_DIR=%~2
-set OUT_DIR=%~3
-if "%OUT_DIR%"=="" set OUT_DIR=%~dp0output
+REM Save args immediately ? before anything can corrupt them.
+set "LLAMA_DIR=%~1"
+set "SP_DIR=%~2"
+set "OUT_DIR=%~3"
+if "%OUT_DIR%"=="" set "OUT_DIR=%~dp0output"
 
 echo [SP] Shannon-Prime LM Studio builder
 echo [SP] llama.cpp:          %LLAMA_DIR%
@@ -41,44 +33,54 @@ echo [SP] shannon-prime-llama: %SP_DIR%
 echo [SP] output:             %OUT_DIR%
 echo.
 
-REM Set up VS developer environment.
-REM CRITICAL: vcvars must be called completely outside any if/for/() blocks.
-REM cmd.exe does not propagate environment changes (PATH, INCLUDE, LIB) from
-REM a call that runs inside parenthesized blocks. We use a variable + goto
-REM pattern to keep the actual call statement at the top level.
-where cl.exe >nul 2>&1
-if not errorlevel 1 goto :vs_ready
+REM ---- VS developer environment ----
+REM Always call vcvars — it is idempotent (harmless if already in a dev prompt).
+REM We avoid conditional logic (where/if/2>&1) before the call because cmd.exe
+REM file-handle state corruption from redirected commands can break vcvars'
+REM internal endlocal & set "PATH=..." propagation.
 set "_VCVARS="
 if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "_VCVARS=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 if "%_VCVARS%"=="" if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "_VCVARS=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-if "%_VCVARS%"=="" (
-    echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
-    exit /b 1
-)
-call "%_VCVARS%" >nul
+if "%_VCVARS%"=="" goto :no_vs
+call "%_VCVARS%"
+goto :vs_ready
+
+:no_vs
+echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
+exit /b 1
+
 :vs_ready
 
-REM Find CUDA
-if defined CUDA_PATH (
-    set "PATH=%CUDA_PATH%\bin;%PATH%"
-) else (
-    for %%d in (v13.2 v13.1 v13.0 v12.6 v12.4 v12.1) do (
-        if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\%%d\bin\nvcc.exe" (
-            set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\%%d"
-            set "PATH=!CUDA_PATH!\bin;%PATH%"
-            goto :cuda_found
-        )
-    )
-    echo [SP] WARNING: No CUDA toolkit found. Building without SP_CUDA.
-    set SP_CUDA_FLAG=-DSP_CUDA=OFF
-    goto :configure
+REM ---- Find Vulkan SDK (needed for GGML_VULKAN, which our patch defaults ON) ----
+if not defined VULKAN_SDK (
+    for /d %%v in (C:\VulkanSDK\*) do set "VULKAN_SDK=%%v"
 )
+if defined VULKAN_SDK echo [SP] Vulkan SDK: %VULKAN_SDK%
+
+REM ---- Find CUDA ----
+if defined CUDA_PATH goto :cuda_from_env
+REM Search newest-first so users get the best available toolkit.
+if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2\bin\nvcc.exe" set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2" & goto :cuda_found
+if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.1\bin\nvcc.exe" set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.1" & goto :cuda_found
+if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0\bin\nvcc.exe" set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0" & goto :cuda_found
+if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin\nvcc.exe" set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6" & goto :cuda_found
+if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4" & goto :cuda_found
+if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin\nvcc.exe" set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1" & goto :cuda_found
+echo [SP] WARNING: No CUDA toolkit found. Building without SP_CUDA.
+set "SP_CUDA_FLAG=-DSP_CUDA=OFF"
+goto :configure
+
+:cuda_from_env
+set "PATH=%CUDA_PATH%\bin;%PATH%"
+goto :cuda_found
+
 :cuda_found
+set "PATH=%CUDA_PATH%\bin;%PATH%"
 echo [SP] CUDA: %CUDA_PATH%
 set SP_CUDA_FLAG=-DSP_CUDA=ON "-DCMAKE_CUDA_COMPILER=%CUDA_PATH%/bin/nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=native "-DCMAKE_CUDA_FLAGS=--use-local-env"
 
 :configure
-set BUILD_DIR=%LLAMA_DIR%\build_sp_lmstudio
+set "BUILD_DIR=%LLAMA_DIR%\build_sp_lmstudio"
 
 echo [SP] Configuring...
 cmake -G Ninja ^
@@ -124,3 +126,12 @@ echo [SP]   %%USERPROFILE%%\.cache\lm-studio\extensions\backends\llama.cpp-win-x
 echo.
 echo [SP] Keep the stock ggml-base.dll, ggml-cpu.dll, and ggml-cuda.dll from LM Studio.
 echo [SP] Only replace llama.dll and ggml.dll with the ones built here.
+goto :eof
+
+:usage
+echo Usage: build.bat ^<llama-cpp-dir^> ^<shannon-prime-llama-dir^> [output-dir]
+echo.
+echo   llama-cpp-dir          Path to patched llama.cpp checkout ^(b8861 + full-engine patch^)
+echo   shannon-prime-llama-dir Path to this repo ^(shannon-prime-llama^)
+echo   output-dir             Where to put the DLLs ^(default: .\output^)
+exit /b 1
