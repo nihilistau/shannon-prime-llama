@@ -41,14 +41,17 @@ echo [SP] shannon-prime-llama: %SP_DIR%
 echo [SP] output:             %OUT_DIR%
 echo.
 
-REM Set up VS developer environment
-call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
+REM Set up VS developer environment (skip if already in a Developer Command Prompt)
+where cl.exe >nul 2>&1
 if errorlevel 1 (
-    call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
-)
-if errorlevel 1 (
-    echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
-    exit /b 1
+    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
+    ) else if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
+        call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
+    ) else (
+        echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
+        exit /b 1
+    )
 )
 
 REM Find CUDA
