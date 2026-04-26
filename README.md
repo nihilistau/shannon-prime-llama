@@ -1,7 +1,5 @@
 # shannon-prime-llama
 
-> **The patch doesn't work. It's broken. I'm not fixing it. I am abandoning this repo. If you want it to work, figure it out yourself. Good luck.**
-
 **Shannon-Prime full engine integration for llama.cpp**
 
 Adds spectral KV cache compression to llama.cpp via the full Shannon-Prime
