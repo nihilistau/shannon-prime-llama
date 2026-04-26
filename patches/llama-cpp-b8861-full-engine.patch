@@ -40,7 +40,7 @@ diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index 7b1fcfc..75c9e31 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -53,6 +53,158 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+@@ -53,6 +53,161 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
  
  target_link_libraries(llama PUBLIC ggml)
  
@@ -122,6 +122,9 @@ index 7b1fcfc..75c9e31 100644
 +    target_include_directories(shannon_prime_core PUBLIC ${_SP_INCLUDES})
 +    target_compile_definitions(shannon_prime_core PUBLIC ${_SP_DEFS})
 +    set_property(TARGET shannon_prime_core PROPERTY POSITION_INDEPENDENT_CODE ON)
++    # Suppress GCC warnings that llama.cpp's strict flags promote to errors
++    target_compile_options(shannon_prime_core PRIVATE
++        -Wno-alloc-size-larger-than -Wno-cast-qual -Wno-overflow)
 +
 +    if (GGML_VULKAN)
 +        target_link_libraries(shannon_prime_core PRIVATE Vulkan::Vulkan)
@@ -281,13 +284,31 @@ index 0b62dc7..aea939d 100644
 +#endif // LLAMA_SHANNON_PRIME
  
      bool v_trans = true;  // the value tensor is transposed
- 
+
+@@ -386,4 +402,16 @@ public:
+     void set_input_v_rot(ggml_tensor * dst) const;
+
++#ifdef LLAMA_SHANNON_PRIME
++    // Shannon-Prime: expose KV cache and slot info for the post-decode bridge.
++    llama_kv_cache       * get_kv()           { return kv; }
++    const llama_kv_cache * get_kv()     const { return kv; }
++    const slot_info_vec_t & get_cur_sinfo() const {
++        static const slot_info_vec_t empty;
++        if (sinfos.empty() || i_cur == 0) return empty;
++        return sinfos;
++    }
++    size_t get_cur_idx() const { return i_cur > 0 ? i_cur - 1 : 0; }
++#endif
++
+ private:
+     llama_memory_status status;
+
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
 index 0000000..e01a819
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,571 @@
+@@ -0,0 +1,595 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -658,7 +679,9 @@ index 0000000..e01a819
 +    auto * kv = kvc->get_kv();
 +    if (!kv) return;
 +
-+    const auto & sinfo  = kvc->get_cur_sinfo();
++    const auto & sinfos_vec = kvc->get_cur_sinfo();
++    if (sinfos_vec.empty()) return;
++    const auto & sinfo = sinfos_vec[kvc->get_cur_idx()];
 +    const auto & layers = kv->get_layers();
 +    const int n_tokens  = (int)ubatch->n_tokens;
 +    if (n_tokens <= 0) return;
@@ -881,13 +904,12 @@ index 0000000..e01a819
 +}
 +
 +#endif // LLAMA_SHANNON_PRIME
-\ No newline at end of file
 diff --git a/src/llama-shannon-prime.h b/src/llama-shannon-prime.h
 new file mode 100644
 index 0000000..61898eb
 --- /dev/null
 +++ b/src/llama-shannon-prime.h
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,64 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp.
 +//
 +// Activated when SHANNON_PRIME_ENABLED=1 is set in the environment.
@@ -952,4 +974,3 @@ index 0000000..61898eb
 +#endif
 +
 +#endif // LLAMA_SHANNON_PRIME
-\ No newline at end of file
