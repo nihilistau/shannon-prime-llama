@@ -24,9 +24,9 @@ setlocal enabledelayedexpansion
 if "%~1"=="" (
     echo Usage: build.bat ^<llama-cpp-dir^> ^<shannon-prime-llama-dir^> [output-dir]
     echo.
-    echo   llama-cpp-dir          Path to patched llama.cpp checkout (b8861 + full-engine patch)
-    echo   shannon-prime-llama-dir Path to this repo (shannon-prime-llama)
-    echo   output-dir             Where to put the DLLs (default: .\output)
+    echo   llama-cpp-dir          Path to patched llama.cpp checkout ^(b8861 + full-engine patch^)
+    echo   shannon-prime-llama-dir Path to this repo ^(shannon-prime-llama^)
+    echo   output-dir             Where to put the DLLs ^(default: .\output^)
     exit /b 1
 )
 
