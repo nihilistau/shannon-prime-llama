@@ -81,7 +81,6 @@ cmake -G Ninja ^
   -DCMAKE_C_COMPILER=cl ^
   -DCMAKE_CXX_COMPILER=cl ^
   -DGGML_CUDA=OFF ^
-  -DLLAMA_SHANNON_PRIME=ON ^
   "-DSHANNON_PRIME_DIR=%SP_DIR%" ^
   %SP_CUDA_FLAG% ^
   -DLLAMA_BUILD_TESTS=OFF ^
@@ -105,11 +104,13 @@ echo [SP] Copying DLLs to %OUT_DIR%...
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 copy /y "%BUILD_DIR%\bin\llama.dll" "%OUT_DIR%\" >nul
 copy /y "%BUILD_DIR%\bin\ggml.dll" "%OUT_DIR%\" >nul
+if exist "%BUILD_DIR%\bin\ggml-vulkan.dll" copy /y "%BUILD_DIR%\bin\ggml-vulkan.dll" "%OUT_DIR%\" >nul
 
 echo.
 echo [SP] Build complete. Drop these into your LM Studio runtime folder:
 echo [SP]   %OUT_DIR%\llama.dll
 echo [SP]   %OUT_DIR%\ggml.dll
+if exist "%OUT_DIR%\ggml-vulkan.dll" echo [SP]   %OUT_DIR%\ggml-vulkan.dll
 echo.
 echo [SP] LM Studio runtime folder is typically:
 echo [SP]   %%USERPROFILE%%\.cache\lm-studio\extensions\backends\llama.cpp-win-x86_64-nvidia-cuda12-avx2-2.14.0\
