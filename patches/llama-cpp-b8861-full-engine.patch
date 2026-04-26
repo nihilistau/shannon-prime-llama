@@ -24,7 +24,7 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 310a3dc..061294a 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -33,6 +33,28 @@ endif()
+@@ -33,6 +33,24 @@ endif()
  
  option(LLAMA_USE_SYSTEM_GGML "Use system libggml" OFF)
  
@@ -41,13 +41,9 @@ index 310a3dc..061294a 100644
 +    endif()
 +endif()
 +set(SHANNON_PRIME_DIR "${SHANNON_PRIME_DIR}" CACHE PATH "Path to shannon-prime-llama checkout")
-+# Auto-enable Vulkan if Vulkan SDK is found and user hasn't explicitly set GGML_VULKAN
++# Enable Vulkan by default — disable with -DGGML_VULKAN=OFF if no SDK installed
 +if (LLAMA_SHANNON_PRIME AND NOT DEFINED CACHE{GGML_VULKAN})
-+    find_package(Vulkan QUIET)
-+    if (Vulkan_FOUND)
-+        set(GGML_VULKAN ON CACHE BOOL "ggml: enable Vulkan (auto-detected by Shannon-Prime)" FORCE)
-+        message(STATUS "Shannon-Prime: Vulkan SDK found, enabling GGML_VULKAN")
-+    endif()
++    set(GGML_VULKAN ON CACHE BOOL "ggml: enable Vulkan (Shannon-Prime default)" FORCE)
 +endif()
 +
  option(LLAMA_WASM_MEM64 "llama: use 64-bit memory in WASM builds" ON)
