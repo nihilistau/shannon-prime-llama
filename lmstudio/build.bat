@@ -42,20 +42,20 @@ echo [SP] output:             %OUT_DIR%
 echo.
 
 REM Set up VS developer environment.
-REM vcvars must be called OUTSIDE if() blocks — cmd.exe doesn't propagate
-REM environment changes from call inside parenthesized blocks properly.
+REM CRITICAL: vcvars must be called completely outside any if/for/() blocks.
+REM cmd.exe does not propagate environment changes (PATH, INCLUDE, LIB) from
+REM a call that runs inside parenthesized blocks. We use a variable + goto
+REM pattern to keep the actual call statement at the top level.
 where cl.exe >nul 2>&1
 if not errorlevel 1 goto :vs_ready
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul
-    goto :vs_ready
+set "_VCVARS="
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "_VCVARS=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+if "%_VCVARS%"=="" if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "_VCVARS=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+if "%_VCVARS%"=="" (
+    echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
+    exit /b 1
 )
-if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
-    call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul
-    goto :vs_ready
-)
-echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
-exit /b 1
+call "%_VCVARS%" >nul
 :vs_ready
 
 REM Find CUDA
