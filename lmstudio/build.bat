@@ -55,7 +55,7 @@ REM Find CUDA
 if defined CUDA_PATH (
     set "PATH=%CUDA_PATH%\bin;%PATH%"
 ) else (
-    for %%d in (v12.4 v12.6 v13.0 v13.2) do (
+    for %%d in (v13.2 v13.1 v13.0 v12.6 v12.4 v12.1) do (
         if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\%%d\bin\nvcc.exe" (
             set "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\%%d"
             set "PATH=!CUDA_PATH!\bin;%PATH%"
@@ -68,7 +68,7 @@ if defined CUDA_PATH (
 )
 :cuda_found
 echo [SP] CUDA: %CUDA_PATH%
-set SP_CUDA_FLAG=-DSP_CUDA=ON "-DCMAKE_CUDA_COMPILER=%CUDA_PATH%/bin/nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=89 "-DCMAKE_CUDA_FLAGS=--use-local-env"
+set SP_CUDA_FLAG=-DSP_CUDA=ON "-DCMAKE_CUDA_COMPILER=%CUDA_PATH%/bin/nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=native "-DCMAKE_CUDA_FLAGS=--use-local-env"
 
 :configure
 set BUILD_DIR=%LLAMA_DIR%\build_sp_lmstudio

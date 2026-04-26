@@ -51,12 +51,11 @@ cd llama-cpp-sp
 # Apply the full-engine patch
 git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
 
-# Build (SP_CUDA=ON is auto-detected if nvcc is found)
+# Build — Shannon-Prime is ON by default, SHANNON_PRIME_DIR auto-detected
+# if shannon-prime-llama is a sibling directory. SP_CUDA auto-detected from nvcc.
 cmake -S . -B build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
-  -DGGML_CUDA=OFF -DLLAMA_BUILD_TESTS=OFF \
-  -DLLAMA_SHANNON_PRIME=ON \
-  -DSHANNON_PRIME_DIR=/path/to/shannon-prime-llama
+  -DGGML_CUDA=OFF -DLLAMA_BUILD_TESTS=OFF
 cmake --build build -j
 
 # Ship path
