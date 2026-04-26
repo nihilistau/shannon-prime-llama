@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "../../core/shannon_prime.h"
+#include "shannon_prime.h"
 
 // External declarations for shared kernels (defined in shannon_prime_sqfree.cu)
 extern "C" void sp_cuda_vilenkin_inplace(float *d_data, int pad_dim, int n_vecs,

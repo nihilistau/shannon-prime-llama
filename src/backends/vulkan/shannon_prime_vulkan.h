@@ -9,7 +9,7 @@
 #ifndef SHANNON_PRIME_VULKAN_H
 #define SHANNON_PRIME_VULKAN_H
 
-#include "../../core/shannon_prime.h"
+#include "shannon_prime.h"
 
 #ifdef __cplusplus
 extern "C" {

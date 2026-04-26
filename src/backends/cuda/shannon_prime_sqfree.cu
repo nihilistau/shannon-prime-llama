@@ -351,7 +351,7 @@ void sp_cuda_spinor_extract(const float *d_actual, const float *d_pred,
 #include <string.h>
 
 #include "shannon_prime_cuda.h"
-#include "../../core/shannon_prime.h"
+#include "shannon_prime.h"
 
 // ── helper kernels ────────────────────────────────────────────────
 
