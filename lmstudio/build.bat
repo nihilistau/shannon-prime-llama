@@ -41,18 +41,22 @@ echo [SP] shannon-prime-llama: %SP_DIR%
 echo [SP] output:             %OUT_DIR%
 echo.
 
-REM Set up VS developer environment (skip if already in a Developer Command Prompt)
+REM Set up VS developer environment.
+REM vcvars must be called OUTSIDE if() blocks — cmd.exe doesn't propagate
+REM environment changes from call inside parenthesized blocks properly.
 where cl.exe >nul 2>&1
-if errorlevel 1 (
-    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
-    ) else if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
-        call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
-    ) else (
-        echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
-        exit /b 1
-    )
+if not errorlevel 1 goto :vs_ready
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul
+    goto :vs_ready
 )
+if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" (
+    call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul
+    goto :vs_ready
+)
+echo [SP] ERROR: Could not find Visual Studio Build Tools. Install VS 2019+ BuildTools.
+exit /b 1
+:vs_ready
 
 REM Find CUDA
 if defined CUDA_PATH (
