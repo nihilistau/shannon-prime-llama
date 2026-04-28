@@ -50,6 +50,13 @@
 //   SHANNON_PRIME_DRAFT_PRESET=aggressive   Shortcut — picks K=2,1 V=1
 //                                            ("ternary"=2,2 / "ship"=defaults)
 //
+// Ternary noise-tail (5/5/4/1.58 — band 3 stored as {-1,0,+1} at 2 bpp
+// regardless of K_BITS[3]). Comma-separated band indices, 0-based:
+//   SHANNON_PRIME_K_TERNARY_BANDS=3       Ternary on K band 3 only
+//   SHANNON_PRIME_V_TERNARY_BANDS=        (empty / unset = no V ternary)
+//   SHANNON_PRIME_DRAFT_K_TERNARY_BANDS=2,3   Differential: ternary on
+//                                              the draft only, more bands
+//
 // Activation:
 //   #include "shannon_prime_llama.h"
 //

@@ -115,6 +115,31 @@ static int parse_role_bits_autocount(const char *base, sp_llama_role_t role,
         resolve_role_name(base, role, name, sizeof(name)), bits, max_n);
 }
 
+// Parse a comma-separated list of band indices (e.g. "3" or "2,3") into
+// a uint32 mask suitable for sp_config_t::{k,v}_ternary_mask. Indices >= 32
+// are silently dropped (SP_MAX_BANDS is bounded well below 32). Returns 0
+// when the role-resolved env var is unset.
+static uint32_t parse_role_ternary_mask(const char *base, sp_llama_role_t role) {
+    const char *v = role_getenv(base, role);
+    if (!v || !*v) return 0u;
+    uint32_t mask = 0u;
+    const char *p = v;
+    while (*p) {
+        // Skip whitespace + leading separators.
+        while (*p == ',' || *p == ' ' || *p == '\t') p++;
+        if (!*p) break;
+        if (*p < '0' || *p > '9') {
+            // Bad token — skip until next separator and continue.
+            while (*p && *p != ',') p++;
+            continue;
+        }
+        int idx = atoi(p);
+        if (idx >= 0 && idx < 32) mask |= (1u << idx);
+        while (*p && *p != ',') p++;
+    }
+    return mask;
+}
+
 // Apply a draft preset's bit allocations as if the user had set
 // SHANNON_PRIME_DRAFT_K_BITS / V_BITS. Real env vars still win — this
 // only fills in defaults. Returns 1 if a known preset was applied,
@@ -228,6 +253,12 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     }
 
     cfg.use_mobius_mask = parse_role_bool("MOBIUS", role, 1);
+
+    // Ternary noise-tail bands. Mask is applied at sp_band_config_init_ext
+    // inside sp_shadow_cache_init (sp_config_t carries the mask through).
+    // Empty / unset env var = 0u = no ternary bands (existing behaviour).
+    cfg.k_ternary_mask = parse_role_ternary_mask("K_TERNARY_BANDS", role);
+    cfg.v_ternary_mask = parse_role_ternary_mask("V_TERNARY_BANDS", role);
 
     // Allow the caller to request a specific backend via env var.
     // Valid values: "cpu" (default), "adreno". Unknown values → caller's
