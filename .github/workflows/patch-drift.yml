@@ -1,0 +1,72 @@
+name: Patch drift check
+
+# Fast pre-merge guard: validates that
+# `patches/llama-cpp-b8861-full-engine.patch` still applies cleanly to a
+# fresh clone of upstream `b8861`. Catches drift the moment it's pushed,
+# instead of waiting for someone to try a build from source.
+#
+# Runs on every push and PR — separate from release.yml so it doesn't
+# share the heavy build matrix's queue and finishes in ~2 min.
+#
+# If this fails, the patch needs to be regenerated against the current
+# `b8861` checkout (typically by re-applying it locally, fixing context,
+# and `git diff > patch`). See BUILD-AND-DISTRIBUTE.md for the recipe.
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  patch-applies:
+    name: Patch applies cleanly to fresh b8861
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout shannon-prime-llama
+        uses: actions/checkout@v4
+        with:
+          # No submodules needed — we only read the patch file.
+          submodules: false
+          path: shannon-prime-llama
+
+      - name: Clone upstream llama.cpp at b8861
+        run: |
+          git -c core.autocrlf=false clone \
+            --branch b8861 --depth 1 \
+            https://github.com/ggml-org/llama.cpp llama-cpp-fresh
+
+      - name: git apply --check
+        working-directory: llama-cpp-fresh
+        run: |
+          # --check validates without actually modifying the working
+          # tree. Exits non-zero if the patch can't apply.
+          git apply --check \
+            ../shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+
+      - name: git apply (real, for whitespace check)
+        working-directory: llama-cpp-fresh
+        run: |
+          # Real apply with --whitespace=error catches CRLF / trailing-
+          # whitespace regressions that --check tolerates. The patch file
+          # is committed to the repo as LF-only; this step fails loudly
+          # if a future commit lets CRLF creep back in.
+          git apply --whitespace=error \
+            ../shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+
+      - name: Verify expected files were touched
+        working-directory: llama-cpp-fresh
+        run: |
+          # Sanity check: the patch must produce the SP source files and
+          # modify the canonical injection points. If a refactor accidentally
+          # narrows the patch surface, this catches it.
+          test -f src/llama-shannon-prime.h        || (echo "missing llama-shannon-prime.h"        && exit 1)
+          test -f src/llama-shannon-prime.cpp      || (echo "missing llama-shannon-prime.cpp"      && exit 1)
+          git diff --name-only | grep -q '^src/llama-context.cpp$' || (echo "patch did not touch llama-context.cpp" && exit 1)
+          git diff --name-only | grep -q '^src/llama-kv-cache.h$'  || (echo "patch did not touch llama-kv-cache.h"  && exit 1)
+          git diff --name-only | grep -q '^CMakeLists.txt$'        || (echo "patch did not touch CMakeLists.txt"    && exit 1)
+          echo "Patch surface looks correct."
