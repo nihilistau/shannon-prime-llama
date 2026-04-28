@@ -26,13 +26,9 @@ jobs:
           - os: windows-2022
             backend: cuda
             cuda_arch: '75;86;89'           # 2060/3090/4090 covered
-            # -allow-unsupported-compiler: CUDA 12.1's host_config.h rejects
-            # the MSVC shipping on windows-2022 runners (17.11+). The flag is
-            # the documented nvcc escape hatch — code we compile here doesn't
-            # touch any of the host-compiler features that would actually break.
             # GGML_VULKAN=OFF: prevent CMake's auto-find from requiring the
             # Vulkan SDK on a CUDA-only build.
-            cmake_flags: "-DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF '-DCMAKE_CUDA_ARCHITECTURES=75;86;89' '-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler'"
+            cmake_flags: "-DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF '-DCMAKE_CUDA_ARCHITECTURES=75;86;89'"
           - os: windows-2022
             backend: vulkan
             cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
@@ -61,11 +57,16 @@ jobs:
           git apply ../shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
 
       # ── Toolchain setup ─────────────────────────────────────────────
+      # CUDA 12.4: 12.1 rejected the MSVC shipping on windows-2022 runners,
+      # and -allow-unsupported-compiler was unreachable during CMake's
+      # compiler-ID probe. 12.4 supports the runner's MSVC natively.
+      # Binaries built with 12.4 remain forward-compatible with users on
+      # CUDA 12.1+ drivers via CUDA's minor-version compat guarantee.
       - name: Set up CUDA (Windows)
         if: matrix.os == 'windows-2022' && matrix.backend == 'cuda'
         uses: Jimver/cuda-toolkit@v0.2.16
         with:
-          cuda: '12.1.1'
+          cuda: '12.4.1'
           method: 'network'
           sub-packages: '["nvcc","cudart","cublas","cublas_dev"]'
 
@@ -73,7 +74,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04' && matrix.backend == 'cuda'
         uses: Jimver/cuda-toolkit@v0.2.16
         with:
-          cuda: '12.1.1'
+          cuda: '12.4.1'
           method: 'network'
 
       # LunarG's "latest" CDN URL has been intermittently 404ing; the
@@ -146,7 +147,7 @@ jobs:
           #   %LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\
           # then select 'llama.cpp-sp-cuda' in the LM Studio runtime picker.
           "@ | Out-File -Encoding utf8 $stage/INSTALL.txt
-          Compress-Archive -Path "$stage/*" -DestinationPath "lmstudio-runtime-sp-windows-cuda12.1-${{ github.sha }}.zip"
+          Compress-Archive -Path "$stage/*" -DestinationPath "lmstudio-runtime-sp-windows-cuda12.4-${{ github.sha }}.zip"
         shell: pwsh
 
       # ── Package: standalone binaries ────────────────────────────────
@@ -230,7 +231,7 @@ jobs:
             built from llama.cpp b8861 + the full-engine SP patch.
 
             **Quick-install (LM Studio, Windows + CUDA):**
-            1. Download `lmstudio-runtime-sp-windows-cuda12.1-*.zip`
+            1. Download `lmstudio-runtime-sp-windows-cuda12.4-*.zip`
             2. Extract to `%LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\`
             3. Select `llama.cpp-sp-cuda` in LM Studio's runtime picker
             4. Reload your model — Shannon-Prime KV compression is active.

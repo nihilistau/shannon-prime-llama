@@ -15,7 +15,7 @@ GitHub Releases on this repository ship four artifact families per release tag (
 
 | Artifact | Target | Use case |
 |---|---|---|
-| `lmstudio-runtime-sp-windows-cuda12.1-*.zip` | LM Studio drop-in DLLs | The button-click install for LM Studio users on Windows + CUDA. |
+| `lmstudio-runtime-sp-windows-cuda12.4-*.zip` | LM Studio drop-in DLLs | The button-click install for LM Studio users on Windows + CUDA. |
 | `llama-cli-sp-windows-{cuda,vulkan}-*.zip` | Standalone Windows binaries | Run llama.cpp directly without LM Studio. |
 | `llama-cli-sp-linux-{cuda,vulkan}-*.tar.gz` | Standalone Linux binaries | Same on Linux. |
 | `shannon-prime-llama-cpp-b8861-patched-source.tar.gz` | Source archive | Build for a specific GPU arch or distribute as a derivative work. |
@@ -24,7 +24,7 @@ The `-sp-` infix is intentional — it lets you keep these bundles side-by-side 
 
 ### Installing the LM Studio runtime (Windows + CUDA)
 
-1. Download `lmstudio-runtime-sp-windows-cuda12.1-<sha>.zip` from the latest release.
+1. Download `lmstudio-runtime-sp-windows-cuda12.4-<sha>.zip` from the latest release.
 2. Extract the archive into:
 
        %LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\
