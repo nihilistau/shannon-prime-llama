@@ -9,6 +9,26 @@ A short licensing note at the end clarifies what can and can't be redistributed.
 
 ---
 
+## Release notes & known limitations
+
+### v2.14.0-sp1 (current release)
+
+First public release. Working: single-model llama-cli + LM Studio runtime, all four backends (Windows/Linux × CUDA/Vulkan), all 24+ supported architectures, hierarchical/sqfree compression paths, multi-GPU sharding, hot/cold tiered KV.
+
+**Known limitation — speculative decoding (`-md`):** the patch in this release uses a single global SP context per process, so when llama.cpp loads two models (target + draft under `-md`), only the first-loaded model receives Shannon-Prime compression. The draft either bypasses SP entirely or — if its head dimensions match the target's by coincidence — corrupts the target's compressed cache. **Do not rely on speculative decoding numbers under v2.14.0-sp1.** The fix is on the `feat/per-model-sp-context` branch and will ship in v2.14.0-sp2.
+
+If you specifically need speculative decoding today, build from source on `feat/per-model-sp-context`:
+
+```bash
+git clone --branch feat/per-model-sp-context --recursive \
+    https://github.com/nihilistau/shannon-prime-llama.git
+# then follow the Building from source recipe below
+```
+
+The architecture rewrite is documented in `lib/shannon-prime/docs/SPECULATIVE-DECODING.md`. Single-model use is unaffected.
+
+---
+
 ## Pre-built binaries
 
 GitHub Releases on this repository ship four artifact families per release tag (`v2.14.0-sp1`, `v2.14.0-sp2`, etc.):
