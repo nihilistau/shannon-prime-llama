@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 310a3dc..d87358f 100644
+index 310a3dc..9ade0a1 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -33,6 +33,24 @@ endif()
+@@ -33,6 +33,89 @@ endif()
  
  option(LLAMA_USE_SYSTEM_GGML "Use system libggml" OFF)
  
@@ -22,6 +22,71 @@ index 310a3dc..d87358f 100644
 +# Enable Vulkan by default — disable with -DGGML_VULKAN=OFF if no SDK installed
 +if (LLAMA_SHANNON_PRIME AND NOT DEFINED CACHE{GGML_VULKAN})
 +    set(GGML_VULKAN ON CACHE BOOL "ggml: enable Vulkan (Shannon-Prime default)" FORCE)
++endif()
++
++# --------------------------------------------------------------------
++# Auto-apply vendor patches (K-quant getrows, etc.) at configure time.
++#
++# The K-quant getrows patch lets ggml's CUDA backend dispatch on Q*_K /
++# IQ* token-embed tables, which is required to load Gemma-3 Q3_K_L,
++# phi-4 Q4_K_M, Phi-3.1-mini-128k-Q4_K_M and other models with a
++# K-quant token_embd.weight tensor. Without it, model load fails
++# at the first row-gather kernel.
++#
++# This block is the shannon-prime-llama equivalent of
++# shannon-prime-engine's SP_ENGINE_AUTO_PATCH option — runs once at
++# configure time, idempotent (skip if already applied via a reverse-
++# apply check), opt-out via -DSP_AUTO_PATCH=OFF for users who want to
++# manage vendor patches manually.
++#
++# The patch lives in the shannon-prime-llama checkout, not in
++# llama.cpp itself, so it's resolved via SHANNON_PRIME_DIR rather
++# than ${CMAKE_SOURCE_DIR}.
++# --------------------------------------------------------------------
++option(SP_AUTO_PATCH "Auto-apply vendor patches at configure time" ON)
++if (LLAMA_SHANNON_PRIME AND SP_AUTO_PATCH AND SHANNON_PRIME_DIR
++    AND EXISTS "${SHANNON_PRIME_DIR}/patches/ggml-cuda-getrows-kquant.patch")
++    set(_SP_KQUANT_PATCH "${SHANNON_PRIME_DIR}/patches/ggml-cuda-getrows-kquant.patch")
++    if (NOT EXISTS "${CMAKE_SOURCE_DIR}/ggml/src/ggml-cuda/getrows.cu")
++        message(STATUS "Shannon-Prime: ggml/src/ggml-cuda/getrows.cu not found; skipping auto-patch")
++    else()
++        # IMPORTANT: ggml/ inside llama.cpp is a vendored subdir, not its own
++        # git repo. So we run `git apply` from the llama.cpp repo root with
++        # `--directory=ggml`, which prepends ggml/ to the patch paths and
++        # makes the check work against llama.cpp's actual git state. Running
++        # from inside ggml/ (a non-repo) gives `--check --reverse` a known
++        # false-positive — both directions silently return 0.
++        #
++        # Step 1: probe by checking for the SP marker comment the patch adds.
++        # File-content heuristic is reliable here because the marker is
++        # SP-specific and can't appear from upstream changes. The marker
++        # lives ~160 lines in (after the get_rows_cuda_float function), so
++        # we have to read the whole file — getrows.cu is small (<20KB).
++        file(READ "${CMAKE_SOURCE_DIR}/ggml/src/ggml-cuda/getrows.cu" _sp_kq_content)
++        if (_sp_kq_content MATCHES "Shannon-Prime local patch")
++            message(STATUS "Shannon-Prime: K-quant getrows patch already applied (marker found)")
++        else()
++            # Step 2: would forward-apply succeed?
++            execute_process(
++                COMMAND git apply --check --directory=ggml "${_SP_KQUANT_PATCH}"
++                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
++                RESULT_VARIABLE _sp_kq_check
++                OUTPUT_QUIET ERROR_QUIET)
++            if (_sp_kq_check EQUAL 0)
++                execute_process(
++                    COMMAND git apply --directory=ggml "${_SP_KQUANT_PATCH}"
++                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
++                    RESULT_VARIABLE _sp_kq_result)
++                if (_sp_kq_result EQUAL 0)
++                    message(STATUS "Shannon-Prime: applied K-quant getrows patch to ggml/")
++                else()
++                    message(WARNING "Shannon-Prime: failed to apply K-quant getrows patch (rc=${_sp_kq_result})")
++                endif()
++            else()
++                message(STATUS "Shannon-Prime: K-quant getrows patch can't apply cleanly — likely a conflicting local change in ggml/. Either revert the conflict or set -DSP_AUTO_PATCH=OFF.")
++            endif()
++        endif()
++    endif()
 +endif()
 +
  option(LLAMA_WASM_MEM64 "llama: use 64-bit memory in WASM builds" ON)

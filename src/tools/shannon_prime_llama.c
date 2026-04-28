@@ -260,6 +260,15 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     cfg.k_ternary_mask = parse_role_ternary_mask("K_TERNARY_BANDS", role);
     cfg.v_ternary_mask = parse_role_ternary_mask("V_TERNARY_BANDS", role);
 
+    // FP8 (E4M3FN) banded quantisation. Advisory: the CPU bridge has no
+    // fp8 path, so requesting fp8 here just logs a warning and falls
+    // through to the int path. The engine's CUDA backend honours
+    // sp_config_t::use_fp8 when SP_ENGINE_FP8 was set at compile time
+    // (see shannon-prime-engine/src/kv_cache.cpp). The CPU/Adreno
+    // backend warning is emitted below once the active backend has
+    // been resolved (after env-override on the BACKEND var).
+    cfg.use_fp8 = (parse_role_bool("FP8", role, 0) != 0);
+
     // Allow the caller to request a specific backend via env var.
     // Valid values: "cpu" (default), "adreno". Unknown values → caller's
     // params->backend is used unchanged.
@@ -270,6 +279,24 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
 #ifdef SP_HAVE_ADRENO
         else if (strcmp(b, "adreno") == 0)    p.backend = SP_BACKEND_ADRENO;
 #endif
+    }
+
+    // Now that the active backend is resolved, warn if fp8 was requested
+    // but the active backend has no fp8 path. CPU + Adreno fall through
+    // to int regardless; only the engine's CUDA backend (linked via a
+    // separate build path, NOT through the CPU bridge) honours use_fp8.
+    if (cfg.use_fp8 && (p.backend == SP_BACKEND_CPU
+#ifdef SP_HAVE_ADRENO
+                       || p.backend == SP_BACKEND_ADRENO
+#endif
+                       )) {
+        const char *role_tag =
+            (role == SP_LLAMA_ROLE_DRAFT)  ? " [draft]"  :
+            (role == SP_LLAMA_ROLE_TARGET) ? " [target]" : "";
+        fprintf(stderr, "[Shannon-Prime]%s SHANNON_PRIME_FP8=1 requested but the "
+                        "active bridge backend has no fp8 path; falling back to "
+                        "int. Use shannon-prime-engine with SP_ENGINE_FP8=ON for "
+                        "the actual fp8 dispatch on CUDA.\n", role_tag);
     }
 
     sp_llama_ctx_t *ctx = sp_llama_init_config(&p, &cfg);
