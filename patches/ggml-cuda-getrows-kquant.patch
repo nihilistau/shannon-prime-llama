@@ -1,0 +1,140 @@
+diff --git a/src/ggml-cuda/getrows.cu b/src/ggml-cuda/getrows.cu
+index 2fab3324..437194c3 100644
+--- a/src/ggml-cuda/getrows.cu
++++ b/src/ggml-cuda/getrows.cu
+@@ -2,6 +2,9 @@
+ #include "dequantize.cuh"
+ #include "convert.cuh"
+ 
++#include <type_traits>
++#include <vector>
++
+ template<int qk, int qr, dequantize_kernel_t dequantize_kernel, typename dst_t>
+ static __global__ void k_get_rows(
+         const void * __restrict__ src0, const int32_t * __restrict__ src1, dst_t * __restrict__ dst,
+@@ -155,6 +158,96 @@ static void get_rows_cuda_float(
+         s10, s11, s12/*, s13*/);
+ }
+ 
++// ────────────────────────────────────────────────────────────────────
++// Shannon-Prime local patch — see patches/ggml-cuda-getrows-kquant.patch
++// in the engine repo. Non-upstream; remove when the equivalent change
++// lands in ggml-org/ggml.
++// ─── K-quant / IQ* per-row path ─────────────────────────────────────
++// The main k_get_rows template dispatches on (qk, qr, dequantize_kernel)
++// with a float2 per (ib, iqs) pair — that fits 32-element interleaved
++// blocks (Q4_0/Q4_1/Q5_0/Q5_1/Q8_0) but not 256-element K-quant
++// superblocks, which carry scales/mins outside the 2-element pattern.
++//
++// For the per-row embed lookup — which is the only K-quant getrows we
++// actually care about in Shannon-Prime (token_embd.weight on Q*_K /
++// IQ* models like gemma-3-12b-Q3_K_L's Q6_K embed, phi-4-Q4_K_M, any
++// future K-quant embed) — the cleanest fix is to reuse the full-row
++// dequantizers that already live in convert.cu. We stage the index
++// array (src1) to host so we can iterate, then issue one full-row
++// dequant launch per requested output row.
++//
++// Cost model: one H←D copy (ne10*ne11*ne12 int32s ≤ tens of KiB) plus
++// one stream sync, then ne10*ne11*ne12 kernel launches each writing
++// ne00 floats. For decode (ne10=ne11=ne12=1) that is one kernel
++// launch — effectively free. For prefill with ctx=2048 it is 2k
++// launches, still drowning in matmul time on any real model.
++template <typename dst_t>
++static void get_rows_cuda_k_quant(
++        const void * src0_d, const ggml_type src0_type,
++        const int32_t * src1_d, dst_t * dst_d,
++        const int64_t ne00, const size_t nb01, const size_t nb02, const size_t nb03,
++        const int64_t ne10, const int64_t ne11, const int64_t ne12,
++        const size_t nb10, const size_t nb11, const size_t nb12,
++        const size_t nb1, const size_t nb2, const size_t nb3,
++        cudaStream_t stream) {
++
++    // K-quant / IQ superblocks span 256 elements; every row must align
++    // to a superblock boundary. Embed tables always satisfy this
++    // (hidden_dim is a multiple of 256 on every real model).
++    GGML_ASSERT(ne00 % QK_K == 0);
++
++    const size_t s1  = nb1  / sizeof(dst_t);
++    const size_t s2  = nb2  / sizeof(dst_t);
++    const size_t s3  = nb3  / sizeof(dst_t);
++    const size_t s10 = nb10 / sizeof(int32_t);
++    const size_t s11 = nb11 / sizeof(int32_t);
++    const size_t s12 = nb12 / sizeof(int32_t);
++
++    // Stage src1 to host. The surrounding code holds the stream, so
++    // a blocking sync here serialises only with this op's producers.
++    const size_t n_idx = (size_t)ne10 * ne11 * ne12;
++    std::vector<int32_t> h_src1(n_idx);
++    CUDA_CHECK(cudaMemcpyAsync(h_src1.data(), src1_d,
++        n_idx * sizeof(int32_t), cudaMemcpyDeviceToHost, stream));
++    CUDA_CHECK(cudaStreamSynchronize(stream));
++
++    if constexpr (std::is_same_v<dst_t, float>) {
++        to_fp32_cuda_t to_f32 = ggml_get_to_fp32_cuda(src0_type);
++        GGML_ASSERT(to_f32 != nullptr);
++        for (int64_t i12 = 0; i12 < ne12; ++i12) {
++            for (int64_t i11 = 0; i11 < ne11; ++i11) {
++                for (int64_t i10 = 0; i10 < ne10; ++i10) {
++                    const int32_t i01 = h_src1[i10*s10 + i11*s11 + i12*s12];
++                    const void * src_row = (const char *) src0_d
++                        + i01*nb01 + i11*nb02 + i12*nb03;
++                    float * dst_row = dst_d + i10*s1 + i11*s2 + i12*s3;
++                    to_f32(src_row, dst_row, ne00, stream);
++                }
++            }
++        }
++    } else if constexpr (std::is_same_v<dst_t, half>) {
++        to_fp16_cuda_t to_f16 = ggml_get_to_fp16_cuda(src0_type);
++        GGML_ASSERT(to_f16 != nullptr);
++        for (int64_t i12 = 0; i12 < ne12; ++i12) {
++            for (int64_t i11 = 0; i11 < ne11; ++i11) {
++                for (int64_t i10 = 0; i10 < ne10; ++i10) {
++                    const int32_t i01 = h_src1[i10*s10 + i11*s11 + i12*s12];
++                    const void * src_row = (const char *) src0_d
++                        + i01*nb01 + i11*nb02 + i12*nb03;
++                    half * dst_row = dst_d + i10*s1 + i11*s2 + i12*s3;
++                    to_f16(src_row, dst_row, ne00, stream);
++                }
++            }
++        }
++    } else {
++        // BF16 / I32 destinations aren't exercised by embed lookups on
++        // any model we ship — abort loudly rather than silently fall
++        // back. If this bites in the future the fix is to dequant to an
++        // F32 scratch row and cast via convert_unary_cont_cuda.
++        GGML_ABORT("%s: K-quant getrows dst type unsupported\n", __func__);
++    }
++}
++
+ template <typename dst_t>
+ static void ggml_cuda_get_rows_switch_src0_type(
+         const void * src0_d, const ggml_type src0_type, const int32_t * src1_d, dst_t * dst_d,
+@@ -199,8 +292,27 @@ static void ggml_cuda_get_rows_switch_src0_type(
+             get_rows_cuda_q<QK8_0, QR8_0, dequantize_q8_0>(src0_d, src1_d, dst_d,
+                 ne00, nb01, nb02, nb03, ne10, ne11, ne12, nb10, nb11, nb12, nb1, nb2, nb3, stream);
+             break;
++        // ─── K-quant / IQ* : per-row dequant via convert.cu ────────
++        case GGML_TYPE_Q2_K:
++        case GGML_TYPE_Q3_K:
++        case GGML_TYPE_Q4_K:
++        case GGML_TYPE_Q5_K:
++        case GGML_TYPE_Q6_K:
++        case GGML_TYPE_IQ2_XXS:
++        case GGML_TYPE_IQ2_XS:
++        case GGML_TYPE_IQ2_S:
++        case GGML_TYPE_IQ3_XXS:
++        case GGML_TYPE_IQ3_S:
++        case GGML_TYPE_IQ1_S:
++        case GGML_TYPE_IQ1_M:
++        case GGML_TYPE_IQ4_NL:
++        case GGML_TYPE_IQ4_XS:
++        case GGML_TYPE_MXFP4:
++        case GGML_TYPE_NVFP4:
++            get_rows_cuda_k_quant(src0_d, src0_type, src1_d, dst_d,
++                ne00, nb01, nb02, nb03, ne10, ne11, ne12, nb10, nb11, nb12, nb1, nb2, nb3, stream);
++            break;
+         default:
+-            // TODO: k-quants
+             GGML_ABORT("%s: unsupported src0 type: %s\n", __func__, ggml_type_name(src0_type));
+             break;
+     }

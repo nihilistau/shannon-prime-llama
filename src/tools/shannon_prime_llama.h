@@ -33,7 +33,13 @@
 //                                   (maximum compression path, requires >=24 token prompt)
 //   SHANNON_PRIME_HIER_W_PATH=<f>  Path to precomputed W sidecar (.sp_hier_W.bin)
 //                                   Skips cold-start calibration when provided
-//   SHANNON_PRIME_FP8=1             Use FP8 (E4M3) for band quantization (Ada+ GPU)
+//   SHANNON_PRIME_FP8=1             Use FP8 (E4M3) for band quantization
+//                                   (advisory at the bridge layer; honoured
+//                                   only by backends with an fp8 path —
+//                                   currently the engine's CUDA backend
+//                                   built with SP_ENGINE_FP8=ON. CPU /
+//                                   Adreno bridge logs a warning and
+//                                   falls back to int.)
 //   SHANNON_PRIME_PE=1              Enable PrimePE lattice RoPE injection (default: on)
 //   SHANNON_PRIME_PE=0              Disable PrimePE (use standard geometric RoPE)
 //   SHANNON_PRIME_PE_ALPHA=0.17     Lattice blend ratio (default: 0.17, range 0.15-0.22)
