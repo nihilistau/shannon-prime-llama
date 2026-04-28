@@ -1,0 +1,225 @@
+name: Release LM Studio runtime + standalone llama-cli binaries
+
+on:
+  push:
+    tags:
+      - 'v*-sp*'        # e.g. v2.14.0-sp1, v2.14.0-sp2, v2.15.0-sp1
+    branches:
+      - 'release/*'      # staging — push to release/test to dry-run CI
+  workflow_dispatch:     # manual trigger from the Actions tab
+
+# All four targets in one matrix; each produces a zipped artifact uploaded
+# to the GitHub Release (when triggered by tag) or as a workflow artifact
+# (when triggered by branch / manual).
+jobs:
+  build:
+    name: ${{ matrix.os }} · ${{ matrix.backend }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            backend: cuda
+            cuda_arch: '75;86;89'           # 2060/3090/4090 covered
+            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75;86;89
+          - os: windows-2022
+            backend: vulkan
+            cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
+          - os: ubuntu-22.04
+            backend: cuda
+            cuda_arch: '75;86;89'
+            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75;86;89
+          - os: ubuntu-22.04
+            backend: vulkan
+            cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
+    steps:
+      # ── Checkout shannon-prime-llama (with submodule) ───────────────
+      - name: Checkout shannon-prime-llama
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: shannon-prime-llama
+
+      # ── Pull llama.cpp at the patched tag ───────────────────────────
+      - name: Clone llama.cpp at b8861
+        run: |
+          git clone --branch b8861 --depth 1 https://github.com/ggml-org/llama.cpp llama-cpp-sp
+          cd llama-cpp-sp
+          git apply ../shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+
+      # ── Toolchain setup ─────────────────────────────────────────────
+      - name: Set up CUDA (Windows)
+        if: matrix.os == 'windows-2022' && matrix.backend == 'cuda'
+        uses: Jimver/cuda-toolkit@v0.2.16
+        with:
+          cuda: '12.1.1'
+          method: 'network'
+          sub-packages: '["nvcc","cudart","cublas","cublas_dev"]'
+
+      - name: Set up CUDA (Linux)
+        if: matrix.os == 'ubuntu-22.04' && matrix.backend == 'cuda'
+        uses: Jimver/cuda-toolkit@v0.2.16
+        with:
+          cuda: '12.1.1'
+          method: 'network'
+
+      - name: Install Vulkan SDK (Windows)
+        if: matrix.os == 'windows-2022' && matrix.backend == 'vulkan'
+        run: |
+          $url = "https://sdk.lunarg.com/sdk/download/latest/windows/VulkanSDK-windows.exe"
+          Invoke-WebRequest -Uri $url -OutFile vulkan.exe
+          .\vulkan.exe --root "$env:USERPROFILE\VulkanSDK" --accept-licenses --default-answer --confirm-command install
+          echo "VULKAN_SDK=$env:USERPROFILE\VulkanSDK" >> $env:GITHUB_ENV
+
+      - name: Install Vulkan SDK (Linux)
+        if: matrix.os == 'ubuntu-22.04' && matrix.backend == 'vulkan'
+        run: |
+          sudo apt update
+          sudo apt install -y vulkan-tools libvulkan-dev vulkan-validationlayers-dev
+          sudo apt install -y glslc
+
+      - name: Install Ninja
+        if: matrix.os == 'windows-2022'
+        run: choco install ninja -y
+
+      - name: Setup MSVC dev environment
+        if: matrix.os == 'windows-2022'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # ── Build ───────────────────────────────────────────────────────
+      - name: Configure CMake
+        working-directory: llama-cpp-sp
+        run: |
+          cmake -S . -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DLLAMA_BUILD_TESTS=OFF `
+            -DSHANNON_PRIME_DIR=${{ github.workspace }}/shannon-prime-llama `
+            ${{ matrix.cmake_flags }}
+        shell: pwsh
+
+      - name: Build
+        working-directory: llama-cpp-sp
+        run: cmake --build build --config Release -j
+
+      # ── Package: LM Studio runtime bundle (Windows-CUDA only) ────────
+      - name: Package LM Studio runtime (Windows + CUDA)
+        if: matrix.os == 'windows-2022' && matrix.backend == 'cuda'
+        run: |
+          $stage = "${{ github.workspace }}/lmstudio-runtime"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          # Copy the LM Studio drop-in DLLs and required deps
+          Copy-Item llama-cpp-sp/build/bin/llama.dll $stage/
+          Copy-Item llama-cpp-sp/build/bin/ggml.dll $stage/
+          Copy-Item llama-cpp-sp/build/bin/ggml-base.dll $stage/ -ErrorAction SilentlyContinue
+          Copy-Item llama-cpp-sp/build/bin/ggml-cpu.dll $stage/ -ErrorAction SilentlyContinue
+          Copy-Item llama-cpp-sp/build/bin/ggml-cuda.dll $stage/ -ErrorAction SilentlyContinue
+          # Stage a one-page install guide
+          @"
+          # Shannon-Prime LM Studio Runtime
+          # Drop these DLLs into:
+          #   %LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\
+          # then select 'llama.cpp-sp-cuda' in the LM Studio runtime picker.
+          "@ | Out-File -Encoding utf8 $stage/INSTALL.txt
+          Compress-Archive -Path "$stage/*" -DestinationPath "lmstudio-runtime-windows-cuda12.1-${{ github.sha }}.zip"
+        shell: pwsh
+
+      # ── Package: standalone binaries ────────────────────────────────
+      - name: Package standalone (Windows)
+        if: matrix.os == 'windows-2022'
+        run: |
+          $bdir = "llama-cpp-sp/build/bin"
+          $zip = "llama-cli-windows-${{ matrix.backend }}-${{ github.sha }}.zip"
+          Compress-Archive -Path "$bdir/*.exe","$bdir/*.dll" -DestinationPath $zip
+        shell: pwsh
+
+      - name: Package standalone (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          mkdir -p stage
+          cp llama-cpp-sp/build/bin/llama-cli stage/ || true
+          cp llama-cpp-sp/build/bin/*.so stage/ || true
+          tar czf llama-cli-linux-${{ matrix.backend }}-${{ github.sha }}.tar.gz -C stage .
+
+      # ── Upload artifacts ────────────────────────────────────────────
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shannon-prime-llama-${{ matrix.os }}-${{ matrix.backend }}
+          path: |
+            *.zip
+            *.tar.gz
+          if-no-files-found: warn
+
+  # ── Patched-source archive (no compile) ─────────────────────────────
+  source-archive:
+    name: Patched llama.cpp source archive
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout shannon-prime-llama
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: shannon-prime-llama
+
+      - name: Clone & patch llama.cpp
+        run: |
+          git clone --branch b8861 --depth 1 https://github.com/ggml-org/llama.cpp llama-cpp-sp
+          cd llama-cpp-sp
+          git apply ../shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+          rm -rf .git
+          cd ..
+          tar czf llama-cpp-sp-b8861-patched-source.tar.gz llama-cpp-sp shannon-prime-llama
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-archive
+          path: llama-cpp-sp-b8861-patched-source.tar.gz
+
+  # ── Mint a GitHub Release on tag push ───────────────────────────────
+  release:
+    name: Publish release
+    needs: [build, source-archive]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifact tree
+        run: |
+          mkdir -p flat
+          find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' \) -exec cp {} flat/ \;
+          ls -la flat/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: flat/*
+          generate_release_notes: true
+          body: |
+            Shannon-Prime LM Studio runtime + standalone llama-cli binaries
+            built from llama.cpp b8861 + the full-engine SP patch.
+
+            **Quick-install (LM Studio, Windows + CUDA):**
+            1. Download `lmstudio-runtime-windows-cuda12.1-*.zip`
+            2. Extract to `%LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\`
+            3. Select `llama.cpp-sp-cuda` in LM Studio's runtime picker
+            4. Reload your model — Shannon-Prime KV compression is active.
+
+            **Standalone llama-cli:**
+            See the source archive or build from source:
+            ```
+            git clone --branch b8861 --depth 1 https://github.com/ggml-org/llama.cpp
+            cd llama.cpp
+            git apply /path/to/shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+            cmake -S . -B build -G Ninja -DGGML_CUDA=ON -DSP_CUDA=ON
+            cmake --build build -j
+            ```
+
+            See `BUILD-AND-DISTRIBUTE.md` for full instructions and license terms.
