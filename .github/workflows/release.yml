@@ -19,6 +19,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Args containing semicolons (CUDA_ARCHITECTURES list) or that need
+          # to survive PowerShell's parser (CUDA_FLAGS) are wrapped in PS-style
+          # single quotes — preserved verbatim by both YAML interpolation and
+          # both shells (pwsh + bash).
           - os: windows-2022
             backend: cuda
             cuda_arch: '75;86;89'           # 2060/3090/4090 covered
@@ -28,7 +32,7 @@ jobs:
             # touch any of the host-compiler features that would actually break.
             # GGML_VULKAN=OFF: prevent CMake's auto-find from requiring the
             # Vulkan SDK on a CUDA-only build.
-            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF -DCMAKE_CUDA_ARCHITECTURES=75;86;89 "-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler"
+            cmake_flags: "-DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF '-DCMAKE_CUDA_ARCHITECTURES=75;86;89' '-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler'"
           - os: windows-2022
             backend: vulkan
             cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
@@ -37,7 +41,7 @@ jobs:
             cuda_arch: '75;86;89'
             # GGML_VULKAN=OFF: prevent CMake's auto-find from requiring the
             # Vulkan SDK on a CUDA-only build.
-            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF -DCMAKE_CUDA_ARCHITECTURES=75;86;89
+            cmake_flags: "-DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF '-DCMAKE_CUDA_ARCHITECTURES=75;86;89'"
           - os: ubuntu-22.04
             backend: vulkan
             cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
@@ -121,6 +125,9 @@ jobs:
         run: cmake --build build --config Release -j
 
       # ── Package: LM Studio runtime bundle (Windows-CUDA only) ────────
+      # Note the "-sp-" infix in artifact filenames — it disambiguates these
+      # bundles from vanilla llama.cpp LM Studio runtimes a user might also
+      # have installed in the same extensions/backends/ directory.
       - name: Package LM Studio runtime (Windows + CUDA)
         if: matrix.os == 'windows-2022' && matrix.backend == 'cuda'
         run: |
@@ -139,7 +146,7 @@ jobs:
           #   %LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\
           # then select 'llama.cpp-sp-cuda' in the LM Studio runtime picker.
           "@ | Out-File -Encoding utf8 $stage/INSTALL.txt
-          Compress-Archive -Path "$stage/*" -DestinationPath "lmstudio-runtime-windows-cuda12.1-${{ github.sha }}.zip"
+          Compress-Archive -Path "$stage/*" -DestinationPath "lmstudio-runtime-sp-windows-cuda12.1-${{ github.sha }}.zip"
         shell: pwsh
 
       # ── Package: standalone binaries ────────────────────────────────
@@ -147,7 +154,7 @@ jobs:
         if: matrix.os == 'windows-2022'
         run: |
           $bdir = "llama-cpp-sp/build/bin"
-          $zip = "llama-cli-windows-${{ matrix.backend }}-${{ github.sha }}.zip"
+          $zip = "llama-cli-sp-windows-${{ matrix.backend }}-${{ github.sha }}.zip"
           Compress-Archive -Path "$bdir/*.exe","$bdir/*.dll" -DestinationPath $zip
         shell: pwsh
 
@@ -157,7 +164,7 @@ jobs:
           mkdir -p stage
           cp llama-cpp-sp/build/bin/llama-cli stage/ || true
           cp llama-cpp-sp/build/bin/*.so stage/ || true
-          tar czf llama-cli-linux-${{ matrix.backend }}-${{ github.sha }}.tar.gz -C stage .
+          tar czf llama-cli-sp-linux-${{ matrix.backend }}-${{ github.sha }}.tar.gz -C stage .
 
       # ── Upload artifacts ────────────────────────────────────────────
       - name: Upload artifact
@@ -187,12 +194,12 @@ jobs:
           git apply ../shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
           rm -rf .git
           cd ..
-          tar czf llama-cpp-sp-b8861-patched-source.tar.gz llama-cpp-sp shannon-prime-llama
+          tar czf shannon-prime-llama-cpp-b8861-patched-source.tar.gz llama-cpp-sp shannon-prime-llama
 
       - uses: actions/upload-artifact@v4
         with:
           name: source-archive
-          path: llama-cpp-sp-b8861-patched-source.tar.gz
+          path: shannon-prime-llama-cpp-b8861-patched-source.tar.gz
 
   # ── Mint a GitHub Release on tag push ───────────────────────────────
   release:
@@ -223,7 +230,7 @@ jobs:
             built from llama.cpp b8861 + the full-engine SP patch.
 
             **Quick-install (LM Studio, Windows + CUDA):**
-            1. Download `lmstudio-runtime-windows-cuda12.1-*.zip`
+            1. Download `lmstudio-runtime-sp-windows-cuda12.1-*.zip`
             2. Extract to `%LOCALAPPDATA%\LM-Studio\extensions\backends\llama.cpp-sp-cuda\`
             3. Select `llama.cpp-sp-cuda` in LM Studio's runtime picker
             4. Reload your model — Shannon-Prime KV compression is active.
