@@ -9,8 +9,24 @@ patch revision; `-sp2` keeps the same upstream and bumps the SP layer.
 
 ## [Unreleased]
 
-Nothing on the road to `v2.14.0-sp3` yet — open backlog items live in
-`FUTURE-WORK.md` at the workspace root.
+Heading toward `v2.14.0-sp3`. Open backlog items live in
+`FUTURE-WORK.md` at the workspace root, and design specs for in-flight
+work live alongside the math core (`docs/PHASE-3-ATTENTION-DESIGN.md`).
+
+### In progress
+
+- **Phase 3: attention short-circuit** — wire the partial-band-read
+  primitive (sp2) into llama.cpp's attention path. Entropy-gated band
+  count, 3-tier extension of System 1/2 routing. Design doc shipped;
+  implementation deferred to sp3.
+- **Hexagon backend (Snapdragon NPU)** — V69 HVX kernels for the SP
+  math primitives so the S22 Ultra and other 8 Gen 1 phones get NPU
+  acceleration alongside CPU/GPU/CUDA. Scaffolding work; depends on
+  Qualcomm Hexagon SDK 5.x.
+- **sqfree / hier migration to v3 disk format** — currently those
+  paths still write v2 (per-vec interleaved bands). Migrating them
+  unlocks partial-load IO wins for sqfree+spinor and hierarchical
+  modes too.
 
 ## [v2.14.0-sp2] — 2026-04-29
 
@@ -33,6 +49,45 @@ Nothing on the road to `v2.14.0-sp3` yet — open backlog items live in
 
 ### Added
 
+- **Disk-tier scaffold (phases 1+2 of progressive band loading).**
+  - Phase 1 (math core): `sp_band_dequantize_partial(in, out, bc, max_bands)`
+    reconstructs only the first N bands of a banded vector, zeroing the
+    rest. Energy concentration in the early bands means band 0 alone
+    gets ~30% reconstruction correlation, bands 0+1 get ~85% on smooth
+    signals.
+  - Phase 2 (disk format): bumped cache disk format v2 → v3 with
+    band-major layout. New `sp_shadow_cache_load_partial(prefix, hash,
+    max_bands)` reads only the first N bands' contiguous regions from
+    disk. Engine wrapper `KvCache::load_from_disk_partial(...)`. Format
+    is backward-compatible — v2 files still readable via fallback path.
+  - Architecture: `DISK-TIER-ARCHITECTURE.md` covers the three-phase
+    plan, energy concentration, Granite/Sand/Jazz tier mapping, and
+    the S22 Ultra phone deployment walkthrough including the Hexagon
+    NPU backend story.
+  - Bench: `bench_disk_partial` measures the IO win — 1.80× on K-side
+    band-0 reads on commodity NVMe (V cache stays full because it's
+    single-band by design).
+- **Auto-apply K-quant getrows patch.** `cmake -S . -B build` now
+  auto-applies `patches/ggml-cuda-getrows-kquant.patch` to `ggml/`
+  on first configure, idempotent via SP-marker comment probe. Opt-out
+  via `-DSP_AUTO_PATCH=OFF`. Eliminates the #1 setup-friction point
+  on Gemma-3 / Phi-4 / Phi-3.1-mini-128k loads.
+- **FP8 advisory wiring.** `SHANNON_PRIME_FP8=1` env var (and
+  `SHANNON_PRIME_DRAFT_FP8`) parsed in the bridge, populates
+  `sp_config_t::use_fp8`. CPU/Adreno bridge logs a warning and falls
+  back to int (no fp8 path on those backends today). The engine's
+  CUDA backend honours the flag when `SP_ENGINE_FP8=ON` was set at
+  compile time.
+- **Model-pack `suggested_draft` field.** Each per-arch preset now
+  carries a recommended draft model hint and expected-acceptance
+  number for speculative decoding. Populated for all 7 shipping
+  presets (Qwen / Llama / Mistral / Phi / Gemma).
+- **Auto-detect-draft hint in bridge.** When `SHANNON_PRIME_VERBOSE=1`
+  and the caller sets `arch_name` on `sp_llama_params_t`, the bridge
+  resolves the matching preset and logs a one-line draft suggestion.
+- **Speculative-decoding bench harness.** `scripts/bench-spec-decode.ps1`
+  runs llama-cli through 5 SP configurations and outputs CSV with
+  tok/sec, acceptance rate, and output edit-distance vs vanilla.
 - **Per-model SP context map.** Foundation for `-md` correctness
   above. New `llama_sp_free(model)` /
   `llama_sp_is_enabled(model)` /
