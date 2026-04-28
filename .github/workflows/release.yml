@@ -22,14 +22,22 @@ jobs:
           - os: windows-2022
             backend: cuda
             cuda_arch: '75;86;89'           # 2060/3090/4090 covered
-            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75;86;89
+            # -allow-unsupported-compiler: CUDA 12.1's host_config.h rejects
+            # the MSVC shipping on windows-2022 runners (17.11+). The flag is
+            # the documented nvcc escape hatch — code we compile here doesn't
+            # touch any of the host-compiler features that would actually break.
+            # GGML_VULKAN=OFF: prevent CMake's auto-find from requiring the
+            # Vulkan SDK on a CUDA-only build.
+            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF -DCMAKE_CUDA_ARCHITECTURES=75;86;89 "-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler"
           - os: windows-2022
             backend: vulkan
             cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
           - os: ubuntu-22.04
             backend: cuda
             cuda_arch: '75;86;89'
-            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75;86;89
+            # GGML_VULKAN=OFF: prevent CMake's auto-find from requiring the
+            # Vulkan SDK on a CUDA-only build.
+            cmake_flags: -DGGML_CUDA=ON -DSP_CUDA=ON -DGGML_VULKAN=OFF -DCMAKE_CUDA_ARCHITECTURES=75;86;89
           - os: ubuntu-22.04
             backend: vulkan
             cmake_flags: -DGGML_VULKAN=ON -DGGML_CUDA=OFF
@@ -64,20 +72,28 @@ jobs:
           cuda: '12.1.1'
           method: 'network'
 
+      # LunarG's "latest" CDN URL has been intermittently 404ing; the
+      # maintained jakoch action knows how to handle the silent-install
+      # quirks and pins to a known-good SDK version.
       - name: Install Vulkan SDK (Windows)
         if: matrix.os == 'windows-2022' && matrix.backend == 'vulkan'
-        run: |
-          $url = "https://sdk.lunarg.com/sdk/download/latest/windows/VulkanSDK-windows.exe"
-          Invoke-WebRequest -Uri $url -OutFile vulkan.exe
-          .\vulkan.exe --root "$env:USERPROFILE\VulkanSDK" --accept-licenses --default-answer --confirm-command install
-          echo "VULKAN_SDK=$env:USERPROFILE\VulkanSDK" >> $env:GITHUB_ENV
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.3.290.0
+          install_runtime: true
+          cache: true
 
+      # `glslc` is not a standalone Ubuntu package — pull the full
+      # vulkan-sdk metapackage from LunarG's official apt repo, which
+      # includes glslc, the loader, headers, and validation layers.
       - name: Install Vulkan SDK (Linux)
         if: matrix.os == 'ubuntu-22.04' && matrix.backend == 'vulkan'
         run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc > /dev/null
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
+            https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
           sudo apt update
-          sudo apt install -y vulkan-tools libvulkan-dev vulkan-validationlayers-dev
-          sudo apt install -y glslc
+          sudo apt install -y vulkan-sdk
 
       - name: Install Ninja
         if: matrix.os == 'windows-2022'
