@@ -105,6 +105,13 @@ typedef struct {
 
     // Optional: CUDA stream or Vulkan queue for GPU backends
     void *gpu_context;   // cudaStream_t or VkQueue, NULL for CPU
+
+    // Optional: GGUF general.architecture string. When non-NULL and
+    // SHANNON_PRIME_VERBOSE=1, the bridge resolves the matching model-pack
+    // preset and logs the suggested draft model for speculative decoding.
+    // The patch should populate this from llama_model_arch_name(model);
+    // existing callers that leave it NULL see no behavioural change.
+    const char *arch_name;
 } sp_llama_params_t;
 
 // ============================================================================

@@ -7,6 +7,7 @@
 // See LICENSE in the project root for full terms.
 
 #include "shannon_prime_llama.h"
+#include "shannon_prime_modelpack.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -339,6 +340,31 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
                         role_tag,
                         ctx->freq_factors[0],
                         ctx->freq_factors[n_freqs - 1]);
+            }
+        }
+    }
+
+    // Speculative-decoding hint: when verbose AND we know the arch AND the
+    // resolved preset has a suggested_draft, log a one-line tip. We only
+    // emit this for ROLE_TARGET / ROLE_DEFAULT — emitting it for the draft
+    // would be circular noise. The hint is purely advisory; it doesn't
+    // load anything or alter behaviour.
+    if (params->arch_name && role != SP_LLAMA_ROLE_DRAFT
+        && parse_role_bool("VERBOSE", role, 0))
+    {
+        const sp_model_preset_t *preset = sp_model_preset_resolve(
+            params->arch_name, params->head_dim, params->n_layers, params->n_heads_kv);
+        if (preset) {
+            float accept = 0.0f;
+            const char *draft = sp_model_preset_suggested_draft(preset, &accept);
+            if (draft && *draft) {
+                const char *role_tag =
+                    (role == SP_LLAMA_ROLE_TARGET) ? " [target]" : "";
+                fprintf(stderr, "[Shannon-Prime]%s preset '%s' matched. "
+                        "Suggested draft for speculative decoding: %s "
+                        "(expected acceptance ~%.0f%%). Pass it with "
+                        "llama-cli's -md flag, or ignore for single-model use.\n",
+                        role_tag, preset->name, draft, accept * 100.0f);
             }
         }
     }
