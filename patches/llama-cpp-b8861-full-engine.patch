@@ -268,7 +268,7 @@ index 7b1fcfc..fb7073d 100644
      set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
      target_compile_definitions(llama PRIVATE LLAMA_BUILD)
 diff --git a/src/llama-context.cpp b/src/llama-context.cpp
-index ee0c292..34f8722 100644
+index ee0c292..52fc54e 100644
 --- a/src/llama-context.cpp
 +++ b/src/llama-context.cpp
 @@ -10,6 +10,9 @@
@@ -299,13 +299,25 @@ index ee0c292..34f8722 100644
      if (!model.hparams.no_alloc) {
          for (size_t i = 0; i < backend_ptrs.size(); ++i) {
              ggml_backend_t             backend = backend_ptrs[i];
-@@ -1235,6 +1246,12 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
+@@ -1235,6 +1246,24 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
          return nullptr;
      }
  
 +#ifdef LLAMA_SHANNON_PRIME
 +    if (llama_sp_is_enabled(&model)) {
-+        llama_sp_post_compute(&model, mctx, &ubatch);
++        // Resolve max_bands from env (phase 3 work item 1). Empty/unset =
++        // INT_MAX = full read = sp1/sp2 behaviour. Values < n_bands trigger
++        // partial dispatch once work item 2 lands. Read once at first
++        // process_ubatch and cache; cheap since post_compute fires N times.
++        static int sp_max_bands_cached = []() {
++            const char * v = std::getenv("SHANNON_PRIME_DEFAULT_BANDS");
++            if (v && *v) {
++                int n = std::atoi(v);
++                if (n >= 0) return n;
++            }
++            return std::numeric_limits<int>::max();
++        }();
++        llama_sp_post_compute(&model, mctx, &ubatch, sp_max_bands_cached);
 +    }
 +#endif
 +
@@ -371,10 +383,10 @@ index 0b62dc7..a0a3a63 100644
  
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
-index 0000000..ca70a70
+index 0000000..5113ad0
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,713 @@
+@@ -0,0 +1,730 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -834,10 +846,27 @@ index 0000000..ca70a70
 +
 +extern "C" void llama_sp_post_compute(const struct llama_model * model,
 +                                      const struct llama_memory_context_i * mctx,
-+                                      const struct llama_ubatch * ubatch) {
++                                      const struct llama_ubatch * ubatch,
++                                      int max_bands) {
 +    if (!model || !mctx || !ubatch) return;
 +    const sp_per_model * st = sp_state_for(model);
 +    if (!st || (!st->ctx && !st->sqfree_active)) return;
++
++    // Phase 3 work item 1: max_bands is plumbed through the API but the
++    // round-trip still reads all bands. Wiring sp_band_dequantize_partial
++    // into sp_llama_read_k is work item 2. For now we just log the value
++    // (verbose only) so it's testable that callers are passing it correctly.
++    static std::atomic<bool> max_bands_logged{false};
++    bool expected = false;
++    if (max_bands_logged.compare_exchange_strong(expected, true)) {
++        const char * verbose = std::getenv("SHANNON_PRIME_VERBOSE");
++        if (verbose && verbose[0] == '1') {
++            std::fprintf(stderr,
++                "[Shannon-Prime] post_compute: max_bands=%d (full read until "
++                "phase 3 work item 2 wires partial dispatch)\n", max_bands);
++        }
++    }
++    (void)max_bands;  // silence unused-warning until WI2 lands
 +    // Snapshot the C-level pointers so the inner loop doesn't re-lock
 +    // through sp_state_for() per iteration. Pointers to the map's stored
 +    // sqfree_cache and ctx remain valid for as long as this entry exists,
@@ -1090,10 +1119,10 @@ index 0000000..ca70a70
 +#endif // LLAMA_SHANNON_PRIME
 diff --git a/src/llama-shannon-prime.h b/src/llama-shannon-prime.h
 new file mode 100644
-index 0000000..ec8ccdf
+index 0000000..071b73c
 --- /dev/null
 +++ b/src/llama-shannon-prime.h
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,100 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp.
 +//
 +// Activated when SHANNON_PRIME_ENABLED=1 is set in the environment.
@@ -1172,9 +1201,22 @@ index 0000000..ec8ccdf
 +// shadow cache for the GIVEN MODEL, and writes the reconstructed values
 +// back in place. The model pointer disambiguates target vs. draft when
 +// multiple models share a process (speculative decoding).
++//
++// max_bands clamps how many spectral bands of the SP cache get used in
++// the round-trip. INT_MAX (or any value >= n_bands) reads all bands —
++// the default and sp1/sp2 behaviour. Smaller values trade reconstruction
++// fidelity for read bandwidth, intended for the phase-3 attention
++// short-circuit. Today the parameter is plumbed through but the
++// dequantize itself still reads all bands; wiring sp_band_dequantize_partial
++// into sp_llama_read_k is the next work item (phase 3 work item 2).
++//
++// The caller-side env var SHANNON_PRIME_DEFAULT_BANDS resolves to a
++// max_bands value for callers that don't compute one dynamically.
++// Empty / unset = INT_MAX = full read.
 +void llama_sp_post_compute(const struct llama_model * model,
 +                           const struct llama_memory_context_i * mctx,
-+                           const struct llama_ubatch * ubatch);
++                           const struct llama_ubatch * ubatch,
++                           int max_bands);
 +
 +#ifdef __cplusplus
 +}
