@@ -52,28 +52,6 @@ static int parse_env_bool(const char *name, int default_val) {
     return (v[0] == '1' || v[0] == 'y' || v[0] == 'Y');
 }
 
-static void parse_env_bits(const char *name, int *bits, int n, const int *defaults) {
-    const char *v = getenv(name);
-    if (!v) {
-        memcpy(bits, defaults, n * sizeof(int));
-        return;
-    }
-
-    // Parse comma-separated: "5,5,4,3"
-    int i = 0;
-    const char *p = v;
-    while (i < n && *p) {
-        bits[i++] = atoi(p);
-        while (*p && *p != ',') p++;
-        if (*p == ',') p++;
-    }
-    // Fill remaining with last value
-    while (i < n) {
-        bits[i] = bits[i-1];
-        i++;
-    }
-}
-
 // Variant that infers the band count from the env string's comma count.
 // Returns the number of values parsed (1..max_n), or 0 when the env var
 // is unset. Callers can then use the returned count to override the
@@ -92,12 +70,100 @@ static int parse_env_bits_autocount(const char *name, int *bits, int max_n) {
     return i;
 }
 
+// ── Role-aware env lookup ───────────────────────────────────────────
+//
+// When a context is initialised with role SP_LLAMA_ROLE_DRAFT, each
+// SHANNON_PRIME_<base> lookup first tries SHANNON_PRIME_DRAFT_<base>;
+// only if that's unset does it fall back to the global name. ROLE_DEFAULT
+// and ROLE_TARGET both bypass the prefixed lookup, preserving legacy
+// behaviour.
+//
+// These wrappers compute the right env-var name for the role and then
+// delegate to the existing parse_env_* helpers — keeps the parsing
+// logic in one place.
+
+// Resolves the env-var name for a base + role combination. When role==
+// SP_LLAMA_ROLE_DRAFT and SHANNON_PRIME_DRAFT_<base> is set, returns
+// the DRAFT-prefixed name. Otherwise returns the global name. The
+// returned pointer aliases `out` (caller-provided storage).
+static const char *resolve_role_name(const char *base, sp_llama_role_t role,
+                                     char *out, size_t out_sz) {
+    if (role == SP_LLAMA_ROLE_DRAFT) {
+        snprintf(out, out_sz, "SHANNON_PRIME_DRAFT_%s", base);
+        const char *v = getenv(out);
+        if (v && *v) return out;
+    }
+    snprintf(out, out_sz, "SHANNON_PRIME_%s", base);
+    return out;
+}
+
+static const char *role_getenv(const char *base, sp_llama_role_t role) {
+    char name[160];
+    return getenv(resolve_role_name(base, role, name, sizeof(name)));
+}
+
+static int parse_role_bool(const char *base, sp_llama_role_t role, int default_val) {
+    char name[160];
+    return parse_env_bool(resolve_role_name(base, role, name, sizeof(name)),
+                          default_val);
+}
+
+static int parse_role_bits_autocount(const char *base, sp_llama_role_t role,
+                                     int *bits, int max_n) {
+    char name[160];
+    return parse_env_bits_autocount(
+        resolve_role_name(base, role, name, sizeof(name)), bits, max_n);
+}
+
+// Apply a draft preset's bit allocations as if the user had set
+// SHANNON_PRIME_DRAFT_K_BITS / V_BITS. Real env vars still win — this
+// only fills in defaults. Returns 1 if a known preset was applied,
+// 0 otherwise (unknown preset string is ignored with a warning).
+//
+// Presets (chosen for speculative-decoding draft contexts where
+// occasional acceptance loss is recoverable):
+//   "aggressive" — K=2,1 V=1   (~10× compression, expect 5-15% accept dip)
+//   "ternary"    — K=2,2 V=2   (~7× compression, expect 2-8% accept dip)
+//   "ship"       — defer to ship defaults (no-op, useful as explicit "off")
+static int apply_draft_preset(int *k_bits, int *k_n_bands,
+                              int *v_bits, int *v_n_bands) {
+    const char *preset = getenv("SHANNON_PRIME_DRAFT_PRESET");
+    if (!preset || !*preset) return 0;
+
+    if (strcmp(preset, "aggressive") == 0) {
+        k_bits[0] = 2; k_bits[1] = 1; *k_n_bands = 2;
+        v_bits[0] = 1;                *v_n_bands = 1;
+        return 1;
+    }
+    if (strcmp(preset, "ternary") == 0) {
+        k_bits[0] = 2; k_bits[1] = 2; *k_n_bands = 2;
+        v_bits[0] = 2;                *v_n_bands = 1;
+        return 1;
+    }
+    if (strcmp(preset, "ship") == 0) {
+        // Explicit no-op — caller's existing defaults stand.
+        return 1;
+    }
+    fprintf(stderr, "[Shannon-Prime] unknown SHANNON_PRIME_DRAFT_PRESET '%s' "
+                    "(known: aggressive, ternary, ship); ignoring\n", preset);
+    return 0;
+}
+
 // ============================================================================
 // Lifecycle
 // ============================================================================
 
 sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params) {
-    if (!parse_env_bool("SHANNON_PRIME_ENABLED", 0)) {
+    return sp_llama_init_with_role(params, SP_LLAMA_ROLE_DEFAULT);
+}
+
+sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
+                                        sp_llama_role_t role) {
+    // SHANNON_PRIME_ENABLED is a process-wide kill switch. We honour the
+    // role-aware path here too so a caller can disable SP for the draft
+    // only via SHANNON_PRIME_DRAFT_ENABLED=0 — useful when the draft is
+    // small enough that the SP overhead exceeds the compression payoff.
+    if (!parse_role_bool("ENABLED", role, 0)) {
         return NULL;
     }
 
@@ -131,37 +197,43 @@ sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params) {
         k_defaults        = k_defaults_hd64;
         v_bits_default    = 5;  // hd=64 minimum; 3-bit is catastrophic here
     }
-    int v_defaults[] = { v_bits_default };
     cfg.k_n_bands = k_n_bands_default;
+    memcpy(cfg.k_band_bits, k_defaults, k_n_bands_default * sizeof(int));
+    cfg.v_band_bits[0] = v_bits_default;
+    cfg.v_n_bands      = 1;
+
+    // Draft-preset shortcut: when role==DRAFT and SHANNON_PRIME_DRAFT_PRESET
+    // is set to a known value, pre-fill the band tables. Explicit env vars
+    // below still override.
+    if (role == SP_LLAMA_ROLE_DRAFT) {
+        apply_draft_preset(cfg.k_band_bits, &cfg.k_n_bands,
+                           cfg.v_band_bits, &cfg.v_n_bands);
+    }
 
     // Environment overrides. If SHANNON_PRIME_K_BITS or _V_BITS are set,
     // the number of comma-separated values determines the band count
     // (capped by SP_MAX_BANDS). E.g. `SHANNON_PRIME_K_BITS=3,3,3,3,3`
-    // → 5 bands at 3 bits each. When the env var is unset we fall back
-    // to the head-dim-adaptive defaults.
-    int k_override_n = parse_env_bits_autocount(
-        "SHANNON_PRIME_K_BITS", cfg.k_band_bits, SP_MAX_BANDS);
+    // → 5 bands at 3 bits each. When the env var is unset we keep the
+    // head-dim-adaptive defaults (or draft-preset values if applied).
+    int k_override_n = parse_role_bits_autocount(
+        "K_BITS", role, cfg.k_band_bits, SP_MAX_BANDS);
     if (k_override_n > 0) {
         cfg.k_n_bands = k_override_n;
-    } else {
-        memcpy(cfg.k_band_bits, k_defaults, k_n_bands_default * sizeof(int));
     }
 
-    int v_override_n = parse_env_bits_autocount(
-        "SHANNON_PRIME_V_BITS", cfg.v_band_bits, SP_MAX_BANDS);
+    int v_override_n = parse_role_bits_autocount(
+        "V_BITS", role, cfg.v_band_bits, SP_MAX_BANDS);
     if (v_override_n > 0) {
         cfg.v_n_bands = v_override_n;
-    } else {
-        cfg.v_band_bits[0] = v_bits_default;
-        cfg.v_n_bands      = 1;
     }
-    cfg.use_mobius_mask = parse_env_bool("SHANNON_PRIME_MOBIUS", 1);
+
+    cfg.use_mobius_mask = parse_role_bool("MOBIUS", role, 1);
 
     // Allow the caller to request a specific backend via env var.
     // Valid values: "cpu" (default), "adreno". Unknown values → caller's
     // params->backend is used unchanged.
     sp_llama_params_t p = *params;
-    const char *b = getenv("SHANNON_PRIME_BACKEND");
+    const char *b = role_getenv("BACKEND", role);
     if (b) {
         if (strcmp(b, "cpu") == 0)            p.backend = SP_BACKEND_CPU;
 #ifdef SP_HAVE_ADRENO
@@ -176,10 +248,10 @@ sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params) {
     // Compute lattice-aligned freq_factors at init. The llama.cpp patch
     // retrieves these via sp_llama_get_freq_factors() and writes them
     // into model.layers[*].rope_freqs. Zero per-token cost.
-    int pe_enabled = parse_env_bool("SHANNON_PRIME_PE", 1);  // on by default
+    int pe_enabled = parse_role_bool("PE", role, 1);  // on by default
     if (pe_enabled && params->head_dim > 0) {
         float pe_alpha = 0.17f;
-        const char *alpha_str = getenv("SHANNON_PRIME_PE_ALPHA");
+        const char *alpha_str = role_getenv("PE_ALPHA", role);
         if (alpha_str) pe_alpha = (float)atof(alpha_str);
 
         // freq_base: default 10000.0, but models vary (500000 for Qwen, etc.)
@@ -188,7 +260,7 @@ sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params) {
         // whatever base the model uses, and the lattice normalization
         // adapts to the geometric range.
         float freq_base = 10000.0f;
-        const char *fb_str = getenv("SHANNON_PRIME_FREQ_BASE");
+        const char *fb_str = role_getenv("FREQ_BASE", role);
         if (fb_str) freq_base = (float)atof(fb_str);
 
         int n_freqs = params->head_dim / 2;
@@ -196,13 +268,17 @@ sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params) {
         ctx->n_freqs = (ctx->freq_factors != NULL) ? n_freqs : 0;
 
         if (ctx->freq_factors) {
-            int verbose = parse_env_bool("SHANNON_PRIME_VERBOSE", 0);
+            int verbose = parse_role_bool("VERBOSE", role, 0);
             if (verbose) {
-                fprintf(stderr, "[Shannon-Prime] PrimePE enabled: α=%.2f, "
+                const char *role_tag =
+                    (role == SP_LLAMA_ROLE_DRAFT)  ? " [draft]"  :
+                    (role == SP_LLAMA_ROLE_TARGET) ? " [target]" : "";
+                fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: α=%.2f, "
                         "freq_base=%.0f, %d freq pairs\n",
-                        pe_alpha, freq_base, n_freqs);
-                fprintf(stderr, "[Shannon-Prime] PrimePE factor range: "
+                        role_tag, pe_alpha, freq_base, n_freqs);
+                fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
                         "[%.4f, %.4f]\n",
+                        role_tag,
                         ctx->freq_factors[0],
                         ctx->freq_factors[n_freqs - 1]);
             }

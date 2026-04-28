@@ -39,6 +39,17 @@
 //   SHANNON_PRIME_PE_ALPHA=0.17     Lattice blend ratio (default: 0.17, range 0.15-0.22)
 //   SHANNON_PRIME_FREQ_BASE=10000   Override rope_freq_base (auto-detected when possible)
 //
+// Speculative-decoding draft overrides (see sp_llama_init_with_role and
+// docs/SPECULATIVE-DECODING.md). When a context is initialised with role
+// SP_LLAMA_ROLE_DRAFT, each SHANNON_PRIME_X lookup tries the DRAFT_-prefixed
+// version first and falls back to the global one if unset:
+//   SHANNON_PRIME_DRAFT_K_BITS=2,1     Aggressive draft K bands
+//   SHANNON_PRIME_DRAFT_V_BITS=1       Aggressive draft V bits
+//   SHANNON_PRIME_DRAFT_MOBIUS=1       Override Möbius for draft only
+//   SHANNON_PRIME_DRAFT_PE=0           Disable PrimePE on draft only
+//   SHANNON_PRIME_DRAFT_PRESET=aggressive   Shortcut — picks K=2,1 V=1
+//                                            ("ternary"=2,2 / "ship"=defaults)
+//
 // Activation:
 //   #include "shannon_prime_llama.h"
 //
@@ -89,13 +100,55 @@ typedef struct {
 
 typedef struct sp_llama_ctx_s sp_llama_ctx_t;
 
+// Context role — disambiguates the target and draft contexts in a
+// speculative-decoding pair. Used by sp_llama_init_with_role() to look
+// up role-specific environment variables (e.g. SHANNON_PRIME_DRAFT_K_BITS)
+// before falling back to the global SHANNON_PRIME_* names.
+//
+// SP_LLAMA_ROLE_DEFAULT preserves the historical behaviour: only the
+// global SHANNON_PRIME_* env vars are read. sp_llama_init() is now a
+// thin wrapper that calls sp_llama_init_with_role(p, ROLE_DEFAULT).
+//
+// SP_LLAMA_ROLE_TARGET behaves identically to ROLE_DEFAULT today —
+// reserved for future use if target-only env vars are ever introduced.
+//
+// SP_LLAMA_ROLE_DRAFT routes through the role-aware getenv path: each
+// SHANNON_PRIME_X lookup first tries SHANNON_PRIME_DRAFT_X, then falls
+// back to SHANNON_PRIME_X. This lets a speculative deployment compress
+// the draft cache more aggressively than the target without affecting
+// the target's defaults. Also enables the SHANNON_PRIME_DRAFT_PRESET
+// shortcut.
+typedef enum {
+    SP_LLAMA_ROLE_DEFAULT = 0,
+    SP_LLAMA_ROLE_TARGET  = 1,
+    SP_LLAMA_ROLE_DRAFT   = 2,
+} sp_llama_role_t;
+
 // ============================================================================
 // Lifecycle
 // ============================================================================
 
 // Initialize from environment variables + model params.
 // Returns NULL if SHANNON_PRIME_ENABLED is not set.
+//
+// Equivalent to sp_llama_init_with_role(params, SP_LLAMA_ROLE_DEFAULT).
 sp_llama_ctx_t *sp_llama_init(const sp_llama_params_t *params);
+
+// Role-aware initialiser. Same as sp_llama_init() except env-var lookups
+// honour `role` — when role==SP_LLAMA_ROLE_DRAFT, each lookup tries
+// SHANNON_PRIME_DRAFT_X before falling back to SHANNON_PRIME_X. Intended
+// for speculative-decoding integrations that want differential KV
+// compression on the draft context.
+//
+// Today's caller-side workflow:
+//   sp_llama_ctx_t *target = sp_llama_init_with_role(&p, SP_LLAMA_ROLE_TARGET);
+//   sp_llama_ctx_t *draft  = sp_llama_init_with_role(&q, SP_LLAMA_ROLE_DRAFT);
+//
+// The llama.cpp speculative-init patch surgery to actually call this
+// from the draft path is a separate work item (see FUTURE-WORK §8a).
+// Until that lands, behaviour is identical to sp_llama_init().
+sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
+                                        sp_llama_role_t role);
 
 // Initialize with explicit config (for programmatic use).
 sp_llama_ctx_t *sp_llama_init_config(const sp_llama_params_t *params,
