@@ -96,7 +96,7 @@ diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index 7b1fcfc..fb7073d 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -53,6 +53,170 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+@@ -53,6 +53,202 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
  
  target_link_libraries(llama PUBLIC ggml)
  
@@ -176,6 +176,38 @@ index 7b1fcfc..fb7073d 100644
 +        list(APPEND _SP_CORE_SOURCES ${_SP_BACK}/vulkan/shannon_prime_vulkan.c)
 +        list(APPEND _SP_DEFS SP_HAVE_VULKAN)
 +        message(STATUS "Shannon-Prime: linking Vulkan backend (SP_HAVE_VULKAN)")
++    endif()
++
++    # --- Hexagon (Snapdragon cDSP via FastRPC) backend ---
++    # Opt-in: requires the Hexagon SDK on the host (for AEEStdDef.h /
++    # FastRPC headers under HEXAGON_SDK_ROOT) and a separately-built
++    # libsp_hex_skel.so on the device.
++    #
++    # The ARM-side stub (sp_hex_stub.c, IDL-generated) talks to the DSP
++    # over FastRPC; the DSP-side .so is loaded at runtime via
++    # ADSP_LIBRARY_PATH and is NOT compiled here. Caller is expected to
++    # link libcdsprpc.so (system) + librpcmem.a (Hexagon SDK).
++    option(SP_HAVE_HEXAGON "Shannon-Prime: enable Hexagon cDSP backend (Android/Snapdragon)" OFF)
++    if (SP_HAVE_HEXAGON AND NOT ANDROID)
++        message(WARNING "SP_HAVE_HEXAGON requested but build target is not Android - disabling.")
++        set(SP_HAVE_HEXAGON OFF)
++    endif()
++    if (SP_HAVE_HEXAGON)
++        if (NOT HEXAGON_SDK_ROOT)
++            message(FATAL_ERROR "SP_HAVE_HEXAGON=ON but HEXAGON_SDK_ROOT is not set. "
++                    "Point it at your Hexagon SDK install (containing incs/AEEStdDef.h).")
++        endif()
++        list(APPEND _SP_CORE_SOURCES
++            ${_SP_BACK}/hexagon/shannon_prime_hexagon.c
++            ${_SP_BACK}/hexagon/sp_hex_stub.c
++        )
++        list(APPEND _SP_INCLUDES
++            ${_SP_BACK}/hexagon
++            ${HEXAGON_SDK_ROOT}/incs
++            ${HEXAGON_SDK_ROOT}/incs/stddef
++        )
++        list(APPEND _SP_DEFS SP_HAVE_HEXAGON SP_HEXAGON_FASTRPC)
++        message(STATUS "Shannon-Prime: linking Hexagon cDSP backend (SP_HAVE_HEXAGON, FastRPC)")
 +    endif()
 +
 +    # Build the core C library
