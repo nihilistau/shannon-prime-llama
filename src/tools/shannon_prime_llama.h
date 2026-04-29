@@ -229,6 +229,23 @@ void sp_llama_read_v(const sp_llama_ctx_t *ctx,
                      int layer, int head, int pos,
                      float *v_out);
 
+// Partial reads — reconstruct using only the first `max_bands` spectral
+// bands of the SP cache. Phase 3 attention short-circuit: read band 0
+// only first (cheap), check confidence, promote to bands 0+1, etc.
+//
+// max_bands < 0 OR >= n_bands behaves identically to sp_llama_read_{k,v}
+// (full reconstruction). max_bands == 0 returns an all-zero vector.
+//
+// Today only the CPU shadow path implements partial reads. Adreno (and
+// future CUDA / Vulkan) backends fall back to the full read with a
+// one-shot warning until their per-backend partial paths land.
+void sp_llama_read_k_partial(const sp_llama_ctx_t *ctx,
+                             int layer, int head, int pos,
+                             float *k_out, int max_bands);
+void sp_llama_read_v_partial(const sp_llama_ctx_t *ctx,
+                             int layer, int head, int pos,
+                             float *v_out, int max_bands);
+
 // Batch read (reconstruct n_pos vectors into contiguous output)
 void sp_llama_read_k_batch(const sp_llama_ctx_t *ctx,
                            int layer, int head,
