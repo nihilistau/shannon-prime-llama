@@ -383,10 +383,10 @@ index 0b62dc7..a0a3a63 100644
  
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
-index 0000000..5113ad0
+index 0000000..267f83d
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,730 @@
+@@ -0,0 +1,733 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -852,21 +852,24 @@ index 0000000..5113ad0
 +    const sp_per_model * st = sp_state_for(model);
 +    if (!st || (!st->ctx && !st->sqfree_active)) return;
 +
-+    // Phase 3 work item 1: max_bands is plumbed through the API but the
-+    // round-trip still reads all bands. Wiring sp_band_dequantize_partial
-+    // into sp_llama_read_k is work item 2. For now we just log the value
-+    // (verbose only) so it's testable that callers are passing it correctly.
++    // Phase 3 work item 2: max_bands is now actually used. The shadow
++    // (WHT) reads dispatch through sp_llama_read_{k,v}_partial which
++    // calls sp_band_dequantize_partial under the hood. When
++    // max_bands >= n_bands the partial path is byte-identical to the
++    // full path (it just returns early on the band-loop bound check),
++    // so this is fully backward-compatible. The sqfree path doesn't
++    // have a partial implementation yet — sqfree reads keep using
++    // the full sp_sqfree_read_{k,v} routines.
 +    static std::atomic<bool> max_bands_logged{false};
 +    bool expected = false;
 +    if (max_bands_logged.compare_exchange_strong(expected, true)) {
 +        const char * verbose = std::getenv("SHANNON_PRIME_VERBOSE");
 +        if (verbose && verbose[0] == '1') {
 +            std::fprintf(stderr,
-+                "[Shannon-Prime] post_compute: max_bands=%d (full read until "
-+                "phase 3 work item 2 wires partial dispatch)\n", max_bands);
++                "[Shannon-Prime] post_compute: max_bands=%d (partial dispatch "
++                "active when < n_bands; sqfree path always full)\n", max_bands);
 +        }
 +    }
-+    (void)max_bands;  // silence unused-warning until WI2 lands
 +    // Snapshot the C-level pointers so the inner loop doesn't re-lock
 +    // through sp_state_for() per iteration. Pointers to the map's stored
 +    // sqfree_cache and ctx remain valid for as long as this entry exists,
@@ -995,8 +998,8 @@ index 0000000..5113ad0
 +                    sp_sqfree_write_k(sqfree_cache, il, h, 0, gather);
 +                    sp_sqfree_read_k (sqfree_cache, il, h, 0, recon);
 +                } else {
-+                    sp_llama_write_k(sp_ctx, il, h, 0, gather);
-+                    sp_llama_read_k (sp_ctx, il, h, 0, recon);
++                    sp_llama_write_k        (sp_ctx, il, h, 0, gather);
++                    sp_llama_read_k_partial (sp_ctx, il, h, 0, recon, max_bands);
 +                }
 +
 +                scatter_vec(k, off, hd_k, recon);
@@ -1032,8 +1035,8 @@ index 0000000..5113ad0
 +                                sp_sqfree_write_v(sqfree_cache, il, h, 0, gather);
 +                                sp_sqfree_read_v (sqfree_cache, il, h, 0, recon);
 +                            } else {
-+                                sp_llama_write_v(sp_ctx, il, h, 0, gather);
-+                                sp_llama_read_v (sp_ctx, il, h, 0, recon);
++                                sp_llama_write_v        (sp_ctx, il, h, 0, gather);
++                                sp_llama_read_v_partial (sp_ctx, il, h, 0, recon, max_bands);
 +                            }
 +
 +                            scatter_vec(v, off, hd_v, recon);
@@ -1090,8 +1093,8 @@ index 0000000..5113ad0
 +                                sp_sqfree_write_v(sqfree_cache, il, h, 0, gather);
 +                                sp_sqfree_read_v (sqfree_cache, il, h, 0, recon);
 +                            } else {
-+                                sp_llama_write_v(sp_ctx, il, h, 0, gather);
-+                                sp_llama_read_v (sp_ctx, il, h, 0, recon);
++                                sp_llama_write_v        (sp_ctx, il, h, 0, gather);
++                                sp_llama_read_v_partial (sp_ctx, il, h, 0, recon, max_bands);
 +                            }
 +
 +                            // Scatter the reconstructed values back to the

@@ -582,6 +582,57 @@ void sp_llama_read_v(const sp_llama_ctx_t *ctx,
     }
 }
 
+void sp_llama_read_k_partial(const sp_llama_ctx_t *ctx,
+                             int layer, int head, int pos,
+                             float *k_out, int max_bands) {
+    switch (ctx->active_backend) {
+    case SP_BACKEND_CPU:
+    default:
+        sp_shadow_read_k_partial(&ctx->cpu_cache, layer, head, pos, k_out, max_bands);
+        break;
+#ifdef SP_HAVE_ADRENO
+    case SP_BACKEND_ADRENO: {
+        // Adreno doesn't have a partial path yet; fall back to full read.
+        // One-shot warning so the user knows they're not getting the IO win
+        // until that backend gets its partial dispatch.
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] adreno backend has no partial read; "
+                            "falling back to full read (max_bands=%d ignored)\n",
+                            max_bands);
+            warned = 1;
+        }
+        sp_adreno_read_k(&ctx->adreno_cache, layer, head, pos, k_out);
+        break;
+    }
+#endif
+    }
+}
+
+void sp_llama_read_v_partial(const sp_llama_ctx_t *ctx,
+                             int layer, int head, int pos,
+                             float *v_out, int max_bands) {
+    switch (ctx->active_backend) {
+    case SP_BACKEND_CPU:
+    default:
+        sp_shadow_read_v_partial(&ctx->cpu_cache, layer, head, pos, v_out, max_bands);
+        break;
+#ifdef SP_HAVE_ADRENO
+    case SP_BACKEND_ADRENO: {
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] adreno backend has no partial read; "
+                            "falling back to full read (max_bands=%d ignored)\n",
+                            max_bands);
+            warned = 1;
+        }
+        sp_adreno_read_v(&ctx->adreno_cache, layer, head, pos, v_out);
+        break;
+    }
+#endif
+    }
+}
+
 void sp_llama_read_k_batch(const sp_llama_ctx_t *ctx,
                            int layer, int head,
                            int start_pos, int n_pos,
