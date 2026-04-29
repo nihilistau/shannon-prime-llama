@@ -13,10 +13,16 @@
 #include <stdio.h>
 
 // Build-time backend gates. Define SP_HAVE_ADRENO when linking against
-// backends/adreno/shannon_prime_adreno.c. The other backends remain
-// commented out here until their bridge cases are written.
+// backends/adreno/shannon_prime_adreno.c, SP_HAVE_HEXAGON when linking
+// the FastRPC engine implementation at
+// backends/hexagon/shannon_prime_hexagon.c (which itself requires
+// SP_HEXAGON_FASTRPC at its compile site, since it pulls in rpcmem.h /
+// remote.h / sp_hex.h from the qaic-generated FastRPC stubs).
 #ifdef SP_HAVE_ADRENO
   #include "../backends/adreno/shannon_prime_adreno.h"
+#endif
+#ifdef SP_HAVE_HEXAGON
+  #include "../backends/hexagon/shannon_prime_hexagon.h"
 #endif
 
 // ============================================================================
@@ -31,6 +37,16 @@ struct sp_llama_ctx_s {
     sp_shadow_cache_t  cpu_cache;      // CPU backend — always compiled
 #ifdef SP_HAVE_ADRENO
     sp_adreno_cache_t  adreno_cache;   // ARM NEON (Tier 1/2) backend
+#endif
+#ifdef SP_HAVE_HEXAGON
+    // Snapdragon cDSP backend (Hexagon V69+ via FastRPC + HVX). The
+    // engine-side ctx (sp_hexagon_ctx_t) holds the FastRPC session and
+    // rpcmem-backed scratch; per-position packed-bytes storage is
+    // shared with cpu_cache for now, with the DSP doing the
+    // compress/decompress work via the engine API. A dedicated
+    // sp_hexagon_cache_t with rpcmem-backed packed-byte storage is the
+    // next layer once write/read decoupling lands.
+    struct sp_hexagon_ctx_s *hexagon_ctx;
 #endif
     // sp_cuda_cache_t    cuda_cache;  // CUDA backend (when linked)
     // sp_vulkan_cache_t *vulkan_cache; // Vulkan backend
@@ -277,6 +293,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     const char *b = role_getenv("BACKEND", role);
     if (b) {
         if (strcmp(b, "cpu") == 0)            p.backend = SP_BACKEND_CPU;
+        else if (strcmp(b, "hexagon") == 0)   p.backend = SP_BACKEND_HEXAGON;
 #ifdef SP_HAVE_ADRENO
         else if (strcmp(b, "adreno") == 0)    p.backend = SP_BACKEND_ADRENO;
 #endif
@@ -414,6 +431,60 @@ sp_llama_ctx_t *sp_llama_init_config(const sp_llama_params_t *params,
         break;
     }
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON: {
+        // Engine API: sp_hexagon_init opens a FastRPC session against
+        // libsp_hex_skel.so on the cDSP, enables unsigned PD (required
+        // for unsigned developer builds), pre-allocates rpcmem-backed
+        // ping-pong scratch (RPCMEM_TRY_MAP_STATIC pre-maps to DSP),
+        // acquires VTCM. Returns NULL if the DSP is unreachable —
+        // we fall back to CPU in that case so the model still runs.
+        ctx->hexagon_ctx = sp_hexagon_init(cfg);
+        if (!ctx->hexagon_ctx) {
+            fprintf(stderr,
+                "[Shannon-Prime] Hexagon backend requested but DSP "
+                "unreachable; falling back to CPU\n");
+            // Init the CPU cache so reads/writes still work via
+            // shadow_cache. active_backend is updated below.
+            if (sp_shadow_cache_init(&ctx->cpu_cache, cfg) != 0) {
+                free(ctx);
+                return NULL;
+            }
+            int n_slots = cfg->n_layers * cfg->n_heads_kv;
+            ctx->cpu_cache.k_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+            ctx->cpu_cache.v_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+            for (int i = 0; i < n_slots; i++) {
+                ctx->cpu_cache.k_cache[i] = (uint8_t *)calloc(
+                    params->max_seq_len, ctx->cpu_cache.k_bands.total_bytes);
+                ctx->cpu_cache.v_cache[i] = (uint8_t *)calloc(
+                    params->max_seq_len, ctx->cpu_cache.v_bands.total_bytes);
+            }
+            ctx->active_backend = SP_BACKEND_CPU;
+            break;
+        }
+        // Hexagon backend uses CPU's packed-byte storage; the DSP just
+        // does compress/decompress work. Init the CPU cache too — it
+        // owns the per-position packed-bytes for now. A dedicated
+        // sp_hexagon_cache_t with rpcmem-backed packed storage is the
+        // next layer (TODO: add band_quantize-only IDL method + cache
+        // wrapper functions in the engine API).
+        if (sp_shadow_cache_init(&ctx->cpu_cache, cfg) != 0) {
+            sp_hexagon_free(ctx->hexagon_ctx);
+            free(ctx);
+            return NULL;
+        }
+        int n_slots = cfg->n_layers * cfg->n_heads_kv;
+        ctx->cpu_cache.k_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+        ctx->cpu_cache.v_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+        for (int i = 0; i < n_slots; i++) {
+            ctx->cpu_cache.k_cache[i] = (uint8_t *)calloc(
+                params->max_seq_len, ctx->cpu_cache.k_bands.total_bytes);
+            ctx->cpu_cache.v_cache[i] = (uint8_t *)calloc(
+                params->max_seq_len, ctx->cpu_cache.v_bands.total_bytes);
+        }
+        break;
+    }
+#endif
     // case SP_BACKEND_CUDA: ...
     // case SP_BACKEND_VULKAN: ...
     }
@@ -446,6 +517,24 @@ void sp_llama_free(sp_llama_ctx_t *ctx) {
         sp_adreno_cache_free(&ctx->adreno_cache);
         break;
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON: {
+        // Tear down the cDSP session first (closes FastRPC handle,
+        // releases VTCM, frees rpcmem ping-pong scratch). Then free
+        // the CPU-side packed-byte storage we share with the CPU
+        // backend.
+        if (ctx->hexagon_ctx) sp_hexagon_free(ctx->hexagon_ctx);
+        int n_slots = ctx->config.n_layers * ctx->config.n_heads_kv;
+        for (int i = 0; i < n_slots; i++) {
+            free(ctx->cpu_cache.k_cache[i]);
+            free(ctx->cpu_cache.v_cache[i]);
+        }
+        free(ctx->cpu_cache.k_cache);
+        free(ctx->cpu_cache.v_cache);
+        sp_shadow_cache_free(&ctx->cpu_cache);
+        break;
+    }
+#endif
     }
 
     free(ctx->freq_factors);
@@ -469,6 +558,21 @@ int sp_llama_get_n_freqs(const sp_llama_ctx_t *ctx) {
 // ============================================================================
 // Write path
 // ============================================================================
+//
+// SP_BACKEND_HEXAGON note: there's no explicit case for HEXAGON in the
+// read/write switch sites below. That's deliberate — the `default:`
+// label at each switch routes to the CPU path (sp_shadow_*), and the
+// Hexagon backend currently shares the CPU's packed-byte storage. The
+// DSP-side compress/decompress work isn't on the per-vector hot path
+// yet; it'll be wired in when the engine API grows
+// sp_hexagon_cache_write_k / read_k wrappers backed by rpcmem-resident
+// packed storage. Until then, the HEXAGON case is "init the engine
+// session for future use, but write/read still go through CPU."
+//
+// This means installing SP_BACKEND_HEXAGON in production today gives
+// you a working session with the FastRPC handle warmed up + VTCM
+// acquired + ping-pong scratch ready, but no actual DSP offload on
+// each KV write/read. That's the next layer of integration work.
 
 void sp_llama_write_kv(sp_llama_ctx_t *ctx,
                        int layer, int head, int pos,
