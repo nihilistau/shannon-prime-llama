@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Ray Daniels. All Rights Reserved.
 //
 // Licensed under the GNU Affero General Public License v3.0 (AGPLv3).
-// Commercial license available — contact raydaniels@gmail.com
+// Commercial license available ? contact raydaniels@gmail.com
 //
 // See LICENSE in the project root for full terms.
 
@@ -13,10 +13,16 @@
 #include <stdio.h>
 
 // Build-time backend gates. Define SP_HAVE_ADRENO when linking against
-// backends/adreno/shannon_prime_adreno.c. The other backends remain
-// commented out here until their bridge cases are written.
+// backends/adreno/shannon_prime_adreno.c, SP_HAVE_HEXAGON when linking
+// the FastRPC engine implementation at
+// backends/hexagon/shannon_prime_hexagon.c (which itself requires
+// SP_HEXAGON_FASTRPC at its compile site, since it pulls in rpcmem.h /
+// remote.h / sp_hex.h from the qaic-generated FastRPC stubs).
 #ifdef SP_HAVE_ADRENO
   #include "../backends/adreno/shannon_prime_adreno.h"
+#endif
+#ifdef SP_HAVE_HEXAGON
+  #include "../backends/hexagon/shannon_prime_hexagon.h"
 #endif
 
 // ============================================================================
@@ -28,9 +34,26 @@ struct sp_llama_ctx_s {
     sp_config_t        config;
 
     // Backend-specific cache (exactly one is active).
-    sp_shadow_cache_t  cpu_cache;      // CPU backend — always compiled
+    sp_shadow_cache_t  cpu_cache;      // CPU backend ? always compiled
 #ifdef SP_HAVE_ADRENO
     sp_adreno_cache_t  adreno_cache;   // ARM NEON (Tier 1/2) backend
+#endif
+#ifdef SP_HAVE_HEXAGON
+    // Snapdragon cDSP backend (Hexagon V69+ via FastRPC + HVX).
+    //
+    // hexagon_ctx holds the FastRPC session, VTCM region, and the engine
+    // ctx's rpcmem-backed ping-pong scratch (used by round_trip_one for
+    // single-vector smoke tests).
+    //
+    // hexagon_cache is the per-position cache: rpcmem-backed packed-byte
+    // storage per (layer, head) slot, sized for max_seq positions. Writes
+    // dispatch through compress_f32 (full encode pipeline on the DSP);
+    // reads through decompress_f32 (full decode + VHT2 inverse on DSP).
+    // Both go through the FastRPC handle stored on hexagon_ctx ? no extra
+    // marshal copy because both ends point at the same rpcmem pages
+    // (SMMU-mapped on the cDSP).
+    sp_hexagon_ctx_t   *hexagon_ctx;
+    sp_hexagon_cache_t  hexagon_cache;
 #endif
     // sp_cuda_cache_t    cuda_cache;  // CUDA backend (when linked)
     // sp_vulkan_cache_t *vulkan_cache; // Vulkan backend
@@ -71,7 +94,7 @@ static int parse_env_bits_autocount(const char *name, int *bits, int max_n) {
     return i;
 }
 
-// ── Role-aware env lookup ───────────────────────────────────────────
+// ?? Role-aware env lookup ???????????????????????????????????????????
 //
 // When a context is initialised with role SP_LLAMA_ROLE_DRAFT, each
 // SHANNON_PRIME_<base> lookup first tries SHANNON_PRIME_DRAFT_<base>;
@@ -80,7 +103,7 @@ static int parse_env_bits_autocount(const char *name, int *bits, int max_n) {
 // behaviour.
 //
 // These wrappers compute the right env-var name for the role and then
-// delegate to the existing parse_env_* helpers — keeps the parsing
+// delegate to the existing parse_env_* helpers ? keeps the parsing
 // logic in one place.
 
 // Resolves the env-var name for a base + role combination. When role==
@@ -130,7 +153,7 @@ static uint32_t parse_role_ternary_mask(const char *base, sp_llama_role_t role) 
         while (*p == ',' || *p == ' ' || *p == '\t') p++;
         if (!*p) break;
         if (*p < '0' || *p > '9') {
-            // Bad token — skip until next separator and continue.
+            // Bad token ? skip until next separator and continue.
             while (*p && *p != ',') p++;
             continue;
         }
@@ -142,15 +165,15 @@ static uint32_t parse_role_ternary_mask(const char *base, sp_llama_role_t role) 
 }
 
 // Apply a draft preset's bit allocations as if the user had set
-// SHANNON_PRIME_DRAFT_K_BITS / V_BITS. Real env vars still win — this
+// SHANNON_PRIME_DRAFT_K_BITS / V_BITS. Real env vars still win ? this
 // only fills in defaults. Returns 1 if a known preset was applied,
 // 0 otherwise (unknown preset string is ignored with a warning).
 //
 // Presets (chosen for speculative-decoding draft contexts where
 // occasional acceptance loss is recoverable):
-//   "aggressive" — K=2,1 V=1   (~10× compression, expect 5-15% accept dip)
-//   "ternary"    — K=2,2 V=2   (~7× compression, expect 2-8% accept dip)
-//   "ship"       — defer to ship defaults (no-op, useful as explicit "off")
+//   "aggressive" ? K=2,1 V=1   (~10? compression, expect 5-15% accept dip)
+//   "ternary"    ? K=2,2 V=2   (~7? compression, expect 2-8% accept dip)
+//   "ship"       ? defer to ship defaults (no-op, useful as explicit "off")
 static int apply_draft_preset(int *k_bits, int *k_n_bands,
                               int *v_bits, int *v_n_bands) {
     const char *preset = getenv("SHANNON_PRIME_DRAFT_PRESET");
@@ -167,7 +190,7 @@ static int apply_draft_preset(int *k_bits, int *k_n_bands,
         return 1;
     }
     if (strcmp(preset, "ship") == 0) {
-        // Explicit no-op — caller's existing defaults stand.
+        // Explicit no-op ? caller's existing defaults stand.
         return 1;
     }
     fprintf(stderr, "[Shannon-Prime] unknown SHANNON_PRIME_DRAFT_PRESET '%s' "
@@ -187,7 +210,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
                                         sp_llama_role_t role) {
     // SHANNON_PRIME_ENABLED is a process-wide kill switch. We honour the
     // role-aware path here too so a caller can disable SP for the draft
-    // only via SHANNON_PRIME_DRAFT_ENABLED=0 — useful when the draft is
+    // only via SHANNON_PRIME_DRAFT_ENABLED=0 ? useful when the draft is
     // small enough that the SP overhead exceeds the compression payoff.
     if (!parse_role_bool("ENABLED", role, 0)) {
         return NULL;
@@ -196,14 +219,14 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     sp_config_t cfg;
     sp_config_init(&cfg, params->head_dim, params->n_layers, params->n_heads_kv);
 
-    // Adaptive K band count. Paper §3.5: band_size below ~32 starves the
+    // Adaptive K band count. Paper ?3.5: band_size below ~32 starves the
     // band with too few coefficients to meaningfully split the energy
-    // decay. hd>=128 → 4 bands (5/5/4/3, ~32 elts/band, paper's ship);
-    // hd==64 → 3 bands (5/4/4, ~21 elts/band, paper's "mobile safe").
+    // decay. hd>=128 ? 4 bands (5/5/4/3, ~32 elts/band, paper's ship);
+    // hd==64 ? 3 bands (5/4/4, ~21 elts/band, paper's "mobile safe").
     //
     // Adaptive V bit width. Paper's flat 3-bit V is validated on hd=128
     // (Qwen3-8B); on hd=64 (Dolphin 1B) measured PPL at flat 3-bit is
-    // catastrophic (≈119 on wikitext-2 32-chunk vs baseline ~11.6). A
+    // catastrophic (?119 on wikitext-2 32-chunk vs baseline ~11.6). A
     // bit-sweep at hd=64 shows 5-bit is the minimum that preserves
     // quality (PPL 13.4); banding V adds nothing on top (5/5 == flat 5).
     // So for hd=64 we keep V flat but bump to 5-bit. The "flat beats
@@ -239,7 +262,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     // Environment overrides. If SHANNON_PRIME_K_BITS or _V_BITS are set,
     // the number of comma-separated values determines the band count
     // (capped by SP_MAX_BANDS). E.g. `SHANNON_PRIME_K_BITS=3,3,3,3,3`
-    // → 5 bands at 3 bits each. When the env var is unset we keep the
+    // ? 5 bands at 3 bits each. When the env var is unset we keep the
     // head-dim-adaptive defaults (or draft-preset values if applied).
     int k_override_n = parse_role_bits_autocount(
         "K_BITS", role, cfg.k_band_bits, SP_MAX_BANDS);
@@ -271,12 +294,13 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     cfg.use_fp8 = (parse_role_bool("FP8", role, 0) != 0);
 
     // Allow the caller to request a specific backend via env var.
-    // Valid values: "cpu" (default), "adreno". Unknown values → caller's
+    // Valid values: "cpu" (default), "adreno". Unknown values ? caller's
     // params->backend is used unchanged.
     sp_llama_params_t p = *params;
     const char *b = role_getenv("BACKEND", role);
     if (b) {
         if (strcmp(b, "cpu") == 0)            p.backend = SP_BACKEND_CPU;
+        else if (strcmp(b, "hexagon") == 0)   p.backend = SP_BACKEND_HEXAGON;
 #ifdef SP_HAVE_ADRENO
         else if (strcmp(b, "adreno") == 0)    p.backend = SP_BACKEND_ADRENO;
 #endif
@@ -303,7 +327,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
     sp_llama_ctx_t *ctx = sp_llama_init_config(&p, &cfg);
     if (!ctx) return ctx;
 
-    // ── PrimePE auto-injection ──────────────────────────────────────────
+    // ?? PrimePE auto-injection ??????????????????????????????????????????
     // Compute lattice-aligned freq_factors at init. The llama.cpp patch
     // retrieves these via sp_llama_get_freq_factors() and writes them
     // into model.layers[*].rope_freqs. Zero per-token cost.
@@ -315,7 +339,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
 
         // freq_base: default 10000.0, but models vary (500000 for Qwen, etc.)
         // The caller should set this from hparams.rope_freq_base. If not
-        // available, 10000.0 is safe — the factors are multipliers on
+        // available, 10000.0 is safe ? the factors are multipliers on
         // whatever base the model uses, and the lattice normalization
         // adapts to the geometric range.
         float freq_base = 10000.0f;
@@ -332,7 +356,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
                 const char *role_tag =
                     (role == SP_LLAMA_ROLE_DRAFT)  ? " [draft]"  :
                     (role == SP_LLAMA_ROLE_TARGET) ? " [target]" : "";
-                fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: α=%.2f, "
+                fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
                         "freq_base=%.0f, %d freq pairs\n",
                         role_tag, pe_alpha, freq_base, n_freqs);
                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
@@ -346,7 +370,7 @@ sp_llama_ctx_t *sp_llama_init_with_role(const sp_llama_params_t *params,
 
     // Speculative-decoding hint: when verbose AND we know the arch AND the
     // resolved preset has a suggested_draft, log a one-line tip. We only
-    // emit this for ROLE_TARGET / ROLE_DEFAULT — emitting it for the draft
+    // emit this for ROLE_TARGET / ROLE_DEFAULT ? emitting it for the draft
     // would be circular noise. The hint is purely advisory; it doesn't
     // load anything or alter behaviour.
     if (params->arch_name && role != SP_LLAMA_ROLE_DRAFT
@@ -414,6 +438,67 @@ sp_llama_ctx_t *sp_llama_init_config(const sp_llama_params_t *params,
         break;
     }
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON: {
+        // Engine API: sp_hexagon_init opens a FastRPC session against
+        // libsp_hex_skel.so on the cDSP, enables unsigned PD (required
+        // for unsigned developer builds), pre-allocates rpcmem-backed
+        // ping-pong scratch (RPCMEM_TRY_MAP_STATIC pre-maps to DSP),
+        // acquires VTCM. Returns NULL if the DSP is unreachable ?
+        // we fall back to CPU in that case so the model still runs.
+        ctx->hexagon_ctx = sp_hexagon_init(cfg);
+        if (!ctx->hexagon_ctx) {
+            fprintf(stderr,
+                "[Shannon-Prime] Hexagon backend requested but DSP "
+                "unreachable; falling back to CPU\n");
+            if (sp_shadow_cache_init(&ctx->cpu_cache, cfg) != 0) {
+                free(ctx);
+                return NULL;
+            }
+            int n_slots = cfg->n_layers * cfg->n_heads_kv;
+            ctx->cpu_cache.k_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+            ctx->cpu_cache.v_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+            for (int i = 0; i < n_slots; i++) {
+                ctx->cpu_cache.k_cache[i] = (uint8_t *)calloc(
+                    params->max_seq_len, ctx->cpu_cache.k_bands.total_bytes);
+                ctx->cpu_cache.v_cache[i] = (uint8_t *)calloc(
+                    params->max_seq_len, ctx->cpu_cache.v_bands.total_bytes);
+            }
+            ctx->active_backend = SP_BACKEND_CPU;
+            break;
+        }
+
+        // Stand up the per-position cache backed by rpcmem so each
+        // compress/decompress FastRPC call lands in zero-copy SMMU pages
+        // (no marshal copy across the host/DSP boundary). On rpcmem
+        // failure we fall back to CPU shadow cache ? same fallback as
+        // the DSP-unreachable path above.
+        if (sp_hexagon_cache_init(&ctx->hexagon_cache, ctx->hexagon_ctx,
+                                   cfg, params->max_seq_len) != 0) {
+            fprintf(stderr,
+                "[Shannon-Prime] Hexagon cache init failed (likely rpcmem "
+                "exhaustion); falling back to CPU shadow cache\n");
+            sp_hexagon_free(ctx->hexagon_ctx);
+            ctx->hexagon_ctx = NULL;
+            if (sp_shadow_cache_init(&ctx->cpu_cache, cfg) != 0) {
+                free(ctx);
+                return NULL;
+            }
+            int n_slots = cfg->n_layers * cfg->n_heads_kv;
+            ctx->cpu_cache.k_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+            ctx->cpu_cache.v_cache = (uint8_t **)calloc(n_slots, sizeof(uint8_t *));
+            for (int i = 0; i < n_slots; i++) {
+                ctx->cpu_cache.k_cache[i] = (uint8_t *)calloc(
+                    params->max_seq_len, ctx->cpu_cache.k_bands.total_bytes);
+                ctx->cpu_cache.v_cache[i] = (uint8_t *)calloc(
+                    params->max_seq_len, ctx->cpu_cache.v_bands.total_bytes);
+            }
+            ctx->active_backend = SP_BACKEND_CPU;
+            break;
+        }
+        break;
+    }
+#endif
     // case SP_BACKEND_CUDA: ...
     // case SP_BACKEND_VULKAN: ...
     }
@@ -446,6 +531,17 @@ void sp_llama_free(sp_llama_ctx_t *ctx) {
         sp_adreno_cache_free(&ctx->adreno_cache);
         break;
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON: {
+        // Free the per-position cache first ? its rpcmem-backed slots
+        // need the FastRPC handle on hexagon_ctx to be live for proper
+        // SMMU unmap. Then tear down the engine ctx (closes FastRPC,
+        // releases VTCM, frees the engine's ping-pong scratch).
+        sp_hexagon_cache_free(&ctx->hexagon_cache);
+        if (ctx->hexagon_ctx) sp_hexagon_free(ctx->hexagon_ctx);
+        break;
+    }
+#endif
     }
 
     free(ctx->freq_factors);
@@ -469,6 +565,20 @@ int sp_llama_get_n_freqs(const sp_llama_ctx_t *ctx) {
 // ============================================================================
 // Write path
 // ============================================================================
+//
+// SP_BACKEND_HEXAGON dispatches to sp_hexagon_cache_* wrappers. Each call
+// is one FastRPC dispatch into compress_f32 (encode) or decompress_f32
+// (decode + inverse VHT2) on the cDSP. The packed-byte slot lives in
+// rpcmem with RPCMEM_TRY_MAP_STATIC so the DSP-side reads/writes hit the
+// same physical pages via SMMU translation ? no marshal copy on the hot
+// path. Per-call FastRPC overhead is sub-millisecond on V69; per-call
+// compute (VHT2 + quantize at head_dim=128) is dominated by the HVX-qf32
+// path that gives 1.73? scalar at head_dim=1024 (per the 2026-04-29
+// session validation).
+//
+// If sp_hexagon_init failed at lifecycle time, ctx->active_backend was
+// already demoted to SP_BACKEND_CPU upstream, so the SP_BACKEND_HEXAGON
+// case here is reachable only when the cDSP session is live.
 
 void sp_llama_write_kv(sp_llama_ctx_t *ctx,
                        int layer, int head, int pos,
@@ -490,6 +600,11 @@ void sp_llama_write_k(sp_llama_ctx_t *ctx,
         sp_adreno_write_k(&ctx->adreno_cache, layer, head, pos, k_vec);
         break;
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_write_k(&ctx->hexagon_cache, layer, head, pos, k_vec);
+        break;
+#endif
     }
     if (pos >= ctx->n_positions) ctx->n_positions = pos + 1;
 }
@@ -505,6 +620,11 @@ void sp_llama_write_v(sp_llama_ctx_t *ctx,
 #ifdef SP_HAVE_ADRENO
     case SP_BACKEND_ADRENO:
         sp_adreno_write_v(&ctx->adreno_cache, layer, head, pos, v_vec);
+        break;
+#endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_write_v(&ctx->hexagon_cache, layer, head, pos, v_vec);
         break;
 #endif
     }
@@ -524,6 +644,12 @@ void sp_llama_write_k_batch(sp_llama_ctx_t *ctx,
         sp_adreno_write_k_batch(&ctx->adreno_cache, layer, head, start_pos, n_pos, k_vecs);
         break;
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_write_k_batch(&ctx->hexagon_cache, layer, head,
+                                        start_pos, n_pos, k_vecs);
+        break;
+#endif
     }
     int last_pos = start_pos + n_pos - 1;
     if (last_pos >= ctx->n_positions) ctx->n_positions = last_pos + 1;
@@ -541,6 +667,12 @@ void sp_llama_write_v_batch(sp_llama_ctx_t *ctx,
 #ifdef SP_HAVE_ADRENO
     case SP_BACKEND_ADRENO:
         sp_adreno_write_v_batch(&ctx->adreno_cache, layer, head, start_pos, n_pos, v_vecs);
+        break;
+#endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_write_v_batch(&ctx->hexagon_cache, layer, head,
+                                        start_pos, n_pos, v_vecs);
         break;
 #endif
     }
@@ -563,6 +695,11 @@ void sp_llama_read_k(const sp_llama_ctx_t *ctx,
         sp_adreno_read_k(&ctx->adreno_cache, layer, head, pos, k_out);
         break;
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_read_k(&ctx->hexagon_cache, layer, head, pos, k_out);
+        break;
+#endif
     }
 }
 
@@ -577,6 +714,11 @@ void sp_llama_read_v(const sp_llama_ctx_t *ctx,
 #ifdef SP_HAVE_ADRENO
     case SP_BACKEND_ADRENO:
         sp_adreno_read_v(&ctx->adreno_cache, layer, head, pos, v_out);
+        break;
+#endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_read_v(&ctx->hexagon_cache, layer, head, pos, v_out);
         break;
 #endif
     }
@@ -606,6 +748,17 @@ void sp_llama_read_k_partial(const sp_llama_ctx_t *ctx,
         break;
     }
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        // Hexagon DOES support partial reads ? decompress_f32 takes
+        // max_bands directly and the DSP-side band_dequantize_scalar
+        // honours it (zero-fills band indices >= max_bands before the
+        // inverse VHT2). This is the phase 3 attention short-circuit's
+        // fast path on the cDSP.
+        sp_hexagon_cache_read_k_partial(&ctx->hexagon_cache, layer, head, pos,
+                                         k_out, max_bands);
+        break;
+#endif
     }
 }
 
@@ -630,6 +783,12 @@ void sp_llama_read_v_partial(const sp_llama_ctx_t *ctx,
         break;
     }
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_read_v_partial(&ctx->hexagon_cache, layer, head, pos,
+                                         v_out, max_bands);
+        break;
+#endif
     }
 }
 
@@ -645,6 +804,12 @@ void sp_llama_read_k_batch(const sp_llama_ctx_t *ctx,
 #ifdef SP_HAVE_ADRENO
     case SP_BACKEND_ADRENO:
         sp_adreno_read_k_batch(&ctx->adreno_cache, layer, head, start_pos, n_pos, k_out);
+        break;
+#endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_read_k_batch(&ctx->hexagon_cache, layer, head,
+                                       start_pos, n_pos, k_out);
         break;
 #endif
     }
@@ -664,6 +829,12 @@ void sp_llama_read_v_batch(const sp_llama_ctx_t *ctx,
         sp_adreno_read_v_batch(&ctx->adreno_cache, layer, head, start_pos, n_pos, v_out);
         break;
 #endif
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        sp_hexagon_cache_read_v_batch(&ctx->hexagon_cache, layer, head,
+                                       start_pos, n_pos, v_out);
+        break;
+#endif
     }
 }
 
@@ -673,6 +844,12 @@ void sp_llama_read_v_batch(const sp_llama_ctx_t *ctx,
 
 void sp_llama_clear_range(sp_llama_ctx_t *ctx,
                           int start_pos, int end_pos) {
+#ifdef SP_HAVE_HEXAGON
+    if (ctx->active_backend == SP_BACKEND_HEXAGON) {
+        sp_hexagon_cache_clear_range(&ctx->hexagon_cache, start_pos, end_pos);
+        return;
+    }
+#endif
     if (ctx->active_backend != SP_BACKEND_CPU) {
         // TODO: adreno/cuda/vulkan clear_range. The eval-callback hook doesn't
         // need this during inference (round-trip is in-place), so leave as
@@ -700,10 +877,16 @@ sp_llama_memory_t sp_llama_memory(const sp_llama_ctx_t *ctx) {
     int n = ctx->n_positions;
     int hd = ctx->config.head_dim;
 
-    // Both backends expose .k_bands / .v_bands with the same total_bytes
+    // All backends expose .k_bands / .v_bands with the same total_bytes
     // derived from config. Read whichever is active.
     int k_total_bytes = 0;
     int v_total_bytes = 0;
+#ifdef SP_HAVE_HEXAGON
+    if (ctx->active_backend == SP_BACKEND_HEXAGON) {
+        k_total_bytes = ctx->hexagon_cache.k_bands.total_bytes;
+        v_total_bytes = ctx->hexagon_cache.v_bands.total_bytes;
+    } else
+#endif
 #ifdef SP_HAVE_ADRENO
     if (ctx->active_backend == SP_BACKEND_ADRENO) {
         k_total_bytes = ctx->adreno_cache.k_bands.total_bytes;
@@ -716,7 +899,7 @@ sp_llama_memory_t sp_llama_memory(const sp_llama_ctx_t *ctx) {
     }
 
     mem.compressed_bytes = (size_t)n_slots * n * (k_total_bytes + v_total_bytes);
-    mem.baseline_bytes = (size_t)n_slots * n * hd * 2 * 2; // K+V × fp16
+    mem.baseline_bytes = (size_t)n_slots * n * hd * 2 * 2; // K+V ? fp16
     mem.compression_ratio = (mem.compressed_bytes > 0)
         ? (float)mem.baseline_bytes / (float)mem.compressed_bytes
         : 0.0f;
@@ -741,9 +924,10 @@ float sp_llama_validate_k(sp_llama_ctx_t *ctx,
 void sp_llama_print_config(const sp_llama_ctx_t *ctx) {
     fprintf(stderr, "[Shannon-Prime] llama.cpp integration\n");
     fprintf(stderr, "  Backend:  %s\n",
-            ctx->active_backend == SP_BACKEND_CPU    ? "CPU" :
-            ctx->active_backend == SP_BACKEND_CUDA   ? "CUDA" :
+            ctx->active_backend == SP_BACKEND_CPU     ? "CPU" :
+            ctx->active_backend == SP_BACKEND_CUDA    ? "CUDA" :
             ctx->active_backend == SP_BACKEND_VULKAN  ? "Vulkan" :
-            ctx->active_backend == SP_BACKEND_ADRENO  ? "Adreno" : "unknown");
+            ctx->active_backend == SP_BACKEND_ADRENO  ? "Adreno" :
+            ctx->active_backend == SP_BACKEND_HEXAGON ? "Hexagon (cDSP)" : "unknown");
     sp_config_print(&ctx->config);
 }

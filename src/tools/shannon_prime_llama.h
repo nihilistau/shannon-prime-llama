@@ -54,6 +54,11 @@
 //   SHANNON_PRIME_DRAFT_MOBIUS=1       Override Möbius for draft only
 //   SHANNON_PRIME_DRAFT_PE=0           Disable PrimePE on draft only
 //   SHANNON_PRIME_DRAFT_PRESET=aggressive   Shortcut — picks K=2,1 V=1
+//   SHANNON_PRIME_DRAFT_BACKEND=hexagon     Differential backend - draft
+//                                            on Snapdragon cDSP via FastRPC,
+//                                            target stays on whatever
+//                                            SHANNON_PRIME_BACKEND points at.
+//                                            See docs/SPECULATIVE-DECODING-HEXAGON.md.
 //                                            ("ternary"=2,2 / "ship"=defaults)
 //
 // Ternary noise-tail (5/5/4/1.58 — band 3 stored as {-1,0,+1} at 2 bpp
@@ -97,10 +102,13 @@ typedef struct {
 
     // Backend selection
     enum {
-        SP_BACKEND_CPU  = 0,  // Core C (universal fallback)
-        SP_BACKEND_CUDA = 1,  // CUDA kernels
-        SP_BACKEND_VULKAN = 2, // Vulkan compute shaders
-        SP_BACKEND_ADRENO = 3, // ARM NEON (mobile)
+        SP_BACKEND_CPU     = 0,  // Core C (universal fallback)
+        SP_BACKEND_CUDA    = 1,  // CUDA kernels
+        SP_BACKEND_VULKAN  = 2,  // Vulkan compute shaders
+        SP_BACKEND_ADRENO  = 3,  // ARM NEON (mobile)
+        SP_BACKEND_HEXAGON = 4,  // Snapdragon cDSP via FastRPC + HVX
+                                 // (V69+ Snapdragon 8 Gen 1+; gated on
+                                 // SP_HAVE_HEXAGON build flag)
     } backend;
 
     // Optional: CUDA stream or Vulkan queue for GPU backends
