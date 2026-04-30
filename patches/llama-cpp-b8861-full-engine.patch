@@ -332,11 +332,16 @@ index ee0c292..52fc54e 100644
      if (!model.hparams.no_alloc) {
          for (size_t i = 0; i < backend_ptrs.size(); ++i) {
              ggml_backend_t             backend = backend_ptrs[i];
-@@ -1235,6 +1246,24 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
+@@ -1235,6 +1246,29 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
          return nullptr;
      }
  
 +#ifdef LLAMA_SHANNON_PRIME
++    // Phase 1.6: stash sp_state in thread-local for build_attn_mha fast path.
++    if (llama_sp_is_enabled(&model)) {
++        llama_sp_set_current_state(&model);
++    }
++
 +    if (llama_sp_is_enabled(&model)) {
 +        // Resolve max_bands from env (phase 3 work item 1). Empty/unset =
 +        // INT_MAX = full read = sp1/sp2 behaviour. Values < n_bands trigger
@@ -419,7 +424,7 @@ new file mode 100644
 index 0000000..267f83d
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,823 @@
+@@ -0,0 +1,850 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -497,6 +502,33 @@ index 0000000..267f83d
 +    auto it = g_sp_map.find(model);
 +    return it == g_sp_map.end() ? nullptr : &it->second;
 +}
++
++// Phase 1.6 fast-path support: thread-local pointer to the current ubatch's
++// SP state, set by process_ubatch before graph_compute and read by
++// build_attn_mha to populate the fused-KQ custom op's userdata. Avoids
++// plumbing model/sp_state through llm_graph_context (would touch many
++// callers). Cleared after graph_compute so leaked references can't fire.
++thread_local const sp_per_model * g_sp_current_state = nullptr;
++
++extern "C" void llama_sp_set_current_state(const struct llama_model * model) {
++    g_sp_current_state = sp_state_for(model);
++}
++extern "C" const void * llama_sp_get_current_hexagon_k_cache_slot(int layer, int head) {
++    // Phase 1.6 fast path: dispatch to the public API in shannon_prime_llama.h
++    // which exposes the persistent SP-Hexagon archive buffer. Returns nullptr
++    // when SP-Hexagon backend isn't active or args invalid; the custom op's
++    // fallback path then engages (round-trip fp16 K through SP per attn call).
++    if (!g_sp_current_state) return nullptr;
++    return sp_llama_get_hexagon_k_buf(g_sp_current_state->ctx, layer, head);
++}
++extern "C" int llama_sp_get_current_hexagon_k_total_bytes(void) {
++    if (!g_sp_current_state) return 0;
++    return sp_llama_get_hexagon_k_total_bytes(g_sp_current_state->ctx);
++}
++
++// Reserve trailing lines so block size matches original (no hunk header drift).
++// (Stub body removed; live impl above calls into shannon_prime_llama.h.)
++
 +
 +inline float * get_scratch(std::vector<float> & v, size_t n) {
 +    if (v.size() < n) v.resize(n);
@@ -1058,8 +1090,8 @@ index 0000000..267f83d
 +                // Single batched compress + decompress at slots [0..n_tokens-1].
 +                // The bridge chunks internally (SP_HEX_BATCH_CHUNK, default 32);
 +                // FastRPC dispatches per (layer, head) becomes ceil(n_tokens / chunk).
-+                sp_llama_write_k_batch(sp_ctx, il, h, 0, n_tokens, batch_in.data());
-+                sp_llama_read_k_batch (sp_ctx, il, h, 0, n_tokens, batch_out.data());
++                sp_llama_write_k_batch(sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, batch_in.data());
++                sp_llama_read_k_batch (sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, batch_out.data());
 +
 +                // Scatter only valid positions; invalid retain original K.
 +                for (int t = 0; t < n_tokens; ++t) {
@@ -1089,8 +1121,8 @@ index 0000000..267f83d
 +                        sp_sqfree_write_k(sqfree_cache, il, h, 0, gather);
 +                        sp_sqfree_read_k (sqfree_cache, il, h, 0, recon);
 +                    } else {
-+                        sp_llama_write_k        (sp_ctx, il, h, 0, gather);
-+                        sp_llama_read_k_partial (sp_ctx, il, h, 0, recon, max_bands);
++                        sp_llama_write_k        (sp_ctx, il, h, (int)slot, gather);
++                        sp_llama_read_k_partial (sp_ctx, il, h, (int)slot, recon, max_bands);
 +                    }
 +
 +                    scatter_vec(k, off, hd_k, recon);
@@ -1135,8 +1167,8 @@ index 0000000..267f83d
 +                                else std::memset(dst, 0, sizeof(float) * hd_v);
 +                            }
 +                            if (!any_valid) continue;
-+                            sp_llama_write_v_batch(sp_ctx, il, h, 0, n_tokens, v_batch_in.data());
-+                            sp_llama_read_v_batch (sp_ctx, il, h, 0, n_tokens, v_batch_out.data());
++                            sp_llama_write_v_batch(sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, v_batch_in.data());
++                            sp_llama_read_v_batch (sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, v_batch_out.data());
 +                            for (int t = 0; t < n_tokens; ++t) {
 +                                if (!v_valid[t]) continue;
 +                                uint32_t slot = sinfo.idxs[0][t];
@@ -1157,8 +1189,8 @@ index 0000000..267f83d
 +                                sp_sqfree_write_v(sqfree_cache, il, h, 0, gather);
 +                                sp_sqfree_read_v (sqfree_cache, il, h, 0, recon);
 +                            } else {
-+                                sp_llama_write_v        (sp_ctx, il, h, 0, gather);
-+                                sp_llama_read_v_partial (sp_ctx, il, h, 0, recon, max_bands);
++                                sp_llama_write_v        (sp_ctx, il, h, (int)slot, gather);
++                                sp_llama_read_v_partial (sp_ctx, il, h, (int)slot, recon, max_bands);
 +                            }
 +
 +                            scatter_vec(v, off, hd_v, recon);
@@ -1216,8 +1248,8 @@ index 0000000..267f83d
 +                                sp_sqfree_write_v(sqfree_cache, il, h, 0, gather);
 +                                sp_sqfree_read_v (sqfree_cache, il, h, 0, recon);
 +                            } else {
-+                                sp_llama_write_v        (sp_ctx, il, h, 0, gather);
-+                                sp_llama_read_v_partial (sp_ctx, il, h, 0, recon, max_bands);
++                                sp_llama_write_v        (sp_ctx, il, h, (int)slot, gather);
++                                sp_llama_read_v_partial (sp_ctx, il, h, (int)slot, recon, max_bands);
 +                            }
 +
 +                            // Scatter the reconstructed values back to the
@@ -1248,7 +1280,7 @@ new file mode 100644
 index 0000000..071b73c
 --- /dev/null
 +++ b/src/llama-shannon-prime.h
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,107 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp.
 +//
 +// Activated when SHANNON_PRIME_ENABLED=1 is set in the environment.
@@ -1344,6 +1376,13 @@ index 0000000..071b73c
 +                           const struct llama_ubatch * ubatch,
 +                           int max_bands);
 +
++// Phase 1.6 fast-path: thread-local current sp_state pointer.
++// Set by process_ubatch before graph_compute; read by build_attn_mha
++// to populate the fused-KQ custom op userdata. Lifetime is one ubatch.
++void llama_sp_set_current_state(const struct llama_model * model);
++const void * llama_sp_get_current_hexagon_k_cache_slot(int layer, int head);
++int llama_sp_get_current_hexagon_k_total_bytes(void);
++
 +#ifdef __cplusplus
 +}
 +#endif
@@ -1385,8 +1424,8 @@ diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
 +            sp_kq_ud.head_dim               = (int) k->ne[0];
 +            sp_kq_ud.n_kv                   = (int) k->ne[1];
 +            sp_kq_ud.is_v                   = 0;
-+            sp_kq_ud.k_packed_buf_per_head  = nullptr;
-+            sp_kq_ud.total_bytes_per_pos    = 0;
++            sp_kq_ud.k_packed_buf_per_head = (const unsigned char *) llama_sp_get_current_hexagon_k_cache_slot(il, 0);
++            sp_kq_ud.total_bytes_per_pos   = llama_sp_get_current_hexagon_k_total_bytes();
 +            kq = ggml_map_custom2(ctx0, q, k, llama_sp_kq_compute,
 +                                  GGML_N_TASKS_MAX, &sp_kq_ud);
 +        }
