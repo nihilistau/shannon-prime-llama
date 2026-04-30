@@ -302,7 +302,7 @@ index 7b1fcfc..14556b6 100644
      set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
      target_compile_definitions(llama PRIVATE LLAMA_BUILD)
 diff --git a/src/llama-context.cpp b/src/llama-context.cpp
-index ee0c292..ffedaa2 100644
+index ee0c292..d243c52 100644
 --- a/src/llama-context.cpp
 +++ b/src/llama-context.cpp
 @@ -10,6 +10,9 @@
@@ -333,7 +333,28 @@ index ee0c292..ffedaa2 100644
      if (!model.hparams.no_alloc) {
          for (size_t i = 0; i < backend_ptrs.size(); ++i) {
              ggml_backend_t             backend = backend_ptrs[i];
-@@ -1235,6 +1246,32 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
+@@ -466,6 +477,20 @@ void llama_context::sched_reserve() {
+         cparams.auto_fa = false;
+     }
+ 
++#ifdef LLAMA_SHANNON_PRIME
++    // Phase 1.7: SHANNON_PRIME_FAST_PATH=1 means SP archive is sole K source
++    // of truth. FUSED_KQ must engage (reads from archive); flash_attn would
++    // intercept and read cache_k_l (which is zero with cpy_k bypassed).
++    // Force flash_attn off so FUSED_KQ runs.
++    if (cparams.flash_attn) {
++        const char * fp = std::getenv("SHANNON_PRIME_FAST_PATH");
++        if (fp && fp[0] == '1') {
++            cparams.flash_attn = false;
++            LLAMA_LOG_INFO("%s: SHANNON_PRIME_FAST_PATH=1 forces flash_attn off (so FUSED_KQ engages)\n", __func__);
++        }
++    }
++#endif
++
+     if (cparams.auto_fgdn) {
+         LLAMA_LOG_INFO("%s: resolving fused Gated Delta Net support:\n", __func__);
+ 
+@@ -1235,6 +1260,32 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
          return nullptr;
      }
  
