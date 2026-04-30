@@ -433,6 +433,43 @@ int sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
         return -1;
     }
 
+    // Batch scratches — sized at chunk_size * per-call so the prefill path
+    // can land an entire (layer, head, [start_pos..start_pos+chunk]) chunk
+    // in ONE FastRPC dispatch. SP_HEX_BATCH_CHUNK env var overrides the
+    // default of 32. Defensive clamp to [1, 256] — n_vectors=1 degrades to
+    // single-position cost (no batching benefit but still correct);
+    // n_vectors > 256 starts pushing FastRPC payload limits at large
+    // head_dim. Per-vector budget at head_dim=128 with 32 chunk: 32*128*4
+    // = 16 KB in, 32*total_bytes ~ 1.3 KB out — comfortable inside V69's
+    // 64 KB VTCM and FastRPC's ~1 MB per-call budget.
+    cache->batch_chunk_size = 32;
+    {
+        const char *env = getenv("SP_HEX_BATCH_CHUNK");
+        if (env && *env) {
+            int v = atoi(env);
+            if (v >= 1 && v <= 256) cache->batch_chunk_size = v;
+        }
+    }
+    int chunk = cache->batch_chunk_size;
+    cache->vec_in_batch_rpc  = (float *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                                  (int)((size_t)chunk * cfg->head_dim * sizeof(float)));
+    cache->vec_out_batch_rpc = (float *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                                  (int)((size_t)chunk * cfg->head_dim * sizeof(float)));
+    cache->k_packed_batch_rpc = (uint8_t *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                                  (int)((size_t)chunk * cache->k_bands.total_bytes));
+    cache->v_packed_batch_rpc = (uint8_t *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                                  (int)((size_t)chunk * cache->v_bands.total_bytes));
+    if (!cache->vec_in_batch_rpc || !cache->vec_out_batch_rpc ||
+        !cache->k_packed_batch_rpc || !cache->v_packed_batch_rpc) {
+        fprintf(stderr, "[Shannon-Prime] hexagon cache: rpcmem batch scratch alloc failed "
+                        "(chunk=%d in=%p out=%p k_pkt=%p)\n",
+                chunk,
+                (void*)cache->vec_in_batch_rpc, (void*)cache->vec_out_batch_rpc,
+                (void*)cache->k_packed_batch_rpc);
+        sp_hexagon_cache_free(cache);
+        return -1;
+    }
+
     // Cache slots are HOST-ONLY memory now (plain malloc). DSP never reads or
     // writes them directly — bridge stages each per-position vector through
     // the rpcmem scratches above, then memcpy into / out of the corresponding
@@ -449,11 +486,9 @@ int sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
     }
 
     size_t k_slot_bytes = (size_t)max_seq_len * (size_t)cache->k_bands.total_bytes;
-    // V slot stores uncompressed fp32 vectors (V skips DSP — see sp_hex_cache_write_one
-    // for the rationale: compress_f32 IDL hard-codes K band config, so V's 1-band
-    // 3-bit config can't dispatch through the existing DSP method). Until the IDL
-    // gains compress_f32_v / decompress_f32_v, V uses host-only fp32 storage.
-    size_t v_slot_bytes = (size_t)max_seq_len * (size_t)cfg->head_dim * sizeof(float);
+    // V slot stores compressed bytes (V now goes through DSP via compress_f32_v
+    // / decompress_f32_v IDL methods, restoring 3.0x compression on V cache).
+    size_t v_slot_bytes = (size_t)max_seq_len * (size_t)cache->v_bands.total_bytes;
 
     for (int s = 0; s < cache->n_slots; ++s) {
         cache->k_cache[s] = (uint8_t *)calloc(1, k_slot_bytes);
@@ -487,6 +522,11 @@ void sp_hexagon_cache_free(sp_hexagon_cache_t *cache) {
     if (cache->vec_out_f32)  rpcmem_free(cache->vec_out_f32);
     if (cache->k_packed_rpc) rpcmem_free(cache->k_packed_rpc);
     if (cache->v_packed_rpc) rpcmem_free(cache->v_packed_rpc);
+    // Batch scratches.
+    if (cache->vec_in_batch_rpc)   rpcmem_free(cache->vec_in_batch_rpc);
+    if (cache->vec_out_batch_rpc)  rpcmem_free(cache->vec_out_batch_rpc);
+    if (cache->k_packed_batch_rpc) rpcmem_free(cache->k_packed_batch_rpc);
+    if (cache->v_packed_batch_rpc) rpcmem_free(cache->v_packed_batch_rpc);
     memset(cache, 0, sizeof(*cache));
 }
 
@@ -502,32 +542,21 @@ static void sp_hex_cache_write_one(sp_hexagon_cache_t *cache,
     int slot = sp_hex_slot_index(&cache->cfg_snapshot, layer, head);
     if (slot < 0 || slot >= cache->n_slots) return;
 
-    if (!is_k) {
-        // V path bypass: the DSP-side sp_hex_compress_f32 hard-codes K band
-        // config (4 bands at 5/5/4/3) and rejects any out_capacity that
-        // doesn't match. Until the IDL gains a config-aware compress_f32_v,
-        // V skips the DSP and stores the fp32 vector directly in the slot.
-        // Net effect: K still gets full DSP compression (3.0× memory savings
-        // on K cache), V is uncompressed fp32 (4× larger than fp16 vanilla,
-        // 2× larger than fp32 vanilla — accept this until the IDL extends).
-        uint8_t *v_slot = cache->v_cache[slot];
-        if (!v_slot) return;
-        float *v_dst = (float *)(v_slot + (size_t)pos * (size_t)hd * sizeof(float));
-        memcpy(v_dst, vec, sizeof(float) * hd);
-        return;
-    }
-
-    // K path: DSP compress_f32 (K band config hard-coded in IDL).
-    sp_band_config_t *bc = &cache->k_bands;
-    uint8_t *dst_slot = cache->k_cache[slot];
+    sp_band_config_t *bc = is_k ? &cache->k_bands : &cache->v_bands;
+    uint8_t *dst_slot = is_k ? cache->k_cache[slot] : cache->v_cache[slot];
     if (!dst_slot) return;
-    uint8_t *out_scratch = cache->k_packed_rpc;
+    uint8_t *out_scratch = is_k ? cache->k_packed_rpc : cache->v_packed_rpc;
     if (!out_scratch) return;
 
     memcpy(cache->vec_in_f32, vec, sizeof(float) * hd);
     sp_hex_rpcmem_sync_for_dsp(cache->vec_in_f32, sizeof(float) * hd);
     int packed_used = 0;
-    int rc = sp_hex_compress_f32(cache->ctx->fastrpc_handle,
+    int rc = is_k
+        ? sp_hex_compress_f32  (cache->ctx->fastrpc_handle,
+                                  cache->vec_in_f32, hd, hd,
+                                  out_scratch, bc->total_bytes,
+                                  &packed_used)
+        : sp_hex_compress_f32_v(cache->ctx->fastrpc_handle,
                                   cache->vec_in_f32, hd, hd,
                                   out_scratch, bc->total_bytes,
                                   &packed_used);
@@ -569,28 +598,14 @@ static void sp_hex_cache_read_one(const sp_hexagon_cache_t *cache,
         return;
     }
 
-    if (!is_k) {
-        // V path bypass — see sp_hex_cache_write_one for rationale. V is stored
-        // uncompressed fp32 in the slot until the IDL gains compress_f32_v.
-        uint8_t *v_slot = cache->v_cache[slot];
-        if (!v_slot) {
-            memset(out_vec, 0, sizeof(float) * hd);
-            return;
-        }
-        const float *v_src = (const float *)(v_slot + (size_t)pos * (size_t)hd * sizeof(float));
-        memcpy(out_vec, v_src, sizeof(float) * hd);
-        return;
-    }
-
-    // K path: DSP decompress_f32.
-    const sp_band_config_t *bc = &cache->k_bands;
-    uint8_t *src_slot = cache->k_cache[slot];
+    const sp_band_config_t *bc = is_k ? &cache->k_bands : &cache->v_bands;
+    uint8_t *src_slot = is_k ? cache->k_cache[slot] : cache->v_cache[slot];
     if (!src_slot) {
         memset(out_vec, 0, sizeof(float) * hd);
         return;
     }
     sp_hexagon_cache_t *cache_mut = (sp_hexagon_cache_t *)cache;
-    uint8_t *in_scratch = cache_mut->k_packed_rpc;
+    uint8_t *in_scratch = is_k ? cache_mut->k_packed_rpc : cache_mut->v_packed_rpc;
     if (!in_scratch) {
         memset(out_vec, 0, sizeof(float) * hd);
         return;
@@ -599,7 +614,12 @@ static void sp_hex_cache_read_one(const sp_hexagon_cache_t *cache,
     memcpy(in_scratch, src, bc->total_bytes);
     sp_hex_rpcmem_sync_for_dsp(in_scratch, bc->total_bytes);
 
-    int rc = sp_hex_decompress_f32(cache->ctx->fastrpc_handle,
+    int rc = is_k
+        ? sp_hex_decompress_f32  (cache->ctx->fastrpc_handle,
+                                    in_scratch, bc->total_bytes,
+                                    hd, max_bands,
+                                    cache_mut->vec_out_f32, hd)
+        : sp_hex_decompress_f32_v(cache->ctx->fastrpc_handle,
                                     in_scratch, bc->total_bytes,
                                     hd, max_bands,
                                     cache_mut->vec_out_f32, hd);
@@ -637,40 +657,319 @@ void sp_hexagon_cache_read_v_partial(const sp_hexagon_cache_t *cache, int layer,
     sp_hex_cache_read_one(cache, layer, head, pos, v_out, 0, max_bands);
 }
 
+// ============================================================================
+// Batched K-cache write — single FastRPC per chunk
+// ============================================================================
+//
+// On prefill (n_pos > 1) the post-decode hook hands us a contiguous run of
+// per-position K vectors for one (layer, head). Calling write_k once per
+// position pays one FastRPC dispatch (~20µs) per call — at 2000 prefill
+// tokens × 16 layers × 8 KV heads that's ~256K dispatches, ~5 seconds of
+// pure transport overhead, and is the single biggest contributor to the
+// -79% prefill penalty observed in the n_ctx=4096 bench.
+//
+// This path chunks the run into batch_chunk_size-sized groups and dispatches
+// each group through ONE compress_f32_batch FastRPC call. The DSP loops
+// the kernel internally over the chunk; the bridge memcpys the per-position
+// output into the host-only cache slot. Net effect: 256K dispatches becomes
+// 256K / chunk_size — at chunk=32 that's ~8K, a ~32× reduction.
+//
+// Generation (n_pos=1) skips the batch path and uses single-position
+// write_k, since chunk=1 has no benefit and adds the in-scratch copy.
+static void sp_hex_cache_write_k_batch_chunk(sp_hexagon_cache_t *cache,
+                                              int layer, int head,
+                                              int start_pos, int chunk_n,
+                                              const float *k_vecs) {
+    if (!cache || !cache->ctx ||
+        cache->ctx->fastrpc_handle == (remote_handle64)-1) return;
+    int hd = cache->cfg_snapshot.head_dim;
+    if (hd <= 0 || hd > SP_HEXAGON_HEAD_DIM_MAX) return;
+    int slot = sp_hex_slot_index(&cache->cfg_snapshot, layer, head);
+    if (slot < 0 || slot >= cache->n_slots) return;
+    if (chunk_n < 1 || chunk_n > cache->batch_chunk_size) return;
+    if (start_pos < 0 || start_pos + chunk_n > cache->max_seq_len) return;
+
+    sp_band_config_t *bc = &cache->k_bands;
+    uint8_t *dst_slot = cache->k_cache[slot];
+    if (!dst_slot) return;
+    float   *in_scratch  = cache->vec_in_batch_rpc;
+    uint8_t *out_scratch = cache->k_packed_batch_rpc;
+    if (!in_scratch || !out_scratch) return;
+
+    // Stage chunk_n vectors contiguously into the rpcmem in-scratch.
+    memcpy(in_scratch, k_vecs, (size_t)chunk_n * hd * sizeof(float));
+    sp_hex_rpcmem_sync_for_dsp(in_scratch, (size_t)chunk_n * hd * sizeof(float));
+
+    int packed_used = 0;
+    int rc = sp_hex_compress_f32_batch(cache->ctx->fastrpc_handle,
+                                        in_scratch, chunk_n * hd,
+                                        hd, chunk_n,
+                                        out_scratch, chunk_n * bc->total_bytes,
+                                        &packed_used);
+    if (rc != AEE_SUCCESS || packed_used != chunk_n * bc->total_bytes) {
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] hexagon: compress_f32_batch rc=0x%x "
+                    "used=%d expect=%d (slot=%d start=%d n=%d)\n",
+                    rc, packed_used, chunk_n * bc->total_bytes,
+                    slot, start_pos, chunk_n);
+            warned = 1;
+        }
+        return;
+    }
+
+    // De-interleave: write each per-position chunk into its slot offset.
+    // The DSP wrote contiguous (vec0_packed, vec1_packed, ...) — the cache
+    // slot expects (pos0_packed, pos1_packed, ...) at total_bytes stride,
+    uint8_t *dst = dst_slot + (size_t)start_pos * (size_t)bc->total_bytes;
+    memcpy(dst, out_scratch, (size_t)chunk_n * bc->total_bytes);
+}
+
+static void sp_hex_cache_read_k_batch_chunk(const sp_hexagon_cache_t *cache,
+                                             int layer, int head,
+                                             int start_pos, int chunk_n,
+                                             float *k_out, int max_bands) {
+    if (!cache || !cache->ctx ||
+        cache->ctx->fastrpc_handle == (remote_handle64)-1) {
+        if (k_out && cache) memset(k_out, 0,
+            (size_t)chunk_n * cache->cfg_snapshot.head_dim * sizeof(float));
+        return;
+    }
+    int hd = cache->cfg_snapshot.head_dim;
+    if (hd <= 0 || hd > SP_HEXAGON_HEAD_DIM_MAX) return;
+    int slot = sp_hex_slot_index(&cache->cfg_snapshot, layer, head);
+    if (slot < 0 || slot >= cache->n_slots ||
+        chunk_n < 1 || chunk_n > cache->batch_chunk_size ||
+        start_pos < 0 || start_pos + chunk_n > cache->max_seq_len) {
+        memset(k_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+
+    const sp_band_config_t *bc = &cache->k_bands;
+    uint8_t *src_slot = cache->k_cache[slot];
+    if (!src_slot) {
+        memset(k_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+    sp_hexagon_cache_t *cache_mut = (sp_hexagon_cache_t *)cache;
+    uint8_t *in_scratch  = cache_mut->k_packed_batch_rpc;
+    float   *out_scratch = cache_mut->vec_out_batch_rpc;
+    if (!in_scratch || !out_scratch) {
+        memset(k_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+
+    const uint8_t *src = src_slot + (size_t)start_pos * (size_t)bc->total_bytes;
+    memcpy(in_scratch, src, (size_t)chunk_n * bc->total_bytes);
+    sp_hex_rpcmem_sync_for_dsp(in_scratch, (size_t)chunk_n * bc->total_bytes);
+
+    int rc = sp_hex_decompress_f32_batch(cache->ctx->fastrpc_handle,
+                                          in_scratch, chunk_n * bc->total_bytes,
+                                          hd, chunk_n, max_bands,
+                                          out_scratch, chunk_n * hd);
+    if (rc != AEE_SUCCESS) {
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] hexagon: decompress_f32_batch rc=0x%x "
+                    "(slot=%d start=%d n=%d)\n", rc, slot, start_pos, chunk_n);
+            warned = 1;
+        }
+        memset(k_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+    memcpy(k_out, out_scratch, (size_t)chunk_n * hd * sizeof(float));
+}
+
 void sp_hexagon_cache_write_k_batch(sp_hexagon_cache_t *cache, int layer, int head,
                                      int start_pos, int n_pos, const float *k_vecs) {
-    if (!cache) return;
+    if (!cache || n_pos <= 0 || !k_vecs) return;
     int hd = cache->cfg_snapshot.head_dim;
-    for (int i = 0; i < n_pos; ++i)
-        sp_hexagon_cache_write_k(cache, layer, head, start_pos + i, k_vecs + (size_t)i * hd);
+    int chunk = cache->batch_chunk_size;
+    if (chunk < 1) chunk = 1;
+    // Single-position fast path: no batching benefit, skip the staging copy.
+    if (n_pos == 1) {
+        sp_hexagon_cache_write_k(cache, layer, head, start_pos, k_vecs);
+        return;
+    }
+    int i = 0;
+    while (i < n_pos) {
+        int this_chunk = n_pos - i;
+        if (this_chunk > chunk) this_chunk = chunk;
+        sp_hex_cache_write_k_batch_chunk(cache, layer, head,
+                                          start_pos + i, this_chunk,
+                                          k_vecs + (size_t)i * hd);
+        i += this_chunk;
+    }
 }
+
+static void sp_hex_cache_write_v_batch_chunk(sp_hexagon_cache_t *cache,
+                                              int layer, int head,
+                                              int start_pos, int chunk_n,
+                                              const float *v_vecs) {
+    if (!cache || !cache->ctx ||
+        cache->ctx->fastrpc_handle == (remote_handle64)-1) return;
+    int hd = cache->cfg_snapshot.head_dim;
+    if (hd <= 0 || hd > SP_HEXAGON_HEAD_DIM_MAX) return;
+    int slot = sp_hex_slot_index(&cache->cfg_snapshot, layer, head);
+    if (slot < 0 || slot >= cache->n_slots) return;
+    if (chunk_n < 1 || chunk_n > cache->batch_chunk_size) return;
+    if (start_pos < 0 || start_pos + chunk_n > cache->max_seq_len) return;
+
+    sp_band_config_t *bc = &cache->v_bands;
+    uint8_t *dst_slot = cache->v_cache[slot];
+    if (!dst_slot) return;
+    float   *in_scratch  = cache->vec_in_batch_rpc;
+    uint8_t *out_scratch = cache->v_packed_batch_rpc;
+    if (!in_scratch || !out_scratch) return;
+
+    memcpy(in_scratch, v_vecs, (size_t)chunk_n * hd * sizeof(float));
+    sp_hex_rpcmem_sync_for_dsp(in_scratch, (size_t)chunk_n * hd * sizeof(float));
+
+    int packed_used = 0;
+    int rc = sp_hex_compress_f32_v_batch(cache->ctx->fastrpc_handle,
+                                          in_scratch, chunk_n * hd,
+                                          hd, chunk_n,
+                                          out_scratch, chunk_n * bc->total_bytes,
+                                          &packed_used);
+    if (rc != AEE_SUCCESS || packed_used != chunk_n * bc->total_bytes) {
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] hexagon: compress_f32_v_batch rc=0x%x "
+                    "used=%d expect=%d (slot=%d start=%d n=%d)\n",
+                    rc, packed_used, chunk_n * bc->total_bytes,
+                    slot, start_pos, chunk_n);
+            warned = 1;
+        }
+        return;
+    }
+    uint8_t *dst = dst_slot + (size_t)start_pos * (size_t)bc->total_bytes;
+    memcpy(dst, out_scratch, (size_t)chunk_n * bc->total_bytes);
+}
+
 void sp_hexagon_cache_write_v_batch(sp_hexagon_cache_t *cache, int layer, int head,
                                      int start_pos, int n_pos, const float *v_vecs) {
-    if (!cache) return;
+    if (!cache || n_pos <= 0 || !v_vecs) return;
     int hd = cache->cfg_snapshot.head_dim;
-    for (int i = 0; i < n_pos; ++i)
-        sp_hexagon_cache_write_v(cache, layer, head, start_pos + i, v_vecs + (size_t)i * hd);
+    int chunk = cache->batch_chunk_size;
+    if (chunk < 1) chunk = 1;
+    if (n_pos == 1) {
+        sp_hexagon_cache_write_v(cache, layer, head, start_pos, v_vecs);
+        return;
+    }
+    int i = 0;
+    while (i < n_pos) {
+        int this_chunk = n_pos - i;
+        if (this_chunk > chunk) this_chunk = chunk;
+        sp_hex_cache_write_v_batch_chunk(cache, layer, head,
+                                          start_pos + i, this_chunk,
+                                          v_vecs + (size_t)i * hd);
+        i += this_chunk;
+    }
 }
+
 void sp_hexagon_cache_read_k_batch(const sp_hexagon_cache_t *cache, int layer, int head,
                                     int start_pos, int n_pos, float *k_out) {
-    if (!cache) return;
+    if (!cache || n_pos <= 0 || !k_out) return;
     int hd = cache->cfg_snapshot.head_dim;
-    for (int i = 0; i < n_pos; ++i)
-        sp_hexagon_cache_read_k(cache, layer, head, start_pos + i, k_out + (size_t)i * hd);
+    int chunk = cache->batch_chunk_size;
+    if (chunk < 1) chunk = 1;
+    if (n_pos == 1) {
+        sp_hexagon_cache_read_k(cache, layer, head, start_pos, k_out);
+        return;
+    }
+    int i = 0;
+    while (i < n_pos) {
+        int this_chunk = n_pos - i;
+        if (this_chunk > chunk) this_chunk = chunk;
+        sp_hex_cache_read_k_batch_chunk(cache, layer, head,
+                                         start_pos + i, this_chunk,
+                                         k_out + (size_t)i * hd, -1);
+        i += this_chunk;
+    }
 }
+
+static void sp_hex_cache_read_v_batch_chunk(const sp_hexagon_cache_t *cache,
+                                             int layer, int head,
+                                             int start_pos, int chunk_n,
+                                             float *v_out, int max_bands) {
+    if (!cache || !cache->ctx ||
+        cache->ctx->fastrpc_handle == (remote_handle64)-1) {
+        if (v_out && cache) memset(v_out, 0,
+            (size_t)chunk_n * cache->cfg_snapshot.head_dim * sizeof(float));
+        return;
+    }
+    int hd = cache->cfg_snapshot.head_dim;
+    if (hd <= 0 || hd > SP_HEXAGON_HEAD_DIM_MAX) return;
+    int slot = sp_hex_slot_index(&cache->cfg_snapshot, layer, head);
+    if (slot < 0 || slot >= cache->n_slots ||
+        chunk_n < 1 || chunk_n > cache->batch_chunk_size ||
+        start_pos < 0 || start_pos + chunk_n > cache->max_seq_len) {
+        memset(v_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+    const sp_band_config_t *bc = &cache->v_bands;
+    uint8_t *src_slot = cache->v_cache[slot];
+    if (!src_slot) {
+        memset(v_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+    sp_hexagon_cache_t *cache_mut = (sp_hexagon_cache_t *)cache;
+    uint8_t *in_scratch  = cache_mut->v_packed_batch_rpc;
+    float   *out_scratch = cache_mut->vec_out_batch_rpc;
+    if (!in_scratch || !out_scratch) {
+        memset(v_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+    const uint8_t *src = src_slot + (size_t)start_pos * (size_t)bc->total_bytes;
+    memcpy(in_scratch, src, (size_t)chunk_n * bc->total_bytes);
+    sp_hex_rpcmem_sync_for_dsp(in_scratch, (size_t)chunk_n * bc->total_bytes);
+
+    int rc = sp_hex_decompress_f32_v_batch(cache->ctx->fastrpc_handle,
+                                            in_scratch, chunk_n * bc->total_bytes,
+                                            hd, chunk_n, max_bands,
+                                            out_scratch, chunk_n * hd);
+    if (rc != AEE_SUCCESS) {
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] hexagon: decompress_f32_v_batch rc=0x%x "
+                    "(slot=%d start=%d n=%d)\n", rc, slot, start_pos, chunk_n);
+            warned = 1;
+        }
+        memset(v_out, 0, (size_t)chunk_n * hd * sizeof(float));
+        return;
+    }
+    memcpy(v_out, out_scratch, (size_t)chunk_n * hd * sizeof(float));
+}
+
 void sp_hexagon_cache_read_v_batch(const sp_hexagon_cache_t *cache, int layer, int head,
                                     int start_pos, int n_pos, float *v_out) {
-    if (!cache) return;
+    if (!cache || n_pos <= 0 || !v_out) return;
     int hd = cache->cfg_snapshot.head_dim;
-    for (int i = 0; i < n_pos; ++i)
-        sp_hexagon_cache_read_v(cache, layer, head, start_pos + i, v_out + (size_t)i * hd);
+    int chunk = cache->batch_chunk_size;
+    if (chunk < 1) chunk = 1;
+    if (n_pos == 1) {
+        sp_hexagon_cache_read_v(cache, layer, head, start_pos, v_out);
+        return;
+    }
+    int i = 0;
+    while (i < n_pos) {
+        int this_chunk = n_pos - i;
+        if (this_chunk > chunk) this_chunk = chunk;
+        sp_hex_cache_read_v_batch_chunk(cache, layer, head,
+                                         start_pos + i, this_chunk,
+                                         v_out + (size_t)i * hd, -1);
+        i += this_chunk;
+    }
 }
 
 void sp_hexagon_cache_clear_range(sp_hexagon_cache_t *cache, int start_pos, int end_pos) {
+    // K + V cache slots store compressed bytes at bands.total_bytes stride per
+    // position (V was uncompressed fp32 during the V-bypass era; #57 reverted that).
     if (!cache || start_pos >= end_pos) return;
     if (start_pos < 0) start_pos = 0;
     if (end_pos > cache->max_seq_len) end_pos = cache->max_seq_len;
     int n_clear = end_pos - start_pos;
+    int hd = cache->cfg_snapshot.head_dim;
     for (int s = 0; s < cache->n_slots; ++s) {
         if (cache->k_cache[s]) {
             size_t k_off = (size_t)start_pos * cache->k_bands.total_bytes;

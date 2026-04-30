@@ -111,19 +111,41 @@ typedef struct {
     int                n_slots;
     sp_band_config_t   k_bands;
     sp_band_config_t   v_bands;
-    // Cache slots are plain malloc'd memory now — DSP never touches them
-    // directly, so they don't need to be rpcmem-registered. Sidesteps
-    // FastRPC's registration-length contract (172 KB-registered slot
-    // called with len=42 was rejected as AEE_EUNSUPPORTED) AND avoids
-    // FD/handle exhaustion on big-layer-count models.
+    // Cache slots are now plain malloc'd memory — DSP never touches them
+    // directly, so they don't need to be rpcmem-registered. This sidesteps
+    // FastRPC's registration-length contract (a 172 KB-registered slot
+    // called with len=42 is rejected as AEE_EUNSUPPORTED) AND avoids
+    // FD/handle exhaustion on large-layer-count models (Llama-70B would
+    // otherwise need 1280 separate rpcmem allocs for K+V slots, blowing
+    // through the typical 1024 FD limit).
     uint8_t          **k_cache;
     uint8_t          **v_cache;
-    // FastRPC IN/OUT scratches — sized at EXACTLY the per-call length so
-    // the rpcmem registration matches the marshaling len param.
+    // FastRPC IN/OUT scratch — sized at EXACTLY the call length so the
+    // registration-length contract is satisfied. vec_in_f32 / vec_out_f32
+    // hold one head_dim-float vector for compress_f32 input / decompress_f32
+    // output. k_packed_rpc / v_packed_rpc hold one packed-byte vector
+    // (sized at k_bands.total_bytes / v_bands.total_bytes) for compress_f32
+    // output / decompress_f32 input. After each FastRPC call, the bridge
+    // memcpys between these scratches and the per-position offset of the
+    // host-only cache slot.
     float             *vec_in_f32;
     float             *vec_out_f32;
     uint8_t           *k_packed_rpc;
     uint8_t           *v_packed_rpc;
+    // Batched FastRPC scratches — sized at chunk_size * per-call so a
+    // single dispatch covers chunk_size positions. Used by
+    // sp_hexagon_cache_{write,read}_k_batch on the prefill path. chunk_size
+    // is the bridge's per-call fan-out (default 32, env-overridable via
+    // SP_HEX_BATCH_CHUNK). vec_in_batch_rpc carries chunk_size * head_dim
+    // fp32 vectors for compress_f32_batch input; k_packed_batch_rpc carries
+    // chunk_size * k_bands.total_bytes packed bytes for output. Read path
+    // reverses (in_packed → out_vecs). Same registration-length contract
+    // applies: alloc size MUST equal the FastRPC call length parameter.
+    int                batch_chunk_size;
+    float             *vec_in_batch_rpc;
+    float             *vec_out_batch_rpc;
+    uint8_t           *k_packed_batch_rpc;
+    uint8_t           *v_packed_batch_rpc;
 } sp_hexagon_cache_t;
 
 int  sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
