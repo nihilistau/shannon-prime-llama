@@ -92,22 +92,28 @@ void llama_sp_kq_compute(struct ggml_tensor * dst,
     const int is_v       = u->is_v;
     const int n_head_kv  = u->n_heads_kv;
 
-    // Q tensor 'a': [head_dim, n_head_q, n_seq, n_batch]. We assume fp32 or
-    // fp16 (most common). Read its strides from ggml.
-    const enum ggml_type qt = a->type;
-    const size_t q_row_stride = a->nb[1];  // bytes per (one Q row across head_dim)
-    const int    n_head_q    = (int) a->ne[1];
+    // Phase 1.7 wiring: ggml_map_custom2_inplace(ctx, kq, q, ...) so:
+    //   dst == a == kq (the mul_mat-shaped output tensor — we overwrite values)
+    //   b   == q  (read Q rows from here)
+    // The K source comes from userdata->k_packed_buf_per_head (SP archive).
+    // q tensor 'b': [head_dim, n_head_q, n_seq, n_batch].
+    const enum ggml_type qt = b->type;
+    const size_t q_row_stride = b->nb[1];  // bytes per (one Q row across head_dim)
+    const int    n_head_q    = (int) b->ne[1];
 
     // dst: KQ scores. [n_kv, n_head_q, n_seq, n_batch]. fp32.
     float * dst_data = (float *) dst->data;
     const size_t dst_row_bytes = dst->nb[1];   // bytes per kq row across n_kv
 
     // Q raw bytes; we'll read a row at a time
-    const uint8_t * q_data = (const uint8_t *) a->data;
+    const uint8_t * q_data = (const uint8_t *) b->data;
 
-    // K raw bytes (used in fallback path when userdata has no archive ptr).
-    const uint8_t * k_data_fp16 = (const uint8_t *) b->data;
-    const size_t k_row_bytes_fp16 = b->nb[1];
+    // Fallback K source (when userdata->k_packed_buf_per_head is null) was
+    // the original cache view passed as `b`. With inplace wiring `b` is q,
+    // so the fallback path no longer has access to the cache view K. Until
+    // archive-only is fully wired, fallback is degraded: zeros.
+    const uint8_t * k_data_fp16 = nullptr;
+    const size_t k_row_bytes_fp16 = 0;
 
     // Multi-thread split along n_kv
     const int kv_per_thread = (n_kv + nth - 1) / nth;

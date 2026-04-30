@@ -388,7 +388,7 @@ index ee0c292..d243c52 100644
  
      return res;
 diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
-index 2ff23f8..8ae2119 100644
+index 2ff23f8..90d8283 100644
 --- a/src/llama-graph.cpp
 +++ b/src/llama-graph.cpp
 @@ -10,6 +10,10 @@
@@ -402,19 +402,17 @@ index 2ff23f8..8ae2119 100644
  
  #include <cassert>
  #include <cmath>
-@@ -1995,11 +1999,42 @@ ggml_tensor * llm_graph_context::build_attn_mha(
+@@ -1995,11 +1999,43 @@ ggml_tensor * llm_graph_context::build_attn_mha(
  
          cur = ggml_reshape_2d(ctx0, cur, cur->ne[0]*cur->ne[1], cur->ne[2]*cur->ne[3]);
      } else {
--        ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
-+        ggml_tensor * kq = nullptr;
++        // ggml_mul_mat gives kq the correct output shape [n_kv, n_head_q, ...].
++        // FUSED_KQ then OVERWRITES the values via ggml_map_custom2_inplace —
++        // the SP-fused kernel reads K from the persistent archive (userdata
++        // pointer) and Q from the second arg, then writes Q*K^T into kq.
+         ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
 +#ifdef LLAMA_SHANNON_PRIME
 +        // Phase 1.6 / Path A.2: SP-fused decompress-matmul.
-+        // Replaces ggml_mul_mat(k, q) with ggml_map_custom2 -> llama_sp_kq_compute
-+        // (decompresses K rows on-the-fly, dot-products against Q). CPU bench:
-+        // 1.79x faster than vanilla scalar fp32 matmul on S22U ARM cores.
-+        // Until persistent SP archive change in post_compute lands, runs in
-+        // fallback mode (re-roundtrip fp16 K through SP per call).
 +        static const bool sp_fused_kq = []() {
 +            const char * v = std::getenv("SHANNON_PRIME_FUSED_KQ");
 +            return v && v[0] == '1';
@@ -428,11 +426,13 @@ index 2ff23f8..8ae2119 100644
 +            sp_kq_ud.is_v                   = 0;
 +            sp_kq_ud.k_packed_buf_per_head = (const unsigned char *) llama_sp_get_current_hexagon_k_cache_slot(il, 0);
 +            sp_kq_ud.total_bytes_per_pos   = llama_sp_get_current_hexagon_k_total_bytes();
-+            kq = ggml_map_custom2(ctx0, q, k, llama_sp_kq_compute,
-+                                  GGML_N_TASKS_MAX, &sp_kq_ud);
++            // inplace: dst==a==kq (mul_mat result, correct shape, gets values
++            // overwritten); b=q for Q values. Kernel reads SP archive K via
++            // userdata, dot-products against Q, writes into kq->data.
++            kq = ggml_map_custom2_inplace(ctx0, kq, q, llama_sp_kq_compute,
++                                          GGML_N_TASKS_MAX, &sp_kq_ud);
 +        }
 +#endif
-+        if (!kq) kq = ggml_mul_mat(ctx0, k, q);
          cb(kq, "kq", il);
  
          // note: this op tends to require high floating point range
@@ -446,7 +446,7 @@ index 2ff23f8..8ae2119 100644
          ggml_mul_mat_set_prec(kq, GGML_PREC_F32);
  
          if (arch == LLM_ARCH_GROK) {
-@@ -2209,6 +2244,12 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2209,6 +2245,12 @@ ggml_tensor * llm_graph_context::build_attn(
          const auto & k_idxs = inp->get_k_idxs();
          const auto & v_idxs = inp->get_v_idxs();
  
@@ -459,7 +459,7 @@ index 2ff23f8..8ae2119 100644
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
          ggml_build_forward_expand(gf, mctx_cur->cpy_v(ctx0, v_cur, v_idxs, il));
      }
-@@ -2301,6 +2342,12 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2301,6 +2343,12 @@ ggml_tensor * llm_graph_context::build_attn(
      {
          const auto & k_idxs = inp->get_k_idxs();
  
@@ -472,7 +472,7 @@ index 2ff23f8..8ae2119 100644
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
      }
  
-@@ -2383,6 +2430,12 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2383,6 +2431,12 @@ ggml_tensor * llm_graph_context::build_attn(
      if (k_cur) {
          const auto & k_idxs = is_swa ? inp->get_k_idxs_swa() : inp->get_k_idxs();
  
