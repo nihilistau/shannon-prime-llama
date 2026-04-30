@@ -447,7 +447,7 @@ int sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
         const char *env = getenv("SP_HEX_BATCH_CHUNK");
         if (env && *env) {
             int v = atoi(env);
-            if (v >= 1 && v <= 256) cache->batch_chunk_size = v;
+            if (v >= 1 && v <= 2048) cache->batch_chunk_size = v;
         }
     }
     int chunk = cache->batch_chunk_size;
