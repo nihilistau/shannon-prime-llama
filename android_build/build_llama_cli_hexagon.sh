@@ -70,9 +70,12 @@ EXTRA_C="-march=armv8.2-a+fp16+dotprod -I${RPCMEM_INC}"
 
 # `RPCMEM_LIB` resolves rpcmem_alloc/free and is a static archive.
 # `CDSPRPC_LIB` resolves remote_handle64 etc. — dynamic .so on-device.
+# `-llog` resolves __android_log_print which the Hexagon SDK's bundled
+# rpcmem_android.c uses for diagnostic logging (linker error otherwise:
+# "undefined symbol: __android_log_print referenced by rpcmem_android.c").
 # Both go on the executable AND shared linker flags so they're picked up
 # when the final llama-cli binary or libllama.so is linked.
-LINK_LIBS="${RPCMEM_LIB} ${CDSPRPC_LIB}"
+LINK_LIBS="${RPCMEM_LIB} ${CDSPRPC_LIB} -llog"
 
 cmake -S "$SRC" -B "$BUILD" \
     -G "Ninja" \
@@ -91,7 +94,7 @@ cmake -S "$SRC" -B "$BUILD" \
     -DLLAMA_BUILD_TESTS=OFF \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_TOOLS=ON \
-    -DLLAMA_BUILD_SERVER=OFF \
+    -DLLAMA_BUILD_SERVER=ON \
     -DLLAMA_SHANNON_PRIME=ON \
     -DSHANNON_PRIME_DIR="$SP" \
     -DSP_CUDA=OFF \
