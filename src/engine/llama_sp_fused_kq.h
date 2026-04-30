@@ -64,6 +64,13 @@ typedef struct {
 // The op uses GGML's per-thread tile sharing: ith in [0, nth) splits the n_kv
 // dimension across worker threads. Each thread iterates its slice, decompresses
 // K rows, dot-products against all Q heads.
+// Phase 1.6 fast-path: thread-local accessors set by process_ubatch and
+// read by build_attn_mha. Declared here so llama-graph.cpp (which includes
+// this header under LLAMA_SHANNON_PRIME) can wire userdata directly.
+// Implementations live in llama-shannon-prime.cpp.
+const void * llama_sp_get_current_hexagon_k_cache_slot(int layer, int head);
+int          llama_sp_get_current_hexagon_k_total_bytes(void);
+
 void llama_sp_kq_compute(
         struct ggml_tensor * dst,
         const struct ggml_tensor * a,    // Q
