@@ -71,6 +71,27 @@ typedef struct {
 const void * llama_sp_get_current_hexagon_k_cache_slot(int layer, int head);
 int          llama_sp_get_current_hexagon_k_total_bytes(void);
 
+// Phase 1.7: SP-archive-IS-the-path gate. When SHANNON_PRIME_FAST_PATH=1 the
+// SP compressed K archive is treated as the SOLE source of truth for K. The
+// fp16 ggml K cache is still allocated (so ggml graph build doesn't break),
+// but the K_cur copy step in build_attn is skipped — those zero pages stay
+// uncommitted by the Linux kernel, freeing ~150 MB at n_ctx=4096 on a 3B
+// model. Combined with FUSED_KQ=1 (which already routes attention reads to
+// the SP archive via the custom op), this fully decouples K storage from
+// the fp16 path.
+//
+// Implementation: 1-byte cache primed from getenv on first call. Returns 0/1.
+// Static inline so each TU gets its own copy (no ODR hazard with extern "C").
+#include <stdlib.h>
+static inline int llama_sp_fast_path_enabled(void) {
+    static int cached = -1;
+    if (cached < 0) {
+        const char * v = getenv("SHANNON_PRIME_FAST_PATH");
+        cached = (v && v[0] == '1') ? 1 : 0;
+    }
+    return cached;
+}
+
 void llama_sp_kq_compute(
         struct ggml_tensor * dst,
         const struct ggml_tensor * a,    // Q
