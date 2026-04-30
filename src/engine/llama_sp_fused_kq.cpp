@@ -8,6 +8,16 @@
 
 #include <cstdio>
 #include <cstring>
+#include "shannon_prime_llama.h"  // sp_llama_kq_matmul_fused (DSP fast path)
+
+#include <atomic>
+
+// Phase 1.7: forward decl from llama-context.cpp patch — exposes the
+// sp_llama_ctx_t for the current ubatch. Used to dispatch the FastRPC
+// fused kernel directly to the DSP, bypassing the per-thread scalar
+// inner loop.
+extern "C" void * llama_sp_get_current_sp_ctx_void(void);
+
 
 namespace {
 
@@ -86,6 +96,48 @@ void llama_sp_kq_compute(struct ggml_tensor * dst,
                          int ith, int nth, void * userdata) {
     const llama_sp_kq_userdata * u = (const llama_sp_kq_userdata *) userdata;
     if (!u || !dst || !a || !b) return;
+
+    // ── DSP fast-path dispatch (Phase 1.7 harness intercept fix) ──────
+    // ith==0 attempts a single FastRPC call to sp_llama_kq_matmul_fused
+    // which runs the fused decompress-matmul on the cDSP. If it succeeds,
+    // the entire kq tensor is filled and ith>0 short-circuit. If it fails
+    // (DSP unavailable, contract mismatch, etc.), all threads fall back
+    // to the scalar inner loop below.
+    static std::atomic<int> g_dsp_status{0};   // 0=pending, 1=ok, 2=fallback
+    if (ith == 0) {
+        g_dsp_status.store(0, std::memory_order_relaxed);
+        void * sp_ctx_v = llama_sp_get_current_sp_ctx_void();
+        int rc = -1;
+        if (sp_ctx_v && !u->is_v && u->n_kv > 0) {
+            // Q: [head_dim, n_head_q, ...] in `b`. We hand the q rows
+            // straight through; the bridge marshals into rpcmem.
+            int n_q_local = (int) b->ne[1];
+            // dst layout matches mul_mat result [n_kv, n_q, ...]; we
+            // dispatch one head_kv worth at a time. For now use head=0
+            // (matches existing FUSED_KQ wiring's known limitation —
+            // GQA n_heads_kv > 1 fix is a follow-up).
+            const sp_llama_ctx_t * sp_ctx =
+                (const sp_llama_ctx_t *) sp_ctx_v;
+            rc = sp_llama_kq_matmul_fused(sp_ctx,
+                                          u->layer_idx, /*head=*/0,
+                                          /*start_pos=*/0, u->n_kv,
+                                          (const float *) b->data,
+                                          n_q_local,
+                                          (float *) dst->data);
+        }
+        g_dsp_status.store(rc == 0 ? 1 : 2, std::memory_order_release);
+    }
+    // All threads wait for ith==0 to publish the status.
+    int dsp_status;
+    do {
+        dsp_status = g_dsp_status.load(std::memory_order_acquire);
+    } while (dsp_status == 0);
+    if (dsp_status == 1) {
+        // DSP wrote the whole kq tensor; this thread is done.
+        return;
+    }
+    // dsp_status == 2: fall through to scalar fallback below.
+
 
     const int head_dim   = u->head_dim;
     const int n_kv       = u->n_kv;

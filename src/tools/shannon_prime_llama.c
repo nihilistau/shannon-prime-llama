@@ -679,6 +679,36 @@ void sp_llama_write_v_batch(sp_llama_ctx_t *ctx,
 }
 
 // ============================================================================
+// kq_matmul_fused — Phase 1.7 single-dispatch attention.
+// ============================================================================
+//
+// Returns 0 on success (custom op uses kq_scores), -1 on fallback (custom
+// op falls back to its scalar inner loop). Only the Hexagon backend has
+// a useful implementation today; CPU/Adreno return -1.
+
+int sp_llama_kq_matmul_fused(const sp_llama_ctx_t *ctx,
+                              int layer, int head,
+                              int start_pos, int n_kv,
+                              const float *q_vec, int n_q,
+                              float *kq_scores) {
+    if (!ctx) return -1;
+    switch (ctx->active_backend) {
+#ifdef SP_HAVE_HEXAGON
+    case SP_BACKEND_HEXAGON:
+        return sp_hexagon_cache_kq_matmul_fused(&ctx->hexagon_cache,
+                                                 layer, head,
+                                                 start_pos, n_kv,
+                                                 q_vec, n_q, kq_scores);
+#endif
+    case SP_BACKEND_CPU:
+    default:
+        (void)layer; (void)head; (void)start_pos; (void)n_kv;
+        (void)q_vec; (void)n_q; (void)kq_scores;
+        return -1;
+    }
+}
+
+// ============================================================================
 // Read path
 // ============================================================================
 
