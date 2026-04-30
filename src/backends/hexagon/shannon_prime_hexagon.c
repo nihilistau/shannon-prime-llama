@@ -984,6 +984,57 @@ void sp_hexagon_cache_clear_range(sp_hexagon_cache_t *cache, int start_pos, int 
     }
 }
 
+
+// ============================================================================
+// kq_matmul_fused — single FastRPC dispatch per attention op.
+// ============================================================================
+//
+// The custom op (llama_sp_kq_compute) calls this once per (layer, head)
+// attention op. K archive bytes already live in cache->k_cache[slot]
+// (plain malloc, NOT rpcmem — FastRPC marshals via copy). DSP-side runs
+// the fused decompress-matmul (scalar reference today, HVX kernel once
+// task #22 lands).
+
+int sp_hexagon_cache_kq_matmul_fused(const sp_hexagon_cache_t *cache,
+                                      int layer, int head,
+                                      int start_pos, int n_kv,
+                                      const float *q_vec, int n_q,
+                                      float *kq_scores) {
+    if (!cache || !cache->ctx || !q_vec || !kq_scores) return -1;
+    if (n_kv <= 0 || n_q <= 0) return -1;
+    if (layer < 0 || layer >= cache->cfg_snapshot.n_layers) return -1;
+    if (head  < 0 || head  >= cache->cfg_snapshot.n_heads_kv) return -1;
+    if (start_pos < 0 || start_pos + n_kv > cache->max_seq_len) return -1;
+
+    const int slot = layer * cache->cfg_snapshot.n_heads_kv + head;
+    const uint8_t *k_archive = cache->k_cache[slot];
+    if (!k_archive) return -1;
+
+    const sp_band_config_t *bc = &cache->k_bands;
+    const int hd = cache->cfg_snapshot.head_dim;
+    const int per_pos = bc->total_bytes;
+
+    const uint8_t *k_packed_start = k_archive + (size_t)start_pos * (size_t)per_pos;
+    const int packed_len = n_kv * per_pos;
+
+    int rc = sp_hex_kq_matmul_fused(cache->ctx->fastrpc_handle,
+                                     q_vec, n_q * hd,
+                                     k_packed_start, packed_len,
+                                     hd, n_kv, n_q,
+                                     kq_scores, n_kv * n_q);
+    if (rc != AEE_SUCCESS) {
+        static int warned = 0;
+        if (!warned) {
+            fprintf(stderr, "[Shannon-Prime] hexagon: kq_matmul_fused rc=0x%x "
+                    "(layer=%d head=%d start=%d n_kv=%d n_q=%d hd=%d)\n",
+                    rc, layer, head, start_pos, n_kv, n_q, hd);
+            warned = 1;
+        }
+        return rc;
+    }
+    return 0;
+}
+
 #else  // !SP_HEXAGON_FASTRPC
 
 // ============================================================================
@@ -1078,4 +1129,8 @@ void sp_hexagon_cache_clear_range(sp_hexagon_cache_t *c, int s, int e) {
     (void)c; (void)s; (void)e;
 }
 
+int sp_hexagon_cache_kq_matmul_fused(const sp_hexagon_cache_t *c, int l, int h, int s, int n_kv, const float *q, int n_q, float *kq) {
+    (void)c; (void)l; (void)h; (void)s; (void)n_kv; (void)q; (void)n_q; (void)kq;
+    return -1;
+}
 #endif  // SP_HEXAGON_FASTRPC
