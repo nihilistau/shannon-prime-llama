@@ -319,6 +319,27 @@ const float *sp_llama_get_freq_factors(const sp_llama_ctx_t *ctx);
 // Number of frequency factors (= head_dim / 2). Returns 0 if ctx is NULL.
 int sp_llama_get_n_freqs(const sp_llama_ctx_t *ctx);
 
+// ============================================================================
+// Phase 1.6 / Path A.2 fast-path — expose Hexagon SP-compressed K archive
+// ============================================================================
+//
+// The fused decompress-matmul custom op (llama_sp_kq_compute) reads directly
+// from these compressed bytes at attention time, skipping the fp16 K read
+// and engaging the bandwidth crossover validated by sp_hex_kq_matmul_bench
+// (1.79× faster than vanilla fp32 matmul, 2.68× at n_q=8).
+//
+// sp_llama_get_hexagon_k_buf — pointer to the contiguous packed bytes for
+// the (layer, head) K cache slot. Layout [position][total_bytes]. Returns
+// NULL if SP-Hexagon backend isn't built or active, or args invalid. Pointer
+// is owned by the context — do NOT free it; lifetime matches the context.
+//
+// sp_llama_get_hexagon_k_total_bytes — bc.total_bytes for the K band config
+// (e.g., 42 for head_dim=64 with {5,5,4,3} bands). Returns 0 if backend
+// inactive or no Hexagon support compiled in.
+const void *sp_llama_get_hexagon_k_buf(const sp_llama_ctx_t *ctx,
+                                        int layer, int head);
+int          sp_llama_get_hexagon_k_total_bytes(const sp_llama_ctx_t *ctx);
+
 #ifdef __cplusplus
 }
 #endif

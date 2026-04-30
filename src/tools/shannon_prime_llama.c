@@ -931,3 +931,35 @@ void sp_llama_print_config(const sp_llama_ctx_t *ctx) {
             ctx->active_backend == SP_BACKEND_HEXAGON ? "Hexagon (cDSP)" : "unknown");
     sp_config_print(&ctx->config);
 }
+
+// ============================================================================
+// Phase 1.6 / Path A.2 fast-path accessors — Hexagon SP-compressed K archive.
+// See shannon_prime_llama.h for the contract; consumers are llama-graph.cpp's
+// build_attn_mha (via the thread-local accessor in llama-shannon-prime.cpp).
+// ============================================================================
+
+const void *sp_llama_get_hexagon_k_buf(const sp_llama_ctx_t *ctx,
+                                        int layer, int head) {
+    if (!ctx) return NULL;
+#ifdef SP_HAVE_HEXAGON
+    if (ctx->active_backend != SP_BACKEND_HEXAGON) return NULL;
+    const sp_hexagon_cache_t *hc = &ctx->hexagon_cache;
+    if (!hc->k_cache) return NULL;
+    int slot = layer * ctx->config.n_heads_kv + head;
+    if (slot < 0 || slot >= hc->n_slots) return NULL;
+    return (const void *) hc->k_cache[slot];
+#else
+    (void)layer; (void)head;
+    return NULL;
+#endif
+}
+
+int sp_llama_get_hexagon_k_total_bytes(const sp_llama_ctx_t *ctx) {
+    if (!ctx) return 0;
+#ifdef SP_HAVE_HEXAGON
+    if (ctx->active_backend != SP_BACKEND_HEXAGON) return 0;
+    return ctx->hexagon_cache.k_bands.total_bytes;
+#else
+    return 0;
+#endif
+}

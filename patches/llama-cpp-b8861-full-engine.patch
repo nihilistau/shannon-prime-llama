@@ -514,21 +514,21 @@ index 0000000..267f83d
 +    g_sp_current_state = sp_state_for(model);
 +}
 +extern "C" const void * llama_sp_get_current_hexagon_k_cache_slot(int layer, int head) {
-+    // Phase 1.6 fast path: returns the persistent SP archive's compressed K
-+    // bytes for (layer, head), so the fused-KQ custom op can read directly
-+    // (skipping the fp16 K read at attention time). Currently returns nullptr
-+    // because sp_per_model exposes only an opaque sp_llama_ctx_t — the
-+    // hexagon_cache lives inside that struct in shannon_prime_llama.c. To
-+    // wire the fast path, add a public accessor in shannon_prime_llama.h
-+    // (e.g., sp_llama_get_hexagon_k_buf(ctx, layer, head)) and call it here.
-+    // Until then, the custom op uses its fallback path (re-roundtrip fp16
-+    // K through SP) — correct but no bandwidth win.
-+    (void)layer; (void)head;
-+    return nullptr;
++    // Phase 1.6 fast path: dispatch to the public API in shannon_prime_llama.h
++    // which exposes the persistent SP-Hexagon archive buffer. Returns nullptr
++    // when SP-Hexagon backend isn't active or args invalid; the custom op's
++    // fallback path then engages (round-trip fp16 K through SP per attn call).
++    if (!g_sp_current_state) return nullptr;
++    return sp_llama_get_hexagon_k_buf(g_sp_current_state->ctx, layer, head);
 +}
 +extern "C" int llama_sp_get_current_hexagon_k_total_bytes(void) {
-+    return 0;
++    if (!g_sp_current_state) return 0;
++    return sp_llama_get_hexagon_k_total_bytes(g_sp_current_state->ctx);
 +}
++
++// Reserve trailing lines so block size matches original (no hunk header drift).
++// (Stub body removed; live impl above calls into shannon_prime_llama.h.)
++
 +
 +inline float * get_scratch(std::vector<float> & v, size_t n) {
 +    if (v.size() < n) v.resize(n);
