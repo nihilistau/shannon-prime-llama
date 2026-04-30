@@ -1,3 +1,4 @@
+warning: in the working copy of 'src/llama-graph.cpp', LF will be replaced by CRLF the next time Git touches it
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 310a3dc..9ade0a1 100644
 --- a/CMakeLists.txt
@@ -93,7 +94,7 @@ index 310a3dc..9ade0a1 100644
  
  if (EMSCRIPTEN)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 7b1fcfc..fb7073d 100644
+index 7b1fcfc..3a98ced 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -53,6 +53,203 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
@@ -301,7 +302,7 @@ index 7b1fcfc..fb7073d 100644
      set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
      target_compile_definitions(llama PRIVATE LLAMA_BUILD)
 diff --git a/src/llama-context.cpp b/src/llama-context.cpp
-index ee0c292..52fc54e 100644
+index ee0c292..08e2a28 100644
 --- a/src/llama-context.cpp
 +++ b/src/llama-context.cpp
 @@ -10,6 +10,9 @@
@@ -362,6 +363,90 @@ index ee0c292..52fc54e 100644
      ret = GGML_STATUS_SUCCESS;
  
      return res;
+diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
+index 2ff23f8..9cf8924 100644
+--- a/src/llama-graph.cpp
++++ b/src/llama-graph.cpp
+@@ -10,6 +10,9 @@
+ #include "llama-memory-hybrid.h"
+ #include "llama-memory-hybrid-iswa.h"
+ #include "llama-memory-recurrent.h"
++#ifdef LLAMA_SHANNON_PRIME
++#include "llama_sp_fused_kq.h"
++#endif
+ 
+ #include <cassert>
+ #include <cmath>
+@@ -1995,7 +1998,32 @@ ggml_tensor * llm_graph_context::build_attn_mha(
+ 
+         cur = ggml_reshape_2d(ctx0, cur, cur->ne[0]*cur->ne[1], cur->ne[2]*cur->ne[3]);
+     } else {
+-        ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
++        ggml_tensor * kq = nullptr;
++#ifdef LLAMA_SHANNON_PRIME
++        // Phase 1.6 / Path A.2: SP-fused decompress-matmul.
++        // Replaces ggml_mul_mat(k, q) with ggml_map_custom2 -> llama_sp_kq_compute
++        // (decompresses K rows on-the-fly, dot-products against Q). CPU bench:
++        // 1.79x faster than vanilla scalar fp32 matmul on S22U ARM cores.
++        // Until persistent SP archive change in post_compute lands, runs in
++        // fallback mode (re-roundtrip fp16 K through SP per call).
++        static const bool sp_fused_kq = []() {
++            const char * v = std::getenv("SHANNON_PRIME_FUSED_KQ");
++            return v && v[0] == '1';
++        }();
++        if (sp_fused_kq && k && q && k->ne[0] == q->ne[0]) {
++            static thread_local llama_sp_kq_userdata sp_kq_ud;
++            sp_kq_ud.layer_idx              = il;
++            sp_kq_ud.n_heads_kv             = (int) k->ne[2];
++            sp_kq_ud.head_dim               = (int) k->ne[0];
++            sp_kq_ud.n_kv                   = (int) k->ne[1];
++            sp_kq_ud.is_v                   = 0;
++            sp_kq_ud.k_packed_buf_per_head = (const unsigned char *) llama_sp_get_current_hexagon_k_cache_slot(il, 0);
++            sp_kq_ud.total_bytes_per_pos   = llama_sp_get_current_hexagon_k_total_bytes();
++            kq = ggml_map_custom2(ctx0, q, k, llama_sp_kq_compute,
++                                  GGML_N_TASKS_MAX, &sp_kq_ud);
++        }
++#endif
++        if (!kq) kq = ggml_mul_mat(ctx0, k, q);
+         cb(kq, "kq", il);
+ 
+         // note: this op tends to require high floating point range
+@@ -2209,6 +2237,11 @@ ggml_tensor * llm_graph_context::build_attn(
+         const auto & k_idxs = inp->get_k_idxs();
+         const auto & v_idxs = inp->get_v_idxs();
+ 
++#ifdef LLAMA_SHANNON_PRIME
++        // Phase 1.7: SP fast-path = SP archive is sole K source of truth.
++        // Skip fp16 K cache write so kernel keeps pages zero-mapped.
++        if (!llama_sp_fast_path_enabled())
++#endif
+         ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
+         ggml_build_forward_expand(gf, mctx_cur->cpy_v(ctx0, v_cur, v_idxs, il));
+     }
+@@ -2301,6 +2334,11 @@ ggml_tensor * llm_graph_context::build_attn(
+     {
+         const auto & k_idxs = inp->get_k_idxs();
+ 
++#ifdef LLAMA_SHANNON_PRIME
++        // Phase 1.7: SP fast-path = SP archive is sole K source of truth.
++        // Skip fp16 K cache write so kernel keeps pages zero-mapped.
++        if (!llama_sp_fast_path_enabled())
++#endif
+         ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
+     }
+ 
+@@ -2383,6 +2421,11 @@ ggml_tensor * llm_graph_context::build_attn(
+     if (k_cur) {
+         const auto & k_idxs = is_swa ? inp->get_k_idxs_swa() : inp->get_k_idxs();
+ 
++#ifdef LLAMA_SHANNON_PRIME
++        // Phase 1.7: SP fast-path = SP archive is sole K source of truth.
++        // Skip fp16 K cache write so kernel keeps pages zero-mapped.
++        if (!llama_sp_fast_path_enabled())
++#endif
+         ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
+     }
+ 
 diff --git a/src/llama-kv-cache.h b/src/llama-kv-cache.h
 index 0b62dc7..a0a3a63 100644
 --- a/src/llama-kv-cache.h
@@ -421,7 +506,7 @@ index 0b62dc7..a0a3a63 100644
  
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
-index 0000000..267f83d
+index 0000000..0a75adb
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
 @@ -0,0 +1,850 @@
@@ -1277,7 +1362,7 @@ index 0000000..267f83d
 +#endif // LLAMA_SHANNON_PRIME
 diff --git a/src/llama-shannon-prime.h b/src/llama-shannon-prime.h
 new file mode 100644
-index 0000000..071b73c
+index 0000000..c5a1a72
 --- /dev/null
 +++ b/src/llama-shannon-prime.h
 @@ -0,0 +1,107 @@
@@ -1388,49 +1473,3 @@ index 0000000..071b73c
 +#endif
 +
 +#endif // LLAMA_SHANNON_PRIME
-diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
---- a/src/llama-graph.cpp
-+++ b/src/llama-graph.cpp
-@@ -10,6 +10,9 @@
- #include "llama-memory-hybrid.h"
- #include "llama-memory-hybrid-iswa.h"
- #include "llama-memory-recurrent.h"
-+#ifdef LLAMA_SHANNON_PRIME
-+#include "llama_sp_fused_kq.h"
-+#endif
- 
- #include <cassert>
- #include <cmath>
-@@ -1995,6 +1995,31 @@ ggml_tensor * llm_graph_context::build_attn_mha(
-         cur = ggml_reshape_2d(ctx0, cur, cur->ne[0]*cur->ne[1], cur->ne[2]*cur->ne[3]);
-     } else {
--        ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
-+        ggml_tensor * kq = nullptr;
-+#ifdef LLAMA_SHANNON_PRIME
-+        // Phase 1.6 / Path A.2: SP-fused decompress-matmul.
-+        // Replaces ggml_mul_mat(k, q) with ggml_map_custom2 -> llama_sp_kq_compute
-+        // (decompresses K rows on-the-fly, dot-products against Q). CPU bench:
-+        // 1.79x faster than vanilla scalar fp32 matmul on S22U ARM cores.
-+        // Until persistent SP archive change in post_compute lands, runs in
-+        // fallback mode (re-roundtrip fp16 K through SP per call).
-+        static const bool sp_fused_kq = []() {
-+            const char * v = std::getenv("SHANNON_PRIME_FUSED_KQ");
-+            return v && v[0] == '1';
-+        }();
-+        if (sp_fused_kq && k && q && k->ne[0] == q->ne[0]) {
-+            static thread_local llama_sp_kq_userdata sp_kq_ud;
-+            sp_kq_ud.layer_idx              = il;
-+            sp_kq_ud.n_heads_kv             = (int) k->ne[2];
-+            sp_kq_ud.head_dim               = (int) k->ne[0];
-+            sp_kq_ud.n_kv                   = (int) k->ne[1];
-+            sp_kq_ud.is_v                   = 0;
-+            sp_kq_ud.k_packed_buf_per_head = (const unsigned char *) llama_sp_get_current_hexagon_k_cache_slot(il, 0);
-+            sp_kq_ud.total_bytes_per_pos   = llama_sp_get_current_hexagon_k_total_bytes();
-+            kq = ggml_map_custom2(ctx0, q, k, llama_sp_kq_compute,
-+                                  GGML_N_TASKS_MAX, &sp_kq_ud);
-+        }
-+#endif
-+        if (!kq) kq = ggml_mul_mat(ctx0, k, q);
-         cb(kq, "kq", il);
- 
-         // note: this op tends to require high floating point range
