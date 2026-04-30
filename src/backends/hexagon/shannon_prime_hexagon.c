@@ -408,19 +408,39 @@ int sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
     sp_band_config_init(&cache->k_bands, cfg->head_dim, 4, k_bits);
     sp_band_config_init(&cache->v_bands, cfg->head_dim, 1, v_bits);
 
+    // FastRPC IN/OUT scratches — allocated at EXACTLY the per-call length so
+    // the rpcmem registration size matches the FastRPC marshaling len param.
+    // Mismatch (e.g. 4 KB-registered buffer called with len=256) is rejected
+    // with AEE_EUNSUPPORTED (rc=0x4e). Confirmed via standalone scaffold:
+    // its compress_f32 calls allocate at exact-size and succeed; the bridge
+    // previously over-allocated and every call silently failed.
     int alloc_flags = RPCMEM_DEFAULT_FLAGS | RPCMEM_TRY_MAP_STATIC;
-    cache->vec_in_f32  = (float *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
-                          SP_HEXAGON_HEAD_DIM_MAX * sizeof(float));
-    cache->vec_out_f32 = (float *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
-                          SP_HEXAGON_HEAD_DIM_MAX * sizeof(float));
-    if (!cache->vec_in_f32 || !cache->vec_out_f32) {
-        fprintf(stderr, "[Shannon-Prime] hexagon cache: rpcmem vec scratch alloc failed\n");
-        if (cache->vec_in_f32)  rpcmem_free(cache->vec_in_f32);
-        if (cache->vec_out_f32) rpcmem_free(cache->vec_out_f32);
-        cache->vec_in_f32 = cache->vec_out_f32 = NULL;
+    cache->vec_in_f32   = (float *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                            (int)(sizeof(float) * cfg->head_dim));
+    cache->vec_out_f32  = (float *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                            (int)(sizeof(float) * cfg->head_dim));
+    cache->k_packed_rpc = (uint8_t *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                            cache->k_bands.total_bytes);
+    cache->v_packed_rpc = (uint8_t *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
+                            cache->v_bands.total_bytes);
+    if (!cache->vec_in_f32 || !cache->vec_out_f32 ||
+        !cache->k_packed_rpc || !cache->v_packed_rpc) {
+        fprintf(stderr, "[Shannon-Prime] hexagon cache: rpcmem scratch alloc failed "
+                        "(in=%p out=%p k_pkt=%p v_pkt=%p)\n",
+                (void*)cache->vec_in_f32, (void*)cache->vec_out_f32,
+                (void*)cache->k_packed_rpc, (void*)cache->v_packed_rpc);
+        sp_hexagon_cache_free(cache);
         return -1;
     }
 
+    // Cache slots are HOST-ONLY memory now (plain malloc). DSP never reads or
+    // writes them directly — bridge stages each per-position vector through
+    // the rpcmem scratches above, then memcpy into / out of the corresponding
+    // slot offset on the host side. Two wins: (1) no FD/handle exhaustion
+    // on big models (Llama-70B with 80 layers x 8 KV heads x 2 = 1280 slots
+    // would otherwise blow through the typical 1024 FD limit), (2) slot
+    // sub-indexing is unconstrained — no 128-byte HVX-alignment requirement
+    // because the DSP never sees these pointers.
     cache->k_cache = (uint8_t **)calloc(cache->n_slots, sizeof(uint8_t *));
     cache->v_cache = (uint8_t **)calloc(cache->n_slots, sizeof(uint8_t *));
     if (!cache->k_cache || !cache->v_cache) {
@@ -429,21 +449,21 @@ int sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
     }
 
     size_t k_slot_bytes = (size_t)max_seq_len * (size_t)cache->k_bands.total_bytes;
-    size_t v_slot_bytes = (size_t)max_seq_len * (size_t)cache->v_bands.total_bytes;
+    // V slot stores uncompressed fp32 vectors (V skips DSP — see sp_hex_cache_write_one
+    // for the rationale: compress_f32 IDL hard-codes K band config, so V's 1-band
+    // 3-bit config can't dispatch through the existing DSP method). Until the IDL
+    // gains compress_f32_v / decompress_f32_v, V uses host-only fp32 storage.
+    size_t v_slot_bytes = (size_t)max_seq_len * (size_t)cfg->head_dim * sizeof(float);
 
     for (int s = 0; s < cache->n_slots; ++s) {
-        cache->k_cache[s] = (uint8_t *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
-                              (int)k_slot_bytes);
-        cache->v_cache[s] = (uint8_t *)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, alloc_flags,
-                              (int)v_slot_bytes);
+        cache->k_cache[s] = (uint8_t *)calloc(1, k_slot_bytes);
+        cache->v_cache[s] = (uint8_t *)calloc(1, v_slot_bytes);
         if (!cache->k_cache[s] || !cache->v_cache[s]) {
-            fprintf(stderr, "[Shannon-Prime] hexagon cache: rpcmem slot %d/%d failed "
+            fprintf(stderr, "[Shannon-Prime] hexagon cache: malloc slot %d/%d failed "
                             "(k=%zu v=%zu)\n", s, cache->n_slots, k_slot_bytes, v_slot_bytes);
             sp_hexagon_cache_free(cache);
             return -1;
         }
-        memset(cache->k_cache[s], 0, k_slot_bytes);
-        memset(cache->v_cache[s], 0, v_slot_bytes);
         ctx->bytes_in_use += k_slot_bytes + v_slot_bytes;
     }
     return 0;
@@ -451,18 +471,22 @@ int sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
 
 void sp_hexagon_cache_free(sp_hexagon_cache_t *cache) {
     if (!cache) return;
+    // Cache slots are now host-only malloc'd memory (see init for rationale).
     if (cache->k_cache) {
         for (int s = 0; s < cache->n_slots; ++s)
-            if (cache->k_cache[s]) rpcmem_free(cache->k_cache[s]);
+            if (cache->k_cache[s]) free(cache->k_cache[s]);
         free(cache->k_cache);
     }
     if (cache->v_cache) {
         for (int s = 0; s < cache->n_slots; ++s)
-            if (cache->v_cache[s]) rpcmem_free(cache->v_cache[s]);
+            if (cache->v_cache[s]) free(cache->v_cache[s]);
         free(cache->v_cache);
     }
-    if (cache->vec_in_f32)  rpcmem_free(cache->vec_in_f32);
-    if (cache->vec_out_f32) rpcmem_free(cache->vec_out_f32);
+    // Per-call rpcmem scratches.
+    if (cache->vec_in_f32)   rpcmem_free(cache->vec_in_f32);
+    if (cache->vec_out_f32)  rpcmem_free(cache->vec_out_f32);
+    if (cache->k_packed_rpc) rpcmem_free(cache->k_packed_rpc);
+    if (cache->v_packed_rpc) rpcmem_free(cache->v_packed_rpc);
     memset(cache, 0, sizeof(*cache));
 }
 
@@ -478,17 +502,34 @@ static void sp_hex_cache_write_one(sp_hexagon_cache_t *cache,
     int slot = sp_hex_slot_index(&cache->cfg_snapshot, layer, head);
     if (slot < 0 || slot >= cache->n_slots) return;
 
-    sp_band_config_t *bc = is_k ? &cache->k_bands : &cache->v_bands;
-    uint8_t *dst_slot = is_k ? cache->k_cache[slot] : cache->v_cache[slot];
+    if (!is_k) {
+        // V path bypass: the DSP-side sp_hex_compress_f32 hard-codes K band
+        // config (4 bands at 5/5/4/3) and rejects any out_capacity that
+        // doesn't match. Until the IDL gains a config-aware compress_f32_v,
+        // V skips the DSP and stores the fp32 vector directly in the slot.
+        // Net effect: K still gets full DSP compression (3.0× memory savings
+        // on K cache), V is uncompressed fp32 (4× larger than fp16 vanilla,
+        // 2× larger than fp32 vanilla — accept this until the IDL extends).
+        uint8_t *v_slot = cache->v_cache[slot];
+        if (!v_slot) return;
+        float *v_dst = (float *)(v_slot + (size_t)pos * (size_t)hd * sizeof(float));
+        memcpy(v_dst, vec, sizeof(float) * hd);
+        return;
+    }
+
+    // K path: DSP compress_f32 (K band config hard-coded in IDL).
+    sp_band_config_t *bc = &cache->k_bands;
+    uint8_t *dst_slot = cache->k_cache[slot];
     if (!dst_slot) return;
-    uint8_t *dst = dst_slot + (size_t)pos * (size_t)bc->total_bytes;
+    uint8_t *out_scratch = cache->k_packed_rpc;
+    if (!out_scratch) return;
 
     memcpy(cache->vec_in_f32, vec, sizeof(float) * hd);
     sp_hex_rpcmem_sync_for_dsp(cache->vec_in_f32, sizeof(float) * hd);
     int packed_used = 0;
     int rc = sp_hex_compress_f32(cache->ctx->fastrpc_handle,
                                   cache->vec_in_f32, hd, hd,
-                                  dst, bc->total_bytes,
+                                  out_scratch, bc->total_bytes,
                                   &packed_used);
     if (rc != AEE_SUCCESS || packed_used != bc->total_bytes) {
         static int warned = 0;
@@ -498,7 +539,14 @@ static void sp_hex_cache_write_one(sp_hexagon_cache_t *cache,
                     rc, packed_used, bc->total_bytes, slot, pos);
             warned = 1;
         }
+        return;
     }
+    // Successful DSP encode — stage into the per-position offset of the
+    // host-only cache slot. rpcmem buffers allocated with DEFAULT_FLAGS +
+    // TRY_MAP_STATIC are cache-coherent in both directions on V69 (ION
+    // I/O-coherent attribute); no explicit sync_for_host needed.
+    uint8_t *dst = dst_slot + (size_t)pos * (size_t)bc->total_bytes;
+    memcpy(dst, out_scratch, bc->total_bytes);
 }
 
 static void sp_hex_cache_read_one(const sp_hexagon_cache_t *cache,
@@ -520,17 +568,39 @@ static void sp_hex_cache_read_one(const sp_hexagon_cache_t *cache,
         memset(out_vec, 0, sizeof(float) * hd);
         return;
     }
-    const sp_band_config_t *bc = is_k ? &cache->k_bands : &cache->v_bands;
-    uint8_t *src_slot = is_k ? cache->k_cache[slot] : cache->v_cache[slot];
+
+    if (!is_k) {
+        // V path bypass — see sp_hex_cache_write_one for rationale. V is stored
+        // uncompressed fp32 in the slot until the IDL gains compress_f32_v.
+        uint8_t *v_slot = cache->v_cache[slot];
+        if (!v_slot) {
+            memset(out_vec, 0, sizeof(float) * hd);
+            return;
+        }
+        const float *v_src = (const float *)(v_slot + (size_t)pos * (size_t)hd * sizeof(float));
+        memcpy(out_vec, v_src, sizeof(float) * hd);
+        return;
+    }
+
+    // K path: DSP decompress_f32.
+    const sp_band_config_t *bc = &cache->k_bands;
+    uint8_t *src_slot = cache->k_cache[slot];
     if (!src_slot) {
         memset(out_vec, 0, sizeof(float) * hd);
         return;
     }
-    uint8_t *src = src_slot + (size_t)pos * (size_t)bc->total_bytes;
-
     sp_hexagon_cache_t *cache_mut = (sp_hexagon_cache_t *)cache;
+    uint8_t *in_scratch = cache_mut->k_packed_rpc;
+    if (!in_scratch) {
+        memset(out_vec, 0, sizeof(float) * hd);
+        return;
+    }
+    const uint8_t *src = src_slot + (size_t)pos * (size_t)bc->total_bytes;
+    memcpy(in_scratch, src, bc->total_bytes);
+    sp_hex_rpcmem_sync_for_dsp(in_scratch, bc->total_bytes);
+
     int rc = sp_hex_decompress_f32(cache->ctx->fastrpc_handle,
-                                    src, bc->total_bytes,
+                                    in_scratch, bc->total_bytes,
                                     hd, max_bands,
                                     cache_mut->vec_out_f32, hd);
     if (rc != AEE_SUCCESS) {
