@@ -1058,8 +1058,8 @@ index 0000000..267f83d
 +                // Single batched compress + decompress at slots [0..n_tokens-1].
 +                // The bridge chunks internally (SP_HEX_BATCH_CHUNK, default 32);
 +                // FastRPC dispatches per (layer, head) becomes ceil(n_tokens / chunk).
-+                sp_llama_write_k_batch(sp_ctx, il, h, 0, n_tokens, batch_in.data());
-+                sp_llama_read_k_batch (sp_ctx, il, h, 0, n_tokens, batch_out.data());
++                sp_llama_write_k_batch(sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, batch_in.data());
++                sp_llama_read_k_batch (sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, batch_out.data());
 +
 +                // Scatter only valid positions; invalid retain original K.
 +                for (int t = 0; t < n_tokens; ++t) {
@@ -1089,8 +1089,8 @@ index 0000000..267f83d
 +                        sp_sqfree_write_k(sqfree_cache, il, h, 0, gather);
 +                        sp_sqfree_read_k (sqfree_cache, il, h, 0, recon);
 +                    } else {
-+                        sp_llama_write_k        (sp_ctx, il, h, 0, gather);
-+                        sp_llama_read_k_partial (sp_ctx, il, h, 0, recon, max_bands);
++                        sp_llama_write_k        (sp_ctx, il, h, (int)slot, gather);
++                        sp_llama_read_k_partial (sp_ctx, il, h, (int)slot, recon, max_bands);
 +                    }
 +
 +                    scatter_vec(k, off, hd_k, recon);
@@ -1135,8 +1135,8 @@ index 0000000..267f83d
 +                                else std::memset(dst, 0, sizeof(float) * hd_v);
 +                            }
 +                            if (!any_valid) continue;
-+                            sp_llama_write_v_batch(sp_ctx, il, h, 0, n_tokens, v_batch_in.data());
-+                            sp_llama_read_v_batch (sp_ctx, il, h, 0, n_tokens, v_batch_out.data());
++                            sp_llama_write_v_batch(sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, v_batch_in.data());
++                            sp_llama_read_v_batch (sp_ctx, il, h, (int)sinfo.idxs[0][0], n_tokens, v_batch_out.data());
 +                            for (int t = 0; t < n_tokens; ++t) {
 +                                if (!v_valid[t]) continue;
 +                                uint32_t slot = sinfo.idxs[0][t];
@@ -1157,8 +1157,8 @@ index 0000000..267f83d
 +                                sp_sqfree_write_v(sqfree_cache, il, h, 0, gather);
 +                                sp_sqfree_read_v (sqfree_cache, il, h, 0, recon);
 +                            } else {
-+                                sp_llama_write_v        (sp_ctx, il, h, 0, gather);
-+                                sp_llama_read_v_partial (sp_ctx, il, h, 0, recon, max_bands);
++                                sp_llama_write_v        (sp_ctx, il, h, (int)slot, gather);
++                                sp_llama_read_v_partial (sp_ctx, il, h, (int)slot, recon, max_bands);
 +                            }
 +
 +                            scatter_vec(v, off, hd_v, recon);
@@ -1216,8 +1216,8 @@ index 0000000..267f83d
 +                                sp_sqfree_write_v(sqfree_cache, il, h, 0, gather);
 +                                sp_sqfree_read_v (sqfree_cache, il, h, 0, recon);
 +                            } else {
-+                                sp_llama_write_v        (sp_ctx, il, h, 0, gather);
-+                                sp_llama_read_v_partial (sp_ctx, il, h, 0, recon, max_bands);
++                                sp_llama_write_v        (sp_ctx, il, h, (int)slot, gather);
++                                sp_llama_read_v_partial (sp_ctx, il, h, (int)slot, recon, max_bands);
 +                            }
 +
 +                            // Scatter the reconstructed values back to the
