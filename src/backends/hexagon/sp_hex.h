@@ -264,6 +264,12 @@ __QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_vtcm_status)(remote_handle64 _h, i
 __QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_vht2_bench)(remote_handle64 _h, int head_dim, int iterations, int64* scalar_pcycles, int64* hvx_pcycles) __QAIC_HEADER_ATTRIBUTE;
 __QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_compress_f32)(remote_handle64 _h, const float* in_vec, int in_vecLen, int head_dim, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_HEADER_ATTRIBUTE;
 __QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_decompress_f32)(remote_handle64 _h, const unsigned char* packed_in, int packed_inLen, int head_dim, int max_bands, float* out_vec, int out_vecLen) __QAIC_HEADER_ATTRIBUTE;
+__QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_compress_f32_batch)(remote_handle64 _h, const float* in_vecs, int in_vecsLen, int head_dim, int n_vectors, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_HEADER_ATTRIBUTE;
+__QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_decompress_f32_batch)(remote_handle64 _h, const unsigned char* packed_in, int packed_inLen, int head_dim, int n_vectors, int max_bands, float* out_vecs, int out_vecsLen) __QAIC_HEADER_ATTRIBUTE;
+__QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_compress_f32_v)(remote_handle64 _h, const float* in_vec, int in_vecLen, int head_dim, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_HEADER_ATTRIBUTE;
+__QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_decompress_f32_v)(remote_handle64 _h, const unsigned char* packed_in, int packed_inLen, int head_dim, int max_bands, float* out_vec, int out_vecLen) __QAIC_HEADER_ATTRIBUTE;
+__QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_compress_f32_v_batch)(remote_handle64 _h, const float* in_vecs, int in_vecsLen, int head_dim, int n_vectors, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_HEADER_ATTRIBUTE;
+__QAIC_HEADER_EXPORT int __QAIC_HEADER(sp_hex_decompress_f32_v_batch)(remote_handle64 _h, const unsigned char* packed_in, int packed_inLen, int head_dim, int n_vectors, int max_bands, float* out_vecs, int out_vecsLen) __QAIC_HEADER_ATTRIBUTE;
 #ifndef sp_hex_URI
 #define sp_hex_URI "file:///libsp_hex_skel.so?sp_hex_skel_handle_invoke&_modver=1.0"
 #endif /*sp_hex_URI*/

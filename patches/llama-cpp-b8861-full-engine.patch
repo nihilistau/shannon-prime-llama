@@ -418,7 +418,7 @@ new file mode 100644
 index 0000000..267f83d
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,733 @@
+@@ -0,0 +1,823 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -1012,30 +1012,90 @@ index 0000000..267f83d
 +            }
 +        }
 +
-+        for (int t = 0; t < n_tokens; ++t) {
-+            uint32_t slot = sinfo.idxs[0][t];
-+            const size_t pos_off = (size_t)slot * k_pos_stride;
++        {
++        // PREFILL FAST PATH — batched compress_f32_batch FastRPC (when applicable).
++        // Reduces n_tokens × nhk × 2 single-position FastRPC calls to nhk × 2
++        // batched calls per layer at prefill (n_tokens > 1). Falls back to the
++        // per-position path for: sqfree codec (host-only memcpy, no FastRPC win),
++        // partial-fidelity reads (max_bands >= 0, batched read returns full bands
++        // only), or single-token generation (chunk=1 has no batching benefit).
++        // Batch covers full-fidelity reads only: max_bands < 0 (explicit "all") OR
++        // max_bands >= 4 (i.e., asking for >= n_bands of K, which the math core treats
++        // as "all" — INT_MAX is the no-partial-dispatch default value).
++        const bool use_k_batch = !sqfree_active && n_tokens > 1 &&
++                                 (max_bands < 0 || max_bands >= 4);
++
++        if (use_k_batch) {
++            // Per-head batch buffers, reused across heads. Each is
++            // n_tokens * hd_k floats. At n_tokens=2000, hd_k=128: ~1 MB
++            // per buffer × 2 = 2 MB peak — acceptable on phone.
++            std::vector<float>   batch_in ((size_t)n_tokens * (size_t)hd_k);
++            std::vector<float>   batch_out((size_t)n_tokens * (size_t)hd_k);
++            std::vector<uint8_t> valid    (n_tokens, 0);
 +
 +            for (int h = 0; h < nhk; ++h) {
-+                const size_t off = pos_off + (size_t)h * hd_k * ek;
-+                if (!gather_vec(k, off, hd_k, gather)) continue;
-+
-+                if (dump_fp && (dump_limit == 0 || dump_count < dump_limit)) {
-+                    std::fwrite(gather, sizeof(float), hd_k, dump_fp);
-+                    dump_count++;
-+                    if (dump_count == dump_limit) std::fflush(dump_fp);
++                bool any_valid = false;
++                for (int t = 0; t < n_tokens; ++t) {
++                    uint32_t slot = sinfo.idxs[0][t];
++                    const size_t off = (size_t)slot * k_pos_stride + (size_t)h * hd_k * ek;
++                    float * dst = batch_in.data() + (size_t)t * hd_k;
++                    valid[t] = gather_vec(k, off, hd_k, dst) ? 1 : 0;
++                    if (valid[t]) {
++                        any_valid = true;
++                        if (dump_fp && (dump_limit == 0 || dump_count < dump_limit)) {
++                            std::fwrite(dst, sizeof(float), hd_k, dump_fp);
++                            dump_count++;
++                            if (dump_count == dump_limit) std::fflush(dump_fp);
++                        }
++                    } else {
++                        // Zero-fill so DSP doesn't see uninitialised data.
++                        std::memset(dst, 0, sizeof(float) * hd_k);
++                    }
 +                }
++                if (!any_valid) continue;
 +
-+                if (sqfree_active) {
-+                    sp_sqfree_write_k(sqfree_cache, il, h, 0, gather);
-+                    sp_sqfree_read_k (sqfree_cache, il, h, 0, recon);
-+                } else {
-+                    sp_llama_write_k        (sp_ctx, il, h, 0, gather);
-+                    sp_llama_read_k_partial (sp_ctx, il, h, 0, recon, max_bands);
++                // Single batched compress + decompress at slots [0..n_tokens-1].
++                // The bridge chunks internally (SP_HEX_BATCH_CHUNK, default 32);
++                // FastRPC dispatches per (layer, head) becomes ceil(n_tokens / chunk).
++                sp_llama_write_k_batch(sp_ctx, il, h, 0, n_tokens, batch_in.data());
++                sp_llama_read_k_batch (sp_ctx, il, h, 0, n_tokens, batch_out.data());
++
++                // Scatter only valid positions; invalid retain original K.
++                for (int t = 0; t < n_tokens; ++t) {
++                    if (!valid[t]) continue;
++                    uint32_t slot = sinfo.idxs[0][t];
++                    const size_t off = (size_t)slot * k_pos_stride + (size_t)h * hd_k * ek;
++                    scatter_vec(k, off, hd_k, batch_out.data() + (size_t)t * hd_k);
 +                }
-+
-+                scatter_vec(k, off, hd_k, recon);
 +            }
++        } else {
++            // Per-position fallback: sqfree, partial-fidelity, or single-tok gen.
++            for (int t = 0; t < n_tokens; ++t) {
++                uint32_t slot = sinfo.idxs[0][t];
++                const size_t pos_off = (size_t)slot * k_pos_stride;
++
++                for (int h = 0; h < nhk; ++h) {
++                    const size_t off = pos_off + (size_t)h * hd_k * ek;
++                    if (!gather_vec(k, off, hd_k, gather)) continue;
++
++                    if (dump_fp && (dump_limit == 0 || dump_count < dump_limit)) {
++                        std::fwrite(gather, sizeof(float), hd_k, dump_fp);
++                        dump_count++;
++                        if (dump_count == dump_limit) std::fflush(dump_fp);
++                    }
++
++                    if (sqfree_active) {
++                        sp_sqfree_write_k(sqfree_cache, il, h, 0, gather);
++                        sp_sqfree_read_k (sqfree_cache, il, h, 0, recon);
++                    } else {
++                        sp_llama_write_k        (sp_ctx, il, h, 0, gather);
++                        sp_llama_read_k_partial (sp_ctx, il, h, 0, recon, max_bands);
++                    }
++
++                    scatter_vec(k, off, hd_k, recon);
++                }
++            }
++        }
 +        }
 +
 +        // V — only when not transposed. The adjacency check matches
@@ -1055,6 +1115,35 @@ index 0000000..267f83d
 +                if (n_embd_v_gqa == (size_t)hd_v * (size_t)nhk) {
 +                    const size_t v_pos_stride = n_embd_v_gqa * ev;
 +
++                    // V PREFILL FAST PATH — mirror K-batch logic for V.
++                    // V has 1 band, so "all bands" = max_bands < 0 OR >= 1.
++                    const bool use_v_batch = !sqfree_active && n_tokens > 1 &&
++                                             (max_bands < 0 || max_bands >= 1);
++                    if (use_v_batch) {
++                        std::vector<float>   v_batch_in ((size_t)n_tokens * (size_t)hd_v);
++                        std::vector<float>   v_batch_out((size_t)n_tokens * (size_t)hd_v);
++                        std::vector<uint8_t> v_valid    (n_tokens, 0);
++                        for (int h = 0; h < nhk; ++h) {
++                            bool any_valid = false;
++                            for (int t = 0; t < n_tokens; ++t) {
++                                uint32_t slot = sinfo.idxs[0][t];
++                                const size_t off = (size_t)slot * v_pos_stride + (size_t)h * hd_v * ev;
++                                float * dst = v_batch_in.data() + (size_t)t * hd_v;
++                                v_valid[t] = gather_vec(v, off, hd_v, dst) ? 1 : 0;
++                                if (v_valid[t]) any_valid = true;
++                                else std::memset(dst, 0, sizeof(float) * hd_v);
++                            }
++                            if (!any_valid) continue;
++                            sp_llama_write_v_batch(sp_ctx, il, h, 0, n_tokens, v_batch_in.data());
++                            sp_llama_read_v_batch (sp_ctx, il, h, 0, n_tokens, v_batch_out.data());
++                            for (int t = 0; t < n_tokens; ++t) {
++                                if (!v_valid[t]) continue;
++                                uint32_t slot = sinfo.idxs[0][t];
++                                const size_t off = (size_t)slot * v_pos_stride + (size_t)h * hd_v * ev;
++                                scatter_vec(v, off, hd_v, v_batch_out.data() + (size_t)t * hd_v);
++                            }
++                        }
++                    } else {
 +                    for (int t = 0; t < n_tokens; ++t) {
 +                        uint32_t slot = sinfo.idxs[0][t];
 +                        const size_t pos_off = (size_t)slot * v_pos_stride;
@@ -1073,6 +1162,7 @@ index 0000000..267f83d
 +
 +                            scatter_vec(v, off, hd_v, recon);
 +                        }
++                    }
 +                    }
 +                }
 +            } else {
