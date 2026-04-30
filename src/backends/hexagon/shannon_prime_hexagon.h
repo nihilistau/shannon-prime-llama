@@ -111,10 +111,19 @@ typedef struct {
     int                n_slots;
     sp_band_config_t   k_bands;
     sp_band_config_t   v_bands;
+    // Cache slots are plain malloc'd memory now — DSP never touches them
+    // directly, so they don't need to be rpcmem-registered. Sidesteps
+    // FastRPC's registration-length contract (172 KB-registered slot
+    // called with len=42 was rejected as AEE_EUNSUPPORTED) AND avoids
+    // FD/handle exhaustion on big-layer-count models.
     uint8_t          **k_cache;
     uint8_t          **v_cache;
+    // FastRPC IN/OUT scratches — sized at EXACTLY the per-call length so
+    // the rpcmem registration matches the marshaling len param.
     float             *vec_in_f32;
     float             *vec_out_f32;
+    uint8_t           *k_packed_rpc;
+    uint8_t           *v_packed_rpc;
 } sp_hexagon_cache_t;
 
 int  sp_hexagon_cache_init(sp_hexagon_cache_t *cache,
