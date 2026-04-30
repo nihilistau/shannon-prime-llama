@@ -97,7 +97,7 @@ diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index 7b1fcfc..3a98ced 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -53,6 +53,203 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+@@ -53,6 +53,204 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
  
  target_link_libraries(llama PUBLIC ggml)
  
@@ -267,6 +267,7 @@ index 7b1fcfc..3a98ced 100644
 +        ${_SP_ENG}/kv_cache.cpp
 +        ${_SP_ENG}/gdn_state.cpp
 +        ${_SP_ENG}/llama_sp_fused_kq.cpp
++        ${_SP_ENG}/llama_sp_kcap.cpp
 +    )
 +    add_library(shannon_prime_engine STATIC ${_SP_ENGINE_SOURCES})
 +    target_include_directories(shannon_prime_engine PUBLIC
@@ -333,7 +334,7 @@ index ee0c292..08e2a28 100644
      if (!model.hparams.no_alloc) {
          for (size_t i = 0; i < backend_ptrs.size(); ++i) {
              ggml_backend_t             backend = backend_ptrs[i];
-@@ -1235,6 +1246,29 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
+@@ -1235,6 +1246,32 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
          return nullptr;
      }
  
@@ -341,6 +342,9 @@ index ee0c292..08e2a28 100644
 +    // Phase 1.6: stash sp_state in thread-local for build_attn_mha fast path.
 +    if (llama_sp_is_enabled(&model)) {
 +        llama_sp_set_current_state(&model);
++        // Phase 1.7: kcap emitter sets a per-ubatch flag during graph build;
++        // clear it here so previous ubatches do not bleed into this one.
++        llama_sp_kcap_clear_post_compute_skip();
 +    }
 +
 +    if (llama_sp_is_enabled(&model)) {
@@ -367,12 +371,13 @@ diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
 index 2ff23f8..9cf8924 100644
 --- a/src/llama-graph.cpp
 +++ b/src/llama-graph.cpp
-@@ -10,6 +10,9 @@
+@@ -10,6 +10,10 @@
  #include "llama-memory-hybrid.h"
  #include "llama-memory-hybrid-iswa.h"
  #include "llama-memory-recurrent.h"
 +#ifdef LLAMA_SHANNON_PRIME
 +#include "llama_sp_fused_kq.h"
++#include "llama_sp_kcap.h"
 +#endif
  
  #include <cassert>
@@ -411,38 +416,41 @@ index 2ff23f8..9cf8924 100644
          cb(kq, "kq", il);
  
          // note: this op tends to require high floating point range
-@@ -2209,6 +2237,11 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2209,6 +2237,12 @@ ggml_tensor * llm_graph_context::build_attn(
          const auto & k_idxs = inp->get_k_idxs();
          const auto & v_idxs = inp->get_v_idxs();
  
 +#ifdef LLAMA_SHANNON_PRIME
 +        // Phase 1.7: SP fast-path = SP archive is sole K source of truth.
 +        // Skip fp16 K cache write so kernel keeps pages zero-mapped.
-+        if (!llama_sp_fast_path_enabled())
++        if (llama_sp_fast_path_enabled())
++            llama_sp_kcap_emit(ctx0, gf, k_cur, k_idxs, il);
 +#endif
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
          ggml_build_forward_expand(gf, mctx_cur->cpy_v(ctx0, v_cur, v_idxs, il));
      }
-@@ -2301,6 +2334,11 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2301,6 +2335,12 @@ ggml_tensor * llm_graph_context::build_attn(
      {
          const auto & k_idxs = inp->get_k_idxs();
  
 +#ifdef LLAMA_SHANNON_PRIME
 +        // Phase 1.7: SP fast-path = SP archive is sole K source of truth.
 +        // Skip fp16 K cache write so kernel keeps pages zero-mapped.
-+        if (!llama_sp_fast_path_enabled())
++        if (llama_sp_fast_path_enabled())
++            llama_sp_kcap_emit(ctx0, gf, k_cur, k_idxs, il);
 +#endif
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
      }
  
-@@ -2383,6 +2421,11 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2383,6 +2423,12 @@ ggml_tensor * llm_graph_context::build_attn(
      if (k_cur) {
          const auto & k_idxs = is_swa ? inp->get_k_idxs_swa() : inp->get_k_idxs();
  
 +#ifdef LLAMA_SHANNON_PRIME
 +        // Phase 1.7: SP fast-path = SP archive is sole K source of truth.
 +        // Skip fp16 K cache write so kernel keeps pages zero-mapped.
-+        if (!llama_sp_fast_path_enabled())
++        if (llama_sp_fast_path_enabled())
++            llama_sp_kcap_emit(ctx0, gf, k_cur, k_idxs, il);
 +#endif
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
      }
@@ -509,7 +517,7 @@ new file mode 100644
 index 0000000..0a75adb
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
-@@ -0,0 +1,850 @@
+@@ -0,0 +1,858 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp. See header.
 +
 +#ifdef LLAMA_SHANNON_PRIME
@@ -610,9 +618,12 @@ index 0000000..0a75adb
 +    if (!g_sp_current_state) return 0;
 +    return sp_llama_get_hexagon_k_total_bytes(g_sp_current_state->ctx);
 +}
-+
-+// Reserve trailing lines so block size matches original (no hunk header drift).
-+// (Stub body removed; live impl above calls into shannon_prime_llama.h.)
++// Phase 1.7: opaque accessor for kcap custom op. Returns sp_llama_ctx_t *
++// for current ubatch model, or null if SP not active.
++extern "C" void * llama_sp_get_current_sp_ctx_void(void) {
++    if (!g_sp_current_state || !g_sp_current_state->ctx) return nullptr;
++    return (void *)g_sp_current_state->ctx;
++}
 +
 +
 +inline float * get_scratch(std::vector<float> & v, size_t n) {
@@ -1108,6 +1119,11 @@ index 0000000..0a75adb
 +        // scatter route through ggml_backend_tensor_{get,set} in that case.
 +
 +        if (skip_k) goto do_v;
++        // Phase 1.7: when fast path emitted kcap ops at graph build, the
++        // SP archive is already populated for K. Skip the post_compute K
++        // round-trip (which would re-read from the zero-mapped fp16 cache
++        // and overwrite the archive with zeros). V is unaffected.
++        if (llama_sp_kcap_skip_post_compute_k()) goto do_v;
 +
 +        // SHANNON_PRIME_DUMP_K=<path> appends raw K vectors (hd_k × fp32) to
 +        // <path>; tools/sp_auto_bands.py consumes the dump to compute a per-band
@@ -1365,7 +1381,7 @@ new file mode 100644
 index 0000000..c5a1a72
 --- /dev/null
 +++ b/src/llama-shannon-prime.h
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,113 @@
 +// Shannon-Prime VHT2 KV cache compression hooks for llama.cpp.
 +//
 +// Activated when SHANNON_PRIME_ENABLED=1 is set in the environment.
@@ -1467,6 +1483,12 @@ index 0000000..c5a1a72
 +void llama_sp_set_current_state(const struct llama_model * model);
 +const void * llama_sp_get_current_hexagon_k_cache_slot(int layer, int head);
 +int llama_sp_get_current_hexagon_k_total_bytes(void);
++
++// Phase 1.7 — kcap helpers used by llama-graph.cpp (build_attn) and the
++// post_compute hook to coordinate the skip-K archive population path.
++void * llama_sp_get_current_sp_ctx_void(void);
++int    llama_sp_kcap_skip_post_compute_k(void);
++void   llama_sp_kcap_clear_post_compute_skip(void);
 +
 +#ifdef __cplusplus
 +}
