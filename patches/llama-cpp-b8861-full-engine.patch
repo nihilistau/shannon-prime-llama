@@ -268,6 +268,25 @@ index 7b1fcfc..14556b6 100644
 +        ${_SP_ENG}/llama_sp_fused_kq.cpp
 +        ${_SP_ENG}/llama_sp_kcap.cpp
 +    )
++
++    # Phase 2.5+ — optional QNN HTP dispatch path for FUSED_KQ. Adds two
++    # source files (sp_qnn.c, sp_llama_qnn.c) and links libdl for runtime
++    # QNN library loading. Only enables on Android aarch64 (where libQnnHtp
++    # is shipped with QAIRT). Activation: -DSP_QNN_KQ=ON + QAIRT_ROOT set.
++    # Runtime: SHANNON_PRIME_QNN_KQ=1 env var on the phone.
++    if (SP_QNN_KQ AND CMAKE_SYSTEM_NAME STREQUAL "Android"
++                  AND CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
++        if (NOT DEFINED QAIRT_ROOT OR NOT EXISTS "${QAIRT_ROOT}/include/QNN/QnnInterface.h")
++            message(FATAL_ERROR "SP_QNN_KQ=ON requires -DQAIRT_ROOT=<QAIRT install path>"
++                                " containing include/QNN/QnnInterface.h")
++        endif()
++        list(APPEND _SP_ENGINE_SOURCES
++            ${_SP_ENG}/sp_qnn.c
++            ${_SP_ENG}/sp_llama_qnn.c
++        )
++        message(STATUS "Shannon-Prime: QNN HTP KQ dispatch enabled (QAIRT_ROOT=${QAIRT_ROOT})")
++    endif()
++
 +    add_library(shannon_prime_engine STATIC ${_SP_ENGINE_SOURCES})
 +    target_include_directories(shannon_prime_engine PUBLIC
 +        ${_SP_INCLUDES}
@@ -277,6 +296,16 @@ index 7b1fcfc..14556b6 100644
 +    target_compile_features(shannon_prime_engine PRIVATE cxx_std_17)
 +    set_property(TARGET shannon_prime_engine PROPERTY POSITION_INDEPENDENT_CODE ON)
 +    target_link_libraries(shannon_prime_engine PUBLIC shannon_prime_core)
++
++    if (SP_QNN_KQ AND CMAKE_SYSTEM_NAME STREQUAL "Android"
++                  AND CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
++        target_compile_definitions(shannon_prime_engine PUBLIC LLAMA_SHANNON_PRIME_QNN)
++        target_include_directories(shannon_prime_engine PRIVATE
++            ${QAIRT_ROOT}/include/QNN
++            ${QAIRT_ROOT}/include
++        )
++        target_link_libraries(shannon_prime_engine PUBLIC dl)
++    endif()
 +    if (SP_CUDA)
 +        target_link_libraries(shannon_prime_engine PUBLIC shannon_prime_cuda)
 +        target_compile_definitions(shannon_prime_engine PUBLIC SP_HAVE_CUDA SP_ENGINE_WITH_CUDA)

@@ -1,0 +1,6 @@
+"Config","Note","TokSec","Acceptance","EditDistVsVan"
+"vanilla","no SP, baseline","0","0","0"
+"shared","ship preset, both ctx (sp1-style)","0","0","0"
+"per-model-same","sp2 per-model, same defaults","0","0","0"
+"differential-agg","sp2 differential - draft K=2,1 V=1","0","0","0"
+"differential-tern","sp2 differential - draft band 3 ternary","0","0","0"
