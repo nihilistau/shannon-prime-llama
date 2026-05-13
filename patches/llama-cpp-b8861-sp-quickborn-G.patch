@@ -1,0 +1,525 @@
+diff --git a/common/CMakeLists.txt b/common/CMakeLists.txt
+index b313a73..5b21d8b 100644
+--- a/common/CMakeLists.txt
++++ b/common/CMakeLists.txt
+@@ -118,6 +118,14 @@ target_link_libraries(${TARGET} PRIVATE
+     cpp-httplib
+ )
+ 
++# SP-QuickBorn block-diffusion speculative draft (Phase G.2). When the
++# llama target has the QuickBorn static lib linked, the common library
++# exposes COMMON_SPECULATIVE_TYPE_SP_QUICKBORN via that lib's symbols.
++if (LLAMA_SP_QUICKBORN)
++    target_compile_definitions(${TARGET} PRIVATE LLAMA_SP_QUICKBORN)
++    target_link_libraries     (${TARGET} PRIVATE shannon_prime_quickborn)
++endif()
++
+ if (LLAMA_LLGUIDANCE)
+     include(ExternalProject)
+     set(LLGUIDANCE_SRC ${CMAKE_BINARY_DIR}/llguidance/source)
+diff --git a/common/common.h b/common/common.h
+index 020b6a7..5bbccae 100644
+--- a/common/common.h
++++ b/common/common.h
+@@ -177,6 +177,7 @@ enum common_speculative_type {
+     COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K4V, // self-speculative decoding with n-gram keys and 4 m-gram values
+     COMMON_SPECULATIVE_TYPE_NGRAM_MOD,
+     COMMON_SPECULATIVE_TYPE_NGRAM_CACHE,   // self-speculative decoding with 3-level n-gram cache
++    COMMON_SPECULATIVE_TYPE_SP_QUICKBORN,  // SP-QuickBorn block-diffusion draft (outbound HTTP to lean engine)
+     COMMON_SPECULATIVE_TYPE_COUNT          // number of types, unknown type
+ };
+ 
+diff --git a/common/speculative.cpp b/common/speculative.cpp
+index 3e68c38..3bb3c3e 100644
+--- a/common/speculative.cpp
++++ b/common/speculative.cpp
+@@ -9,6 +9,10 @@
+ #include "ngram-mod.h"
+ #include "sampling.h"
+ 
++#ifdef LLAMA_SP_QUICKBORN
++#include "sp_quickborn_hook.h"
++#endif
++
+ #include <algorithm>
+ #include <cstring>
+ #include <iomanip>
+@@ -25,7 +29,8 @@ const std::vector<enum common_speculative_type> common_speculative_types = {
+     COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K,
+     COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K4V,
+     COMMON_SPECULATIVE_TYPE_NGRAM_MOD,
+-    COMMON_SPECULATIVE_TYPE_NGRAM_CACHE
++    COMMON_SPECULATIVE_TYPE_NGRAM_CACHE,
++    COMMON_SPECULATIVE_TYPE_SP_QUICKBORN
+ };
+ 
+ const std::map<std::string, enum common_speculative_type> common_speculative_type_from_name_map = {
+@@ -36,7 +41,8 @@ const std::map<std::string, enum common_speculative_type> common_speculative_typ
+     {"ngram_map_k",   COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K},
+     {"ngram_map_k4v", COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K4V},
+     {"ngram_mod",     COMMON_SPECULATIVE_TYPE_NGRAM_MOD},
+-    {"ngram_cache",   COMMON_SPECULATIVE_TYPE_NGRAM_CACHE}
++    {"ngram_cache",   COMMON_SPECULATIVE_TYPE_NGRAM_CACHE},
++    {"sp_quickborn",  COMMON_SPECULATIVE_TYPE_SP_QUICKBORN}
+ };
+ 
+ struct common_speculative_config {
+@@ -737,6 +743,101 @@ struct common_speculative_state_ngram_cache : public common_speculative_state {
+     }
+ };
+ 
++#ifdef LLAMA_SP_QUICKBORN
++// SP-QuickBorn block-diffusion draft. The patched llama.dll captures
++// residual stream at configured layer indices during the target's
++// forward pass (via sp_quickborn_capture_post_layer, plumbed into
++// llama-graph.cpp). When the speculative draft is requested, we POST
++// those captured hidden states to the lean engine's
++// /v1/spec-draft-raw and receive a block of candidate tokens.
++//
++// Capture is engaged for the lifetime of this object so the most
++// recent target decode's hidden states are always available in
++// cap.bufs[] when draft() is called.
++struct common_speculative_state_sp_quickborn : public common_speculative_state {
++    enum { SP_QB_HIDDEN  = 2048 }; // matches dflash draft model expectation
++    enum { SP_QB_N_LAYER = 5     };
++
++    sp_quickborn_capture cap;
++    std::vector<float>   buf_storage; // owns the per-layer scratch
++    int                  block_size = 8;
++
++    common_speculative_state_sp_quickborn(enum common_speculative_type type)
++        : common_speculative_state(type)
++    {
++        // Default layers — matches what the dflash draft was trained on.
++        // Env-overridable via SP_QUICKBORN_LAYERS="1,10,19,28,37" (parsed
++        // by the lean engine; here we just need SP_QB_N_LAYER slots).
++        std::memset(&cap, 0, sizeof(cap));
++        cap.n_layers    = SP_QB_N_LAYER;
++        cap.n_positions = 1;
++        cap.hidden_size = 0; // filled by hook on first call
++
++        const int default_layers[SP_QB_N_LAYER] = {1, 10, 19, 28, 37};
++        for (int i = 0; i < SP_QB_N_LAYER; ++i) {
++            cap.layer_ids[i] = default_layers[i];
++        }
++
++        buf_storage.assign((size_t)SP_QB_N_LAYER * (size_t)SP_QB_HIDDEN, 0.0f);
++        for (int i = 0; i < SP_QB_N_LAYER; ++i) {
++            cap.bufs[i] = buf_storage.data() + (size_t)i * (size_t)SP_QB_HIDDEN;
++        }
++
++        // Permissive block-size override.
++        if (const char * e = std::getenv("SP_QUICKBORN_BLOCK")) {
++            int v = atoi(e);
++            if (v > 0 && v <= 64) block_size = v;
++        }
++
++        sp_quickborn_capture_set(&cap);
++        LOG_INF("%s: engaged. layers=[%d,%d,%d,%d,%d] block=%d url=%s\n",
++                __func__, cap.layer_ids[0], cap.layer_ids[1], cap.layer_ids[2],
++                cap.layer_ids[3], cap.layer_ids[4], block_size,
++                sp_quickborn_url());
++    }
++
++    ~common_speculative_state_sp_quickborn() override {
++        sp_quickborn_capture_set(nullptr);
++    }
++
++    void begin(const llama_tokens & /*prompt*/) override {
++        // No per-decode init needed — capture state stays engaged for the
++        // lifetime of this object. The next target llama_decode will
++        // populate cap.bufs[].
++    }
++
++    void draft(
++            const common_params_speculative & params,
++            const llama_tokens & /*prompt_tgt*/,
++            llama_token /*id_last*/,
++            llama_tokens & result) override {
++        if (cap.hidden_size <= 0) {
++            // Capture hasn't run yet (e.g. before first decode) — skip.
++            return;
++        }
++        int want = block_size;
++        if (params.n_max > 0 && params.n_max < want) want = params.n_max;
++        std::vector<int> draft_ids((size_t)want);
++        int n = sp_quickborn_request_draft(&cap, want, draft_ids.data(), want);
++        if (n <= 0) {
++            LOG_DBG("%s: sp_quickborn_request_draft returned %d (skipping)\n",
++                    __func__, n);
++            return;
++        }
++        result.reserve(result.size() + (size_t)n);
++        for (int i = 0; i < n; ++i) {
++            result.push_back((llama_token)draft_ids[i]);
++        }
++    }
++
++    void accept(uint16_t /*n_accepted*/) override {
++        // Stateless. The engine's dflash forward is deterministic on the
++        // captured hidden states; per-step acceptance feedback is a future
++        // optimisation (e.g. drive an adaptive block_size).
++    }
++};
++#endif // LLAMA_SP_QUICKBORN
++
+ struct common_speculative {
+     std::vector<std::unique_ptr<common_speculative_state>> impls; // list of implementations to use and their states
+     common_speculative_state * curr_impl = nullptr; // current implementation in use (for stats)
+@@ -786,6 +887,7 @@ std::string common_speculative_type_to_str(enum common_speculative_type type) {
+         case COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K4V: return "ngram_map_k4v";
+         case COMMON_SPECULATIVE_TYPE_NGRAM_MOD:     return "ngram_mod";
+         case COMMON_SPECULATIVE_TYPE_NGRAM_CACHE:   return "ngram_cache";
++        case COMMON_SPECULATIVE_TYPE_SP_QUICKBORN:  return "sp_quickborn";
+         default:                                    return "unknown";
+     }
+ }
+@@ -859,6 +961,7 @@ common_speculative * common_speculative_init(
+         bool has_ngram_map_k   = (params.type == COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K);
+         bool has_ngram_map_k4v = (params.type == COMMON_SPECULATIVE_TYPE_NGRAM_MAP_K4V);
+         bool has_ngram_mod     = (params.type == COMMON_SPECULATIVE_TYPE_NGRAM_MOD);
++        bool has_sp_quickborn  = (params.type == COMMON_SPECULATIVE_TYPE_SP_QUICKBORN);
+ 
+         // In a more complex implementation we could use the same implementation but with different parameters.
+         // This was initially used in PR-18471 but removed to simplify the code.
+@@ -898,6 +1001,9 @@ common_speculative * common_speculative_init(
+         if (has_draft_eagle3) {
+             configs.push_back(common_speculative_config(COMMON_SPECULATIVE_TYPE_EAGLE3, params));
+         }
++        if (has_sp_quickborn) {
++            configs.push_back(common_speculative_config(COMMON_SPECULATIVE_TYPE_SP_QUICKBORN, params));
++        }
+     }
+ 
+     std::vector<std::unique_ptr<common_speculative_state>> impls = {};
+@@ -955,6 +1061,12 @@ common_speculative * common_speculative_init(
+                 impls.push_back(std::make_unique<common_speculative_state_ngram_cache>(state));
+                 break;
+             }
++#ifdef LLAMA_SP_QUICKBORN
++            case COMMON_SPECULATIVE_TYPE_SP_QUICKBORN: {
++                impls.push_back(std::make_unique<common_speculative_state_sp_quickborn>(config.type));
++                break;
++            }
++#endif
+             default:
+                 break;
+         }
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 121c21f..0d8557c 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -163,6 +163,228 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
+ 
+ target_link_libraries(llama PUBLIC ggml)
+ 
++if (LLAMA_SHANNON_PRIME)
++    # ========================================================================
++    # Shannon-Prime full engine.
++    # Sources come from SHANNON_PRIME_DIR (a shannon-prime-llama checkout).
++    # Core math:    ${SHANNON_PRIME_DIR}/lib/shannon-prime/core/
++    # Backends:     ${SHANNON_PRIME_DIR}/src/backends/{cuda,vulkan,adreno}/
++    # Engine:       ${SHANNON_PRIME_DIR}/src/engine/
++    # Tools/bridge: ${SHANNON_PRIME_DIR}/src/tools/
++    #
++    # CUDA: SP_CUDA is independent of GGML_CUDA so we can compile our .cu
++    # files without triggering ggml-cuda (which may fail on older MSVC).
++    # ========================================================================
++
++    if (NOT SHANNON_PRIME_DIR)
++        message(FATAL_ERROR "LLAMA_SHANNON_PRIME is ON but SHANNON_PRIME_DIR is not set. "
++                "Point it at your shannon-prime-llama checkout.")
++    endif()
++
++    set(_SP_CORE ${SHANNON_PRIME_DIR}/lib/shannon-prime/core)
++    set(_SP_BACK ${SHANNON_PRIME_DIR}/src/backends)
++    set(_SP_ENG  ${SHANNON_PRIME_DIR}/src/engine)
++    set(_SP_TOOL ${SHANNON_PRIME_DIR}/src/tools)
++
++    # Auto-detect: enable SP CUDA if a CUDA compiler is findable
++    if (NOT DEFINED SP_CUDA)
++        find_program(_SP_NVCC nvcc
++            HINTS
++                "$ENV{CUDA_PATH}/bin"
++                "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/bin"
++                "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"
++        )
++        if (_SP_NVCC)
++            set(SP_CUDA ON)
++        else()
++            set(SP_CUDA OFF)
++        endif()
++    endif()
++
++    # --- Core math library (C) ---
++    set(_SP_CORE_SOURCES
++        ${_SP_CORE}/shannon_prime.c
++        ${_SP_CORE}/shannon_prime_cauchy.c
++        ${_SP_CORE}/shannon_prime_sqfree.c
++        ${_SP_CORE}/shannon_prime_modelpack.c
++        ${_SP_CORE}/shannon_prime_pe.c
++        ${_SP_TOOL}/shannon_prime_llama.c
++        ${_SP_TOOL}/shannon_prime_llama_sqfree.c
++    )
++
++    set(_SP_DEFS LLAMA_SHANNON_PRIME)
++    set(_SP_INCLUDES
++        ${_SP_CORE}
++        ${_SP_TOOL}
++        ${_SP_BACK}/adreno
++        ${_SP_BACK}/cuda
++        ${_SP_BACK}/vulkan
++        ${_SP_ENG}
++    )
++
++    # --- Adreno (ARM NEON) backend ---
++    if (ANDROID OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
++        list(APPEND _SP_CORE_SOURCES ${_SP_BACK}/adreno/shannon_prime_adreno.c)
++        list(APPEND _SP_DEFS SP_HAVE_ADRENO)
++        message(STATUS "Shannon-Prime: linking Adreno NEON backend (SP_HAVE_ADRENO)")
++    endif()
++
++    # --- Hexagon (Snapdragon cDSP via FastRPC + HVX) backend ---
++    # Opt-in via -DSP_HAVE_HEXAGON=ON. Requires the Hexagon SDK install
++    # for the qaic-generated stub + FastRPC prebuilts. Android-only.
++    if (SP_HAVE_HEXAGON AND ANDROID)
++        if (NOT HEXAGON_SDK_ROOT)
++            set(HEXAGON_SDK_ROOT "C:/Qualcomm/Hexagon_SDK/5.5.6.0")
++        endif()
++        if (NOT EXISTS "${HEXAGON_SDK_ROOT}")
++            message(FATAL_ERROR "SP_HAVE_HEXAGON=ON but HEXAGON_SDK_ROOT does not exist: ${HEXAGON_SDK_ROOT}")
++        endif()
++        # Vendored hexagon backend: ARM-side FastRPC shim + the
++        # qaic-generated stub. sp_hex_stub.c and sp_hex.h are produced
++        # by the scaffold's build.cmd qaic step and copied into
++        # ${SHANNON_PRIME_DIR}/src/backends/hexagon/ alongside the
++        # hand-written shim, so the build path is self-contained.
++        list(APPEND _SP_CORE_SOURCES
++            ${_SP_BACK}/hexagon/shannon_prime_hexagon.c
++            ${_SP_BACK}/hexagon/sp_hex_stub.c
++        )
++        list(APPEND _SP_DEFS SP_HAVE_HEXAGON SP_HEXAGON_FASTRPC CDSP_DOMAIN_ID=3)
++        list(APPEND _SP_INCLUDES
++            ${_SP_BACK}/hexagon
++            ${HEXAGON_SDK_ROOT}/incs
++            ${HEXAGON_SDK_ROOT}/incs/stddef
++            ${HEXAGON_SDK_ROOT}/ipc/fastrpc/rpcmem/inc
++            ${HEXAGON_SDK_ROOT}/ipc/fastrpc/remote/ship/android_aarch64
++        )
++        # Defer link-libs to the final llama target since shannon_prime_core
++        # is a STATIC archive — these go on the executable's link line.
++        set(_SP_HEX_LINK_LIBS
++            ${HEXAGON_SDK_ROOT}/ipc/fastrpc/remote/ship/android_aarch64/libcdsprpc.so
++            ${HEXAGON_SDK_ROOT}/ipc/fastrpc/rpcmem/prebuilt/android_aarch64/rpcmem.a
++        )
++        message(STATUS "Shannon-Prime: linking Hexagon cDSP backend (SP_HAVE_HEXAGON, V69 HVX-qf32)")
++        message(STATUS "Shannon-Prime: HEXAGON_SDK_ROOT = ${HEXAGON_SDK_ROOT}")
++    endif()
++
++    # --- Vulkan backend ---
++    if (GGML_VULKAN)
++        list(APPEND _SP_CORE_SOURCES ${_SP_BACK}/vulkan/shannon_prime_vulkan.c)
++        list(APPEND _SP_DEFS SP_HAVE_VULKAN)
++        message(STATUS "Shannon-Prime: linking Vulkan backend (SP_HAVE_VULKAN)")
++    endif()
++
++    # Build the core C library
++    add_library(shannon_prime_core STATIC ${_SP_CORE_SOURCES})
++    target_include_directories(shannon_prime_core PUBLIC ${_SP_INCLUDES})
++    target_compile_definitions(shannon_prime_core PUBLIC ${_SP_DEFS})
++    set_property(TARGET shannon_prime_core PROPERTY POSITION_INDEPENDENT_CODE ON)
++
++    if (GGML_VULKAN)
++        target_link_libraries(shannon_prime_core PRIVATE Vulkan::Vulkan)
++    endif()
++
++    if (SP_HAVE_HEXAGON AND ANDROID)
++        target_link_libraries(shannon_prime_core PUBLIC ${_SP_HEX_LINK_LIBS})
++    endif()
++
++    # --- CUDA backends (independent of GGML_CUDA) ---
++    if (SP_CUDA)
++        enable_language(CUDA)
++        set(_SP_CUDA_SOURCES
++            ${_SP_BACK}/cuda/shannon_prime_cuda.cu
++            ${_SP_BACK}/cuda/shannon_prime_sqfree.cu
++            ${_SP_BACK}/cuda/shannon_prime_hier.cu
++        )
++        add_library(shannon_prime_cuda STATIC ${_SP_CUDA_SOURCES})
++        target_include_directories(shannon_prime_cuda PUBLIC ${_SP_INCLUDES})
++        target_compile_definitions(shannon_prime_cuda PUBLIC LLAMA_SHANNON_PRIME SP_HAVE_CUDA)
++        set_property(TARGET shannon_prime_cuda PROPERTY POSITION_INDEPENDENT_CODE ON)
++        if (CMAKE_CUDA_ARCHITECTURES)
++            set_property(TARGET shannon_prime_cuda PROPERTY CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
++        else()
++            set_property(TARGET shannon_prime_cuda PROPERTY CUDA_ARCHITECTURES "89")
++        endif()
++
++        target_compile_definitions(shannon_prime_core PUBLIC SP_HAVE_CUDA)
++        message(STATUS "Shannon-Prime: linking CUDA backends (SP_HAVE_CUDA)")
++    endif()
++
++    # --- Engine subsystems (C++) ---
++    set(_SP_ENGINE_SOURCES
++        ${_SP_ENG}/kv_cache.cpp
++        ${_SP_ENG}/gdn_state.cpp
++    )
++    add_library(shannon_prime_engine STATIC ${_SP_ENGINE_SOURCES})
++    target_include_directories(shannon_prime_engine PUBLIC
++        ${_SP_INCLUDES}
++        ${CMAKE_CURRENT_SOURCE_DIR}/../ggml/include
++    )
++    target_compile_definitions(shannon_prime_engine PUBLIC LLAMA_SHANNON_PRIME)
++    target_compile_features(shannon_prime_engine PRIVATE cxx_std_17)
++    set_property(TARGET shannon_prime_engine PROPERTY POSITION_INDEPENDENT_CODE ON)
++    target_link_libraries(shannon_prime_engine PUBLIC shannon_prime_core)
++    if (SP_CUDA)
++        target_link_libraries(shannon_prime_engine PUBLIC shannon_prime_cuda)
++        target_compile_definitions(shannon_prime_engine PUBLIC SP_HAVE_CUDA SP_ENGINE_WITH_CUDA)
++        target_include_directories(shannon_prime_engine PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
++    endif()
++
++    # --- Wire into llama ---
++    target_compile_definitions(llama PRIVATE ${_SP_DEFS})
++    if (SP_CUDA)
++        target_compile_definitions(llama PRIVATE SP_HAVE_CUDA)
++    endif()
++    if (GGML_VULKAN)
++        target_compile_definitions(llama PRIVATE SP_HAVE_VULKAN)
++    endif()
++    target_sources(llama PRIVATE llama-shannon-prime.cpp)
++    target_link_libraries(llama PRIVATE shannon_prime_engine)
++
++    message(STATUS "Shannon-Prime: full engine enabled (core + engine + bridge)")
++endif()
++
++# ─── SP-QuickBorn outbound side-channel (Phase G) ────────────────────
++# Independent of LLAMA_SHANNON_PRIME — the hook works against vanilla
++# llama.cpp too. cpp-httplib is vendored in this repo. Hook is a strict
++# no-op until SP_QUICKBORN_ENABLE=1 is set at runtime.
++#
++# Source location: shannon-prime-llama/src/tools/sp_quickborn_*.{c,h,cpp}
++# (the SHANNON_PRIME_DIR setup above defines _SP_TOOL_QB if missing).
++option(LLAMA_SP_QUICKBORN "llama: enable SP-QuickBorn outbound spec-decode side channel" ON)
++if (LLAMA_SP_QUICKBORN)
++    if (NOT SHANNON_PRIME_DIR)
++        message(WARNING "LLAMA_SP_QUICKBORN=ON but SHANNON_PRIME_DIR unset — disabling.")
++        set(LLAMA_SP_QUICKBORN OFF)
++    endif()
++endif()
++if (LLAMA_SP_QUICKBORN)
++    set(_SP_TOOL_QB ${SHANNON_PRIME_DIR}/src/tools)
++    if (NOT EXISTS "${_SP_TOOL_QB}/sp_quickborn_hook.c")
++        message(WARNING "LLAMA_SP_QUICKBORN=ON but ${_SP_TOOL_QB}/sp_quickborn_hook.c missing — disabling.")
++        set(LLAMA_SP_QUICKBORN OFF)
++    endif()
++endif()
++if (LLAMA_SP_QUICKBORN)
++    add_library(shannon_prime_quickborn STATIC
++        ${_SP_TOOL_QB}/sp_quickborn_hook.c
++        ${_SP_TOOL_QB}/sp_quickborn_http.cpp
++        ${CMAKE_CURRENT_SOURCE_DIR}/../vendor/cpp-httplib/httplib.cpp
++    )
++    target_include_directories(shannon_prime_quickborn PUBLIC
++        ${_SP_TOOL_QB}
++        ${CMAKE_CURRENT_SOURCE_DIR}/../vendor/cpp-httplib
++        ${CMAKE_CURRENT_SOURCE_DIR}/../ggml/include
++    )
++    target_compile_features(shannon_prime_quickborn PRIVATE cxx_std_17)
++    set_property(TARGET shannon_prime_quickborn PROPERTY POSITION_INDEPENDENT_CODE ON)
++    if (WIN32)
++        target_link_libraries(shannon_prime_quickborn PUBLIC ws2_32)
++    endif()
++    target_compile_definitions(llama PRIVATE LLAMA_SP_QUICKBORN)
++    target_link_libraries(llama PRIVATE shannon_prime_quickborn)
++    message(STATUS "Shannon-Prime: QuickBorn outbound side-channel enabled (Phase G)")
++endif()
++
+ if (BUILD_SHARED_LIBS)
+     set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
+     target_compile_definitions(llama PRIVATE LLAMA_BUILD)
+diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
+index d6f5c5e..03d2ee3 100644
+--- a/src/llama-graph.cpp
++++ b/src/llama-graph.cpp
+@@ -17,6 +17,14 @@
+ #include <sstream>
+ #include <unordered_set>
+ 
++#ifdef LLAMA_SP_QUICKBORN
++// SP-QuickBorn outbound capture hook — defined in shannon_prime_quickborn
++// static lib (src/tools/sp_quickborn_hook.c). Declared here at file scope
++// to satisfy MSVC's "extern \"C\" must be at global scope" rule.
++extern "C" void sp_quickborn_capture_post_layer(int layer_idx,
++                                                const struct ggml_tensor * cur);
++#endif
++
+ // dedup helpers
+ 
+ static ggml_tensor * build_attn_inp_kq_mask(
+@@ -1978,6 +1986,12 @@ ggml_tensor * llm_graph_context::build_attn_mha(
+ 
+     ggml_build_forward_expand(gf, cur);
+ 
++#ifdef LLAMA_SP_QUICKBORN
++    // SP-QuickBorn capture hook — no-op when SP_QUICKBORN_ENABLE != 1.
++    // Declared at file scope below to satisfy MSVC's extern "C" rule.
++    sp_quickborn_capture_post_layer(il, cur);
++#endif
++
+     return cur;
+ }
+ 
+diff --git a/src/llama-kv-cache.h b/src/llama-kv-cache.h
+index 0b62dc7..54e159c 100644
+--- a/src/llama-kv-cache.h
++++ b/src/llama-kv-cache.h
+@@ -208,10 +208,25 @@ public:
+     void set_input_k_rot(ggml_tensor * dst) const;
+     void set_input_v_rot(ggml_tensor * dst) const;
+ 
++#ifdef LLAMA_SHANNON_PRIME
++    // Shannon-Prime KV access — public so the post-decode bridge can
++    // walk layers and read/write K/V tensor storage directly.
++    struct kv_layer {
++        uint32_t il;
++        ggml_tensor * k;
++        ggml_tensor * v;
++        std::vector<ggml_tensor *> k_stream;
++        std::vector<ggml_tensor *> v_stream;
++    };
++
++    const std::vector<kv_layer> & get_layers() const { return layers; }
++#endif
++
+ private:
+     const llama_model & model;
+     const llama_hparams & hparams;
+ 
++#ifndef LLAMA_SHANNON_PRIME
+     struct kv_layer {
+         // layer index in the model
+         // note: can be different from the layer index in the KV cache
+@@ -223,6 +238,7 @@ private:
+         std::vector<ggml_tensor *> k_stream;
+         std::vector<ggml_tensor *> v_stream;
+     };
++#endif // LLAMA_SHANNON_PRIME
+ 
+     bool v_trans = true;  // the value tensor is transposed
+ 
+@@ -353,6 +369,14 @@ public:
+     ggml_type type_k() const;
+     ggml_type type_v() const;
+ 
++#ifdef LLAMA_SHANNON_PRIME
++    // SP post-decode bridge needs raw access to the inner KV cache and to the
++    // currently-active slot info. Both are unguarded private members today;
++    // expose them via thin accessors rather than touching the upstream API.
++    llama_kv_cache * get_kv() const { return kv; }
++    const llama_kv_cache::slot_info & get_cur_sinfo() const { return sinfos[i_cur]; }
++#endif
++
+     // get views of the current state of the cache
+     ggml_tensor * get_k(ggml_context * ctx, int32_t il) const;
+     ggml_tensor * get_v(ggml_context * ctx, int32_t il) const;
