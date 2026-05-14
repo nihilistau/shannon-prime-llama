@@ -29,6 +29,23 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Export/import dance: when this header is consumed inside the unit that
+// builds INTO llama.dll (sp_quickborn_hook.c, sp_quickborn_http.cpp), the
+// CMake target sets SP_QB_INSIDE_DLL so the public functions are
+// dllexport. When consumed outside (common/speculative.cpp, which links
+// into llama-server.exe), SP_QB_INSIDE_DLL is unset and the functions
+// resolve via dllimport from llama.dll. This keeps `g_sp_capture` as a
+// single global living inside llama.dll — the previous version relinked
+// the static lib into both binaries, so each got its own copy and the
+// hook+subclass talked past each other.
+#if defined(_WIN32) && defined(SP_QB_INSIDE_DLL)
+#  define SP_QB_API __declspec(dllexport)
+#elif defined(_WIN32)
+#  define SP_QB_API __declspec(dllimport)
+#else
+#  define SP_QB_API
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,13 +67,13 @@ struct sp_quickborn_capture {
     float *bufs[SP_QUICKBORN_MAX_CAPTURE_LAYERS];
 };
 
-void sp_quickborn_capture_set(struct sp_quickborn_capture *cap);
+SP_QB_API void sp_quickborn_capture_set(struct sp_quickborn_capture *cap);
 
 // The patch's only intrusion into llama-graph.cpp: a single call to this
 // after each layer's body. No-op when no capture is active or layer_idx
 // isn't in the captured set.
-void sp_quickborn_capture_post_layer(int layer_idx,
-                                     const struct ggml_tensor *cur);
+SP_QB_API void sp_quickborn_capture_post_layer(int layer_idx,
+                                                const struct ggml_tensor *cur);
 
 // ----------------------------------------------------------------------
 // Outbound draft request.
@@ -79,10 +96,10 @@ void sp_quickborn_capture_post_layer(int layer_idx,
 //   -5  malformed response
 // On success, out_tokens[0..n) are the draft IDs.
 // ----------------------------------------------------------------------
-int sp_quickborn_request_draft(const struct sp_quickborn_capture *cap,
-                                int   block_size,
-                                int  *out_tokens,
-                                int   max_out);
+SP_QB_API int sp_quickborn_request_draft(const struct sp_quickborn_capture *cap,
+                                          int   block_size,
+                                          int  *out_tokens,
+                                          int   max_out);
 
 // ----------------------------------------------------------------------
 // Env gate. Returns 1 iff SP_QUICKBORN_ENABLE=1 (cached on first call).
@@ -90,9 +107,9 @@ int sp_quickborn_request_draft(const struct sp_quickborn_capture *cap,
 //   SP_QUICKBORN_URL       default http://127.0.0.1:9988/v1/spec-draft-raw
 //   SP_QUICKBORN_TIMEOUT_MS default 5000
 // ----------------------------------------------------------------------
-int sp_quickborn_enabled(void);
-const char *sp_quickborn_url(void);
-int sp_quickborn_timeout_ms(void);
+SP_QB_API int sp_quickborn_enabled(void);
+SP_QB_API const char *sp_quickborn_url(void);
+SP_QB_API int sp_quickborn_timeout_ms(void);
 
 #ifdef __cplusplus
 }

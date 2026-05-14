@@ -50,7 +50,7 @@ ParsedUrl parse_url(const char *url) {
 
 }  // namespace
 
-extern "C" int sp_quickborn_request_draft(
+extern "C" SP_QB_API int sp_quickborn_request_draft(
         const struct sp_quickborn_capture *cap,
         int   block_size,
         int  *out_tokens,
