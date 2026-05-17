@@ -278,13 +278,13 @@ struct Interface {
 static const Type types[2];
 static const Type types[2] = {{0x4,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x4},{0x1,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x1}};
 static const Parameter parameters[10] = {{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)0x0,0}}, 4,SLIM_IFPTR32(0x4,0x8),0,0},{SLIM_IFPTR32(0x4,0x8),{{(const uintptr_t)0xdeadc0de,(const uintptr_t)0}}, 0,SLIM_IFPTR32(0x4,0x8),3,0},{SLIM_IFPTR32(0x4,0x8),{{(const uintptr_t)0xdeadc0de,(const uintptr_t)0}}, 0,SLIM_IFPTR32(0x4,0x8),0,0},{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)&(types[0]),(const uintptr_t)0x0}}, 9,SLIM_IFPTR32(0x4,0x8),0,0},{0x4,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x4,0,0},{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)&(types[0]),(const uintptr_t)0x0}}, 9,SLIM_IFPTR32(0x4,0x8),3,0},{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)&(types[1]),(const uintptr_t)0x0}}, 9,SLIM_IFPTR32(0x4,0x8),3,0},{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)&(types[1]),(const uintptr_t)0x0}}, 9,SLIM_IFPTR32(0x4,0x8),0,0},{0x8,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x8,3,0},{0x4,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x4,3,0}};
-static const Parameter* const parameterArrays[33] = {(&(parameters[7])),(&(parameters[4])),(&(parameters[4])),(&(parameters[4])),(&(parameters[5])),(&(parameters[3])),(&(parameters[4])),(&(parameters[4])),(&(parameters[6])),(&(parameters[9])),(&(parameters[3])),(&(parameters[4])),(&(parameters[6])),(&(parameters[9])),(&(parameters[4])),(&(parameters[4])),(&(parameters[8])),(&(parameters[8])),(&(parameters[7])),(&(parameters[4])),(&(parameters[4])),(&(parameters[5])),(&(parameters[8])),(&(parameters[8])),(&(parameters[8])),(&(parameters[3])),(&(parameters[4])),(&(parameters[5])),(&(parameters[5])),(&(parameters[4])),(&(parameters[0])),(&(parameters[1])),(&(parameters[2]))};
-static const Method methods[11] = {{REMOTE_SCALARS_MAKEX(0,0,0x2,0x0,0x0,0x1),0x4,0x0,2,2,(&(parameterArrays[30])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x0,0x0,0x1,0x0),0x0,0x0,1,1,(&(parameterArrays[32])),0x1,0x0},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0xc,0x0,6,3,(&(parameterArrays[25])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x1,0x1,0x0,0x0),0x8,0x0,4,2,(&(parameterArrays[28])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0xc,0x0,6,3,(&(parameterArrays[10])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0x10,0x0,7,4,(&(parameterArrays[18])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x0,0x1,0x0,0x0),0x0,0x18,3,3,(&(parameterArrays[22])),0x1,0x8},{REMOTE_SCALARS_MAKEX(0,0,0x1,0x1,0x0,0x0),0x8,0x10,4,4,(&(parameterArrays[14])),0x4,0x8},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x2,0x0,0x0),0xc,0x4,7,4,(&(parameterArrays[10])),0x4,0x4},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x2,0x0,0x0),0x10,0x4,8,5,(&(parameterArrays[5])),0x4,0x4},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0x14,0x0,8,5,(&(parameterArrays[0])),0x4,0x1}};
-static const Method* const methodArrays[16] = {&(methods[0]),&(methods[1]),&(methods[2]),&(methods[3]),&(methods[4]),&(methods[5]),&(methods[6]),&(methods[7]),&(methods[8]),&(methods[5]),&(methods[9]),&(methods[10]),&(methods[8]),&(methods[5]),&(methods[9]),&(methods[10])};
-static const char strings[370] = "decompress_f32_v_batch\0decompress_f32_batch\0decompress_f32_v\0band_dequantize\0decompress_f32\0scalar_pcycles\0bytes_acquired\0round_trip_f32\0band_quantize\0vht2_forward\0packed_used\0hvx_pcycles\0bytes_avail\0bytes_total\0vtcm_status\0iterations\0vht2_bench\0out_coeffs\0out_packed\0n_vectors\0packed_in\0max_bands\0in_packed\0out_vecs\0head_dim\0in_vecs\0out_vec\0in_vec\0close\0data\0open\0uri\0";
-static const uint16_t methodStrings[74] = {0,278,317,268,288,308,2,326,317,268,257,164,23,278,317,268,288,308,25,326,317,268,257,164,44,278,317,288,334,46,342,317,257,164,77,278,317,288,334,79,342,317,257,164,235,317,224,92,176,61,298,317,288,246,212,200,188,107,137,250,317,257,122,342,317,334,151,355,286,360,365,21,349,21};
-static const uint16_t methodStringsArrays[16] = {69,72,62,66,58,49,54,44,39,34,18,12,29,24,6,0};
-__QAIC_SLIM_EXPORT const Interface __QAIC_SLIM(sp_hex_slim) = {16,&(methodArrays[0]),0,0,&(methodStringsArrays [0]),methodStrings,strings};
+static const Parameter* const parameterArrays[34] = {(&(parameters[3])),(&(parameters[7])),(&(parameters[4])),(&(parameters[4])),(&(parameters[4])),(&(parameters[5])),(&(parameters[3])),(&(parameters[4])),(&(parameters[4])),(&(parameters[6])),(&(parameters[9])),(&(parameters[3])),(&(parameters[4])),(&(parameters[6])),(&(parameters[9])),(&(parameters[4])),(&(parameters[4])),(&(parameters[8])),(&(parameters[8])),(&(parameters[7])),(&(parameters[4])),(&(parameters[4])),(&(parameters[5])),(&(parameters[8])),(&(parameters[8])),(&(parameters[8])),(&(parameters[3])),(&(parameters[4])),(&(parameters[5])),(&(parameters[5])),(&(parameters[4])),(&(parameters[0])),(&(parameters[1])),(&(parameters[2]))};
+static const Method methods[12] = {{REMOTE_SCALARS_MAKEX(0,0,0x2,0x0,0x0,0x1),0x4,0x0,2,2,(&(parameterArrays[31])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x0,0x0,0x1,0x0),0x0,0x0,1,1,(&(parameterArrays[33])),0x1,0x0},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0xc,0x0,6,3,(&(parameterArrays[26])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x1,0x1,0x0,0x0),0x8,0x0,4,2,(&(parameterArrays[29])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0xc,0x0,6,3,(&(parameterArrays[11])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0x10,0x0,7,4,(&(parameterArrays[19])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x0,0x1,0x0,0x0),0x0,0x18,3,3,(&(parameterArrays[23])),0x1,0x8},{REMOTE_SCALARS_MAKEX(0,0,0x1,0x1,0x0,0x0),0x8,0x10,4,4,(&(parameterArrays[15])),0x4,0x8},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x2,0x0,0x0),0xc,0x4,7,4,(&(parameterArrays[11])),0x4,0x4},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x2,0x0,0x0),0x10,0x4,8,5,(&(parameterArrays[6])),0x4,0x4},{REMOTE_SCALARS_MAKEX(0,0,0x2,0x1,0x0,0x0),0x14,0x0,8,5,(&(parameterArrays[1])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x3,0x1,0x0,0x0),0x18,0x0,10,6,(&(parameterArrays[0])),0x4,0x1}};
+static const Method* const methodArrays[17] = {&(methods[0]),&(methods[1]),&(methods[2]),&(methods[3]),&(methods[4]),&(methods[5]),&(methods[6]),&(methods[7]),&(methods[8]),&(methods[5]),&(methods[9]),&(methods[10]),&(methods[11]),&(methods[8]),&(methods[5]),&(methods[9]),&(methods[10])};
+static const char strings[420] = "decompress_f32_v_batch\0decompress_f32_batch\0decompress_f32_v\0kq_matmul_fused\0band_dequantize\0decompress_f32\0scalar_pcycles\0bytes_acquired\0round_trip_f32\0band_quantize\0vht2_forward\0packed_used\0hvx_pcycles\0bytes_avail\0bytes_total\0vtcm_status\0iterations\0vht2_bench\0out_coeffs\0out_packed\0kq_scores\0n_vectors\0packed_in\0max_bands\0in_packed\0k_packed\0out_vecs\0head_dim\0in_vecs\0out_vec\0in_vec\0q_vec\0close\0n_kv\0data\0open\0n_q\0uri\0";
+static const uint16_t methodStrings[81] = {61,384,334,352,396,411,284,0,304,352,294,314,343,2,361,352,294,273,180,23,304,352,294,314,343,25,361,352,294,273,180,44,304,352,314,369,46,377,352,273,180,93,304,352,314,369,95,377,352,273,180,251,352,240,108,192,77,324,352,314,262,228,216,204,123,153,266,352,273,138,377,352,369,167,401,312,406,415,21,390,21};
+static const uint16_t methodStringsArrays[17] = {76,79,69,73,65,56,61,51,46,41,25,19,0,36,31,13,7};
+__QAIC_SLIM_EXPORT const Interface __QAIC_SLIM(sp_hex_slim) = {17,&(methodArrays[0]),0,0,&(methodStringsArrays [0]),methodStrings,strings};
 #endif //_SP_HEX_SLIM_H
 
 
@@ -559,20 +559,54 @@ __QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_decompress_f32_batch)(remote_handle64 
    uint32_t _mid = 11;
    return _stub_method_8(_handle, _mid, (char**)&packed_in, (uint32_t*)&packed_inLen, (uint32_t*)&head_dim, (uint32_t*)&n_vectors, (uint32_t*)&max_bands, (char**)&out_vecs, (uint32_t*)&out_vecsLen);
 }
-__QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_compress_f32_v)(remote_handle64 _handle, const float* in_vec, int in_vecLen, int head_dim, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_STUB_ATTRIBUTE {
+static __inline int _stub_method_9(remote_handle64 _handle, uint32_t _mid, char* _in0[1], uint32_t _in0Len[1], char* _in1[1], uint32_t _in1Len[1], uint32_t _in2[1], uint32_t _in3[1], uint32_t _in4[1], char* _rout5[1], uint32_t _rout5Len[1]) {
+   int _numIn[1] = {0};
+   remote_arg _pra[4] = {0};
+   uint32_t _primIn[6]= {0};
+   remote_arg* _praIn = 0;
+   remote_arg* _praROut = 0;
+   int _nErr = 0;
+   _numIn[0] = 2;
+   _pra[0].buf.pv = (void*)_primIn;
+   _pra[0].buf.nLen = sizeof(_primIn);
+   _COPY(_primIn, 0, _in0Len, 0, 4);
+   _praIn = (_pra + 1);
+   _praIn[0].buf.pv = (void*) _in0[0];
+   _praIn[0].buf.nLen = (4 * _in0Len[0]);
+   _COPY(_primIn, 4, _in1Len, 0, 4);
+   _praIn[1].buf.pv = (void*) _in1[0];
+   _praIn[1].buf.nLen = (1 * _in1Len[0]);
+   _COPY(_primIn, 8, _in2, 0, 4);
+   _COPY(_primIn, 12, _in3, 0, 4);
+   _COPY(_primIn, 16, _in4, 0, 4);
+   _COPY(_primIn, 20, _rout5Len, 0, 4);
+   _praROut = (_praIn + _numIn[0] + 0);
+   _praROut[0].buf.pv = _rout5[0];
+   _praROut[0].buf.nLen = (4 * _rout5Len[0]);
+   _TRY_FARF(_nErr, __QAIC_REMOTE(remote_handle64_invoke)(_handle, REMOTE_SCALARS_MAKEX(0, _mid, 3, 1, 0, 0), _pra));
+   _CATCH_FARF(_nErr) {
+      _QAIC_FARF(RUNTIME_ERROR, "ERROR 0x%x: handle=0x%"PRIx64", scalar=0x%x, method ID=%d: %s failed\n", _nErr , _handle, REMOTE_SCALARS_MAKEX(0, _mid, 3, 1, 0, 0), _mid, __func__);
+   }
+   return _nErr;
+}
+__QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_kq_matmul_fused)(remote_handle64 _handle, const float* q_vec, int q_vecLen, const unsigned char* k_packed, int k_packedLen, int head_dim, int n_kv, int n_q, float* kq_scores, int kq_scoresLen) __QAIC_STUB_ATTRIBUTE {
    uint32_t _mid = 12;
+   return _stub_method_9(_handle, _mid, (char**)&q_vec, (uint32_t*)&q_vecLen, (char**)&k_packed, (uint32_t*)&k_packedLen, (uint32_t*)&head_dim, (uint32_t*)&n_kv, (uint32_t*)&n_q, (char**)&kq_scores, (uint32_t*)&kq_scoresLen);
+}
+__QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_compress_f32_v)(remote_handle64 _handle, const float* in_vec, int in_vecLen, int head_dim, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_STUB_ATTRIBUTE {
+   uint32_t _mid = 13;
    return _stub_method_6(_handle, _mid, (char**)&in_vec, (uint32_t*)&in_vecLen, (uint32_t*)&head_dim, (char**)&out_packed, (uint32_t*)&out_packedLen, (uint32_t*)packed_used);
 }
 __QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_decompress_f32_v)(remote_handle64 _handle, const unsigned char* packed_in, int packed_inLen, int head_dim, int max_bands, float* out_vec, int out_vecLen) __QAIC_STUB_ATTRIBUTE {
-   uint32_t _mid = 13;
+   uint32_t _mid = 14;
    return _stub_method_3(_handle, _mid, (char**)&packed_in, (uint32_t*)&packed_inLen, (uint32_t*)&head_dim, (uint32_t*)&max_bands, (char**)&out_vec, (uint32_t*)&out_vecLen);
 }
 __QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_compress_f32_v_batch)(remote_handle64 _handle, const float* in_vecs, int in_vecsLen, int head_dim, int n_vectors, unsigned char* out_packed, int out_packedLen, int* packed_used) __QAIC_STUB_ATTRIBUTE {
-   uint32_t _mid = 14;
+   uint32_t _mid = 15;
    return _stub_method_7(_handle, _mid, (char**)&in_vecs, (uint32_t*)&in_vecsLen, (uint32_t*)&head_dim, (uint32_t*)&n_vectors, (char**)&out_packed, (uint32_t*)&out_packedLen, (uint32_t*)packed_used);
 }
 __QAIC_STUB_EXPORT int __QAIC_STUB(sp_hex_decompress_f32_v_batch)(remote_handle64 _handle, const unsigned char* packed_in, int packed_inLen, int head_dim, int n_vectors, int max_bands, float* out_vecs, int out_vecsLen) __QAIC_STUB_ATTRIBUTE {
-   uint32_t _mid = 15;
+   uint32_t _mid = 16;
    return _stub_method_8(_handle, _mid, (char**)&packed_in, (uint32_t*)&packed_inLen, (uint32_t*)&head_dim, (uint32_t*)&n_vectors, (uint32_t*)&max_bands, (char**)&out_vecs, (uint32_t*)&out_vecsLen);
 }
 #ifdef __cplusplus

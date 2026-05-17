@@ -8,3 +8,10 @@ Thumbs.db
 
 # Internal templates not for the published repo
 COPYRIGHT_HEADER.txt
+
+# Build / run artifacts (Phase 2.x cross-compile)
+android_build/
+*.log
+*.err
+*.pid
+

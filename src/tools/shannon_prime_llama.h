@@ -237,6 +237,24 @@ void sp_llama_read_v(const sp_llama_ctx_t *ctx,
                      int layer, int head, int pos,
                      float *v_out);
 
+// ============================================================================
+// kq_matmul_fused — single dispatch per attention op (Phase 1.7 fix).
+// ============================================================================
+//
+// Replaces the FUSED_KQ custom op's per-thread scalar inner loop. When the
+// Hexagon backend is active, dispatches a single FastRPC call to the cDSP
+// which runs fused decompress-matmul (scalar reference today, HVX kernel
+// once task #22 lands). Other backends fall back to a CPU implementation
+// (currently a no-op stub that returns -1; the custom op falls back to its
+// existing scalar path on -1).
+//
+// Returns 0 on success; -1 otherwise (custom op should fall back).
+int sp_llama_kq_matmul_fused(const sp_llama_ctx_t *ctx,
+                              int layer, int head,
+                              int start_pos, int n_kv,
+                              const float *q_vec, int n_q,
+                              float *kq_scores);
+
 // Partial reads — reconstruct using only the first `max_bands` spectral
 // bands of the SP cache. Phase 3 attention short-circuit: read band 0
 // only first (cheap), check confidence, promote to bands 0+1, etc.

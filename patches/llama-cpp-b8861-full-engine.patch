@@ -1,4 +1,3 @@
-warning: in the working copy of 'src/llama-graph.cpp', LF will be replaced by CRLF the next time Git touches it
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 310a3dc..9ade0a1 100644
 --- a/CMakeLists.txt
@@ -94,7 +93,7 @@ index 310a3dc..9ade0a1 100644
  
  if (EMSCRIPTEN)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 7b1fcfc..3a98ced 100644
+index 7b1fcfc..14556b6 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -53,6 +53,204 @@ target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
@@ -269,6 +268,25 @@ index 7b1fcfc..3a98ced 100644
 +        ${_SP_ENG}/llama_sp_fused_kq.cpp
 +        ${_SP_ENG}/llama_sp_kcap.cpp
 +    )
++
++    # Phase 2.5+ — optional QNN HTP dispatch path for FUSED_KQ. Adds two
++    # source files (sp_qnn.c, sp_llama_qnn.c) and links libdl for runtime
++    # QNN library loading. Only enables on Android aarch64 (where libQnnHtp
++    # is shipped with QAIRT). Activation: -DSP_QNN_KQ=ON + QAIRT_ROOT set.
++    # Runtime: SHANNON_PRIME_QNN_KQ=1 env var on the phone.
++    if (SP_QNN_KQ AND CMAKE_SYSTEM_NAME STREQUAL "Android"
++                  AND CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
++        if (NOT DEFINED QAIRT_ROOT OR NOT EXISTS "${QAIRT_ROOT}/include/QNN/QnnInterface.h")
++            message(FATAL_ERROR "SP_QNN_KQ=ON requires -DQAIRT_ROOT=<QAIRT install path>"
++                                " containing include/QNN/QnnInterface.h")
++        endif()
++        list(APPEND _SP_ENGINE_SOURCES
++            ${_SP_ENG}/sp_qnn.c
++            ${_SP_ENG}/sp_llama_qnn.c
++        )
++        message(STATUS "Shannon-Prime: QNN HTP KQ dispatch enabled (QAIRT_ROOT=${QAIRT_ROOT})")
++    endif()
++
 +    add_library(shannon_prime_engine STATIC ${_SP_ENGINE_SOURCES})
 +    target_include_directories(shannon_prime_engine PUBLIC
 +        ${_SP_INCLUDES}
@@ -278,6 +296,16 @@ index 7b1fcfc..3a98ced 100644
 +    target_compile_features(shannon_prime_engine PRIVATE cxx_std_17)
 +    set_property(TARGET shannon_prime_engine PROPERTY POSITION_INDEPENDENT_CODE ON)
 +    target_link_libraries(shannon_prime_engine PUBLIC shannon_prime_core)
++
++    if (SP_QNN_KQ AND CMAKE_SYSTEM_NAME STREQUAL "Android"
++                  AND CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
++        target_compile_definitions(shannon_prime_engine PUBLIC LLAMA_SHANNON_PRIME_QNN)
++        target_include_directories(shannon_prime_engine PRIVATE
++            ${QAIRT_ROOT}/include/QNN
++            ${QAIRT_ROOT}/include
++        )
++        target_link_libraries(shannon_prime_engine PUBLIC dl)
++    endif()
 +    if (SP_CUDA)
 +        target_link_libraries(shannon_prime_engine PUBLIC shannon_prime_cuda)
 +        target_compile_definitions(shannon_prime_engine PUBLIC SP_HAVE_CUDA SP_ENGINE_WITH_CUDA)
@@ -303,7 +331,7 @@ index 7b1fcfc..3a98ced 100644
      set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
      target_compile_definitions(llama PRIVATE LLAMA_BUILD)
 diff --git a/src/llama-context.cpp b/src/llama-context.cpp
-index ee0c292..08e2a28 100644
+index ee0c292..d243c52 100644
 --- a/src/llama-context.cpp
 +++ b/src/llama-context.cpp
 @@ -10,6 +10,9 @@
@@ -334,7 +362,28 @@ index ee0c292..08e2a28 100644
      if (!model.hparams.no_alloc) {
          for (size_t i = 0; i < backend_ptrs.size(); ++i) {
              ggml_backend_t             backend = backend_ptrs[i];
-@@ -1235,6 +1246,32 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
+@@ -466,6 +477,20 @@ void llama_context::sched_reserve() {
+         cparams.auto_fa = false;
+     }
+ 
++#ifdef LLAMA_SHANNON_PRIME
++    // Phase 1.7: SHANNON_PRIME_FAST_PATH=1 means SP archive is sole K source
++    // of truth. FUSED_KQ must engage (reads from archive); flash_attn would
++    // intercept and read cache_k_l (which is zero with cpy_k bypassed).
++    // Force flash_attn off so FUSED_KQ runs.
++    if (cparams.flash_attn) {
++        const char * fp = std::getenv("SHANNON_PRIME_FAST_PATH");
++        if (fp && fp[0] == '1') {
++            cparams.flash_attn = false;
++            LLAMA_LOG_INFO("%s: SHANNON_PRIME_FAST_PATH=1 forces flash_attn off (so FUSED_KQ engages)\n", __func__);
++        }
++    }
++#endif
++
+     if (cparams.auto_fgdn) {
+         LLAMA_LOG_INFO("%s: resolving fused Gated Delta Net support:\n", __func__);
+ 
+@@ -1235,6 +1260,32 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
          return nullptr;
      }
  
@@ -368,7 +417,7 @@ index ee0c292..08e2a28 100644
  
      return res;
 diff --git a/src/llama-graph.cpp b/src/llama-graph.cpp
-index 2ff23f8..9cf8924 100644
+index 2ff23f8..90d8283 100644
 --- a/src/llama-graph.cpp
 +++ b/src/llama-graph.cpp
 @@ -10,6 +10,10 @@
@@ -382,19 +431,17 @@ index 2ff23f8..9cf8924 100644
  
  #include <cassert>
  #include <cmath>
-@@ -1995,7 +1998,32 @@ ggml_tensor * llm_graph_context::build_attn_mha(
+@@ -1995,11 +1999,43 @@ ggml_tensor * llm_graph_context::build_attn_mha(
  
          cur = ggml_reshape_2d(ctx0, cur, cur->ne[0]*cur->ne[1], cur->ne[2]*cur->ne[3]);
      } else {
--        ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
-+        ggml_tensor * kq = nullptr;
++        // ggml_mul_mat gives kq the correct output shape [n_kv, n_head_q, ...].
++        // FUSED_KQ then OVERWRITES the values via ggml_map_custom2_inplace —
++        // the SP-fused kernel reads K from the persistent archive (userdata
++        // pointer) and Q from the second arg, then writes Q*K^T into kq.
+         ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
 +#ifdef LLAMA_SHANNON_PRIME
 +        // Phase 1.6 / Path A.2: SP-fused decompress-matmul.
-+        // Replaces ggml_mul_mat(k, q) with ggml_map_custom2 -> llama_sp_kq_compute
-+        // (decompresses K rows on-the-fly, dot-products against Q). CPU bench:
-+        // 1.79x faster than vanilla scalar fp32 matmul on S22U ARM cores.
-+        // Until persistent SP archive change in post_compute lands, runs in
-+        // fallback mode (re-roundtrip fp16 K through SP per call).
 +        static const bool sp_fused_kq = []() {
 +            const char * v = std::getenv("SHANNON_PRIME_FUSED_KQ");
 +            return v && v[0] == '1';
@@ -408,15 +455,27 @@ index 2ff23f8..9cf8924 100644
 +            sp_kq_ud.is_v                   = 0;
 +            sp_kq_ud.k_packed_buf_per_head = (const unsigned char *) llama_sp_get_current_hexagon_k_cache_slot(il, 0);
 +            sp_kq_ud.total_bytes_per_pos   = llama_sp_get_current_hexagon_k_total_bytes();
-+            kq = ggml_map_custom2(ctx0, q, k, llama_sp_kq_compute,
-+                                  GGML_N_TASKS_MAX, &sp_kq_ud);
++            // inplace: dst==a==kq (mul_mat result, correct shape, gets values
++            // overwritten); b=q for Q values. Kernel reads SP archive K via
++            // userdata, dot-products against Q, writes into kq->data.
++            kq = ggml_map_custom2_inplace(ctx0, kq, q, llama_sp_kq_compute,
++                                          GGML_N_TASKS_MAX, &sp_kq_ud);
 +        }
 +#endif
-+        if (!kq) kq = ggml_mul_mat(ctx0, k, q);
          cb(kq, "kq", il);
  
          // note: this op tends to require high floating point range
-@@ -2209,6 +2237,12 @@ ggml_tensor * llm_graph_context::build_attn(
+         //       while for some models F16 is enough, for others it is not, so we default to F32 here
++#ifdef LLAMA_SHANNON_PRIME
++        // Phase 1.7: when FUSED_KQ engages, kq is GGML_OP_MAP_CUSTOM2 not
++        // MUL_MAT. set_prec asserts MUL_MAT, so gate it. SP-fused kernel
++        // computes F32 internally regardless.
++        if (kq->op == GGML_OP_MUL_MAT)
++#endif
+         ggml_mul_mat_set_prec(kq, GGML_PREC_F32);
+ 
+         if (arch == LLM_ARCH_GROK) {
+@@ -2209,6 +2245,12 @@ ggml_tensor * llm_graph_context::build_attn(
          const auto & k_idxs = inp->get_k_idxs();
          const auto & v_idxs = inp->get_v_idxs();
  
@@ -429,7 +488,7 @@ index 2ff23f8..9cf8924 100644
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
          ggml_build_forward_expand(gf, mctx_cur->cpy_v(ctx0, v_cur, v_idxs, il));
      }
-@@ -2301,6 +2335,12 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2301,6 +2343,12 @@ ggml_tensor * llm_graph_context::build_attn(
      {
          const auto & k_idxs = inp->get_k_idxs();
  
@@ -442,7 +501,7 @@ index 2ff23f8..9cf8924 100644
          ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
      }
  
-@@ -2383,6 +2423,12 @@ ggml_tensor * llm_graph_context::build_attn(
+@@ -2383,6 +2431,12 @@ ggml_tensor * llm_graph_context::build_attn(
      if (k_cur) {
          const auto & k_idxs = is_swa ? inp->get_k_idxs_swa() : inp->get_k_idxs();
  
@@ -514,7 +573,7 @@ index 0b62dc7..a0a3a63 100644
  
 diff --git a/src/llama-shannon-prime.cpp b/src/llama-shannon-prime.cpp
 new file mode 100644
-index 0000000..0a75adb
+index 0000000..95d02ae
 --- /dev/null
 +++ b/src/llama-shannon-prime.cpp
 @@ -0,0 +1,858 @@
@@ -1378,7 +1437,7 @@ index 0000000..0a75adb
 +#endif // LLAMA_SHANNON_PRIME
 diff --git a/src/llama-shannon-prime.h b/src/llama-shannon-prime.h
 new file mode 100644
-index 0000000..c5a1a72
+index 0000000..5611e94
 --- /dev/null
 +++ b/src/llama-shannon-prime.h
 @@ -0,0 +1,113 @@

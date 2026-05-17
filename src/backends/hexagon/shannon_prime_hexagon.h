@@ -191,6 +191,32 @@ void sp_hexagon_cache_read_v_batch(const sp_hexagon_cache_t *cache,
 void sp_hexagon_cache_clear_range(sp_hexagon_cache_t *cache,
                                    int start_pos, int end_pos);
 
+// ============================================================================
+// kq_matmul_fused — single FastRPC dispatch per attention op.
+// ============================================================================
+//
+// Replaces the FUSED_KQ custom op's ARM-scalar inner loop. Reads the K
+// archive bytes for (layer, head) directly out of cache->k_cache (already
+// rpcmem-backed since Phase 1.6), ships only Q + scores across the
+// FastRPC boundary. DSP-side runs the fused decompress-matmul (scalar
+// reference today, HVX kernel once task #22 lands).
+//
+// q_vec     : n_q * head_dim contiguous fp32, host buffer (will be
+//             staged into rpcmem by the bridge).
+// layer/head: indexes into the existing per-slot K archive.
+// n_kv      : positions to attend over (typically the live ubatch slot
+//             range; caller is responsible for picking a valid range).
+// n_q       : Q heads to dot against each K row.
+// kq_scores : n_kv * n_q fp32 output.
+//
+// Returns 0 on success; nonzero on FastRPC or contract failure (caller
+// should fall back to the scalar custom op kernel in that case).
+int sp_hexagon_cache_kq_matmul_fused(const sp_hexagon_cache_t *cache,
+                                      int layer, int head,
+                                      int start_pos, int n_kv,
+                                      const float *q_vec, int n_q,
+                                      float *kq_scores);
+
 #ifdef __cplusplus
 }
 #endif
