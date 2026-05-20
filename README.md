@@ -6,7 +6,7 @@ This repository patches the full Shannon-Prime VHT2 spectral compression stack i
 
 This is a **bridge**, not the primary deployment path. llama.cpp was not designed for compressed KV caches, and maintaining a patch against a moving upstream target is inherently fragile. The [Shannon-Prime Engine](https://github.com/nihilistau/shannon-prime-engine) is the reference implementation that owns the KV data path end-to-end. This repository exists because LM Studio and the broader llama.cpp ecosystem represent a large installed base that benefits from Shannon-Prime compression today.
 
-The long-term plan is to phase this out as the engine matures and gains its own ecosystem integrations.
+The long-term plan is to phase this out as the engine matures and gains its own ecosystem integrations..
 
 ---
 
