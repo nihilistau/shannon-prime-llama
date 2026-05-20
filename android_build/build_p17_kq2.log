@@ -1,0 +1,248 @@
+NDK:         D:/Files/Android/android-ndk-r27d
+SP:          D:/F/shannon-prime-repos/shannon-prime-llama
+SRC:         D:/F/shannon-prime-repos/sp-model-test/llama-cpp
+HEXAGON_SDK: C:/Qualcomm/Hexagon_SDK/5.5.6.0
+BUILD:       D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon
+API:         28
+PATCH:       D:/F/shannon-prime-repos/shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+
+[1/3] Reset D:/F/shannon-prime-repos/sp-model-test/llama-cpp to upstream HEAD and apply Shannon-Prime patch
+      patch applied OK
+
+[2/3] Configure CMake (Hexagon enabled)
+-- The C compiler identification is Clang 18.0.4
+-- The CXX compiler identification is Clang 18.0.4
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Git: C:/Program Files/Git/mingw64/bin/git.exe (found version "2.53.0.windows.1")
+-- Shannon-Prime: applied K-quant getrows patch to ggml/
+-- The ASM compiler identification is Clang with GNU-like command-line
+-- Found assembler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe
+-- Setting GGML_NATIVE_DEFAULT to OFF
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: aarch64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- ARM detected
+-- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E
+-- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E - Failed
+-- Checking for ARM features using flags:
+-- Performing Test HAVE_DOTPROD
+-- Performing Test HAVE_DOTPROD - Success
+-- Performing Test HAVE_SVE
+-- Performing Test HAVE_SVE - Failed
+-- Performing Test HAVE_MATMUL_INT8
+-- Performing Test HAVE_MATMUL_INT8 - Failed
+-- Performing Test HAVE_FMA
+-- Performing Test HAVE_FMA - Success
+-- Performing Test HAVE_FP16_VECTOR_ARITHMETIC
+-- Performing Test HAVE_FP16_VECTOR_ARITHMETIC - Success
+-- Performing Test HAVE_SME
+-- Performing Test HAVE_SME - Failed
+-- Adding CPU backend variant ggml-cpu:  
+-- ggml version: 0.9.11
+-- ggml commit:  cf8b0db-dirty
+-- Shannon-Prime: linking Adreno NEON backend (SP_HAVE_ADRENO)
+-- Shannon-Prime: linking Hexagon cDSP backend (SP_HAVE_HEXAGON, FastRPC)
+-- Shannon-Prime: full engine enabled (core + engine + bridge)
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Could NOT find OpenSSL, try to set the path to OpenSSL root folder in the system variable OPENSSL_ROOT_DIR (missing: OPENSSL_CRYPTO_LIBRARY OPENSSL_INCLUDE_DIR) 
+-- Generating embedded license file for target: llama-common
+-- Configuring done (6.5s)
+-- Generating done (0.3s)
+-- Build files have been written to: D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon
+
+[3/3] Build llama-cli
+[1/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[2/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[4/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[5/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[6/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[7/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[8/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[9/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[10/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[11/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_cauchy.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[12/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[13/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[14/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_modelpack.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[15/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o
+FAILED: [code=1] src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o 
+D:\Files\Android\android-ndk-r27d\toolchains\llvm\prebuilt\windows-x86_64\bin\clang.exe --target=aarch64-none-linux-android28 --sysroot=D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DLLAMA_SHANNON_PRIME -DSP_HAVE_ADRENO -DSP_HAVE_HEXAGON -DSP_HEXAGON_FASTRPC -ID:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core -ID:/F/shannon-prime-repos/shannon-prime-llama/src/tools -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/cuda -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/vulkan -ID:/F/shannon-prime-repos/shannon-prime-llama/src/engine -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/incs -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/stddef -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -march=armv8.2-a+fp16+dotprod -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/ipc/fastrpc/rpcmem/inc -O3 -DNDEBUG  -fPIC -Wshadow -Wstrict-prototypes -Wpointer-arith -Wmissing-prototypes -Werror=implicit-int -Werror=implicit-function-declaration -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wunreachable-code-break -Wunreachable-code-return -Wdouble-promotion -Wno-alloc-size-larger-than -Wno-cast-qual -Wno-overflow -MD -MT src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o -MF src\CMakeFiles\shannon_prime_core.dir\D_\F\shannon-prime-repos\shannon-prime-llama\src\tools\shannon_prime_llama.c.o.d -o src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o -c D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:25:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/../backends/hexagon/shannon_prime_hexagon.h:12:10: fatal error: '../../core/shannon_prime.h' file not found
+   12 | #include "../../core/shannon_prime.h"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning and 1 error generated.
+[16/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/arm/quants.c.o
+[17/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_pe.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[18/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:188:54: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  187 |         fprintf(stderr, "[Shannon-Prime SQFREE] scaling law: safe K_corr floor=%.4f "
+      |         ~~~~~~~
+  188 |                 "(est. %.1fB params @ Q8)\n", floor, params_b);
+      |                                                      ^~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:188:47: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  187 |         fprintf(stderr, "[Shannon-Prime SQFREE] scaling law: safe K_corr floor=%.4f "
+      |         ~~~~~~~
+  188 |                 "(est. %.1fB params @ Q8)\n", floor, params_b);
+      |                                               ^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:123:24: warning: no previous prototype for function 'sp_llama_sqfree_init' [-Wmissing-prototypes]
+  123 | sp_llama_sqfree_ctx_t *sp_llama_sqfree_init(int head_dim, int n_layers,
+      |                        ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:123:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  123 | sp_llama_sqfree_ctx_t *sp_llama_sqfree_init(int head_dim, int n_layers,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:194:6: warning: no previous prototype for function 'sp_llama_sqfree_free' [-Wmissing-prototypes]
+  194 | void sp_llama_sqfree_free(sp_llama_sqfree_ctx_t *ctx) {
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:194:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  194 | void sp_llama_sqfree_free(sp_llama_sqfree_ctx_t *ctx) {
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:208:6: warning: no previous prototype for function 'sp_llama_sqfree_write_kv' [-Wmissing-prototypes]
+  208 | void sp_llama_sqfree_write_kv(sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:208:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  208 | void sp_llama_sqfree_write_kv(sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:220:6: warning: no previous prototype for function 'sp_llama_sqfree_read_k' [-Wmissing-prototypes]
+  220 | void sp_llama_sqfree_read_k(const sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:220:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  220 | void sp_llama_sqfree_read_k(const sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:226:6: warning: no previous prototype for function 'sp_llama_sqfree_read_v' [-Wmissing-prototypes]
+  226 | void sp_llama_sqfree_read_v(const sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:226:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  226 | void sp_llama_sqfree_read_v(const sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:240:2: warning: no newline at end of file [-Wnewline-eof]
+  240 | }
+      |  ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:233:7: warning: no previous prototype for function 'sp_llama_sqfree_validate_k' [-Wmissing-prototypes]
+  233 | float sp_llama_sqfree_validate_k(sp_llama_sqfree_ctx_t *ctx,
+      |       ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:233:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  233 | float sp_llama_sqfree_validate_k(sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+10 warnings generated.
+[19/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[20/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1181:19: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1181 |         sum_a  += a[i];
+      |                ~~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1182:19: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1182 |         sum_b  += b[i];
+      |                ~~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1183:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1183 |         sum_ab += (double)a[i] * b[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1184:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1184 |         sum_a2 += (double)a[i] * a[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1185:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1185 |         sum_b2 += (double)b[i] * b[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1238:61: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1237 |         fprintf(stderr, " (%d primes, %.0f%% energy)",
+      |         ~~~~~~~
+ 1238 |                 cfg->vilenkin_primes, cfg->energy_threshold * 100);
+      |                                       ~~~~~~~~~~~~~~~~~~~~~~^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1242:49: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1242 |     fprintf(stderr, "  Compression:  %.1f×\n", sp_compression_ratio(cfg));
+      |     ~~~~~~~                                    ^~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1503:57: warning: unused parameter 'sc' [-Wunused-parameter]
+ 1503 | static int sp_load_layer_kv(FILE *f, sp_shadow_cache_t *sc, int il,
+      |                                                         ^
+9 warnings generated.
+[21/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[22/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:83:51: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+   83 |         for (int i = 0; i < head_dim; i++) sum += in[i];
+      |                                                ~~ ^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1070:55: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1070 |             hp->calib_XtX[i * ns + j] += (double)xi * xj;
+      |                                                     ~ ^~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1075:55: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1075 |             hp->calib_XtY[i * nt + t] += (double)xi * yt;
+      |                                                     ~ ^~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1325:44: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1323 |         fprintf(stderr, "[Shannon-Prime HIER] bytes/pos: K=%d V=%d (%.1f× vs fp16)\n",
+      |         ~~~~~~~
+ 1324 |                 hc->k_bytes_per_pos, hc->v_bytes_per_pos,
+ 1325 |                 (float)(cfg->head_dim * 4) / (hc->k_bytes_per_pos + hc->v_bytes_per_pos));
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1595:2: warning: no newline at end of file [-Wnewline-eof]
+ 1595 | }
+      |  ^
+6 warnings generated.
+[23/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:391:38: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  391 |                 d[i + j]       = u + v;
+      |                                    ~ ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:391:34: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  391 |                 d[i + j]       = u + v;
+      |                                  ^ ~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:392:38: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  392 |                 d[i + j + len] = u - v;
+      |                                    ~ ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:392:34: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  392 |                 d[i + j + len] = u - v;
+      |                                  ^ ~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:405:32: warning: implicit conversion increases floating-point precision: 'const __fp16' to 'float' [-Wdouble-promotion]
+  405 |     for (; i < n; i++) d[i] *= inv_sqrt_n;
+      |                             ~~ ^~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:657:13: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  653 |     fprintf(stderr, "[Shannon-Prime Mobile] Cache: %.2f MB "
+      |     ~~~~~~~
+  654 |             "(vs %.2f MB fp16, %.1f× compression)\n",
+  655 |             (k_total + v_total) / (1024.0 * 1024.0),
+  656 |             (size_t)n_slots * max_seq_len * cfg->head_dim * 4 / (1024.0 * 1024.0),
+  657 |             compression);
+      |             ^~~~~~~~~~~
+7 warnings generated.
+[24/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[25/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/arm/repack.cpp.o
+[26/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[27/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[28/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[29/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[30/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[31/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[32/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+ninja: build stopped: subcommand failed.

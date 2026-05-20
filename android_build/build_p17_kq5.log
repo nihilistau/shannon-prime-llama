@@ -1,0 +1,707 @@
+NDK:         D:/Files/Android/android-ndk-r27d
+SP:          D:/F/shannon-prime-repos/shannon-prime-llama
+SRC:         D:/F/shannon-prime-repos/sp-model-test/llama-cpp
+HEXAGON_SDK: C:/Qualcomm/Hexagon_SDK/5.5.6.0
+BUILD:       D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon
+API:         28
+PATCH:       D:/F/shannon-prime-repos/shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+
+[1/3] Reset D:/F/shannon-prime-repos/sp-model-test/llama-cpp to upstream HEAD and apply Shannon-Prime patch
+      patch applied OK
+
+[2/3] Configure CMake (Hexagon enabled)
+-- The C compiler identification is Clang 18.0.4
+-- The CXX compiler identification is Clang 18.0.4
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Git: C:/Program Files/Git/mingw64/bin/git.exe (found version "2.53.0.windows.1")
+-- Shannon-Prime: applied K-quant getrows patch to ggml/
+-- The ASM compiler identification is Clang with GNU-like command-line
+-- Found assembler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe
+-- Setting GGML_NATIVE_DEFAULT to OFF
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: aarch64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- ARM detected
+-- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E
+-- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E - Failed
+-- Checking for ARM features using flags:
+-- Performing Test HAVE_DOTPROD
+-- Performing Test HAVE_DOTPROD - Success
+-- Performing Test HAVE_SVE
+-- Performing Test HAVE_SVE - Failed
+-- Performing Test HAVE_MATMUL_INT8
+-- Performing Test HAVE_MATMUL_INT8 - Failed
+-- Performing Test HAVE_FMA
+-- Performing Test HAVE_FMA - Success
+-- Performing Test HAVE_FP16_VECTOR_ARITHMETIC
+-- Performing Test HAVE_FP16_VECTOR_ARITHMETIC - Success
+-- Performing Test HAVE_SME
+-- Performing Test HAVE_SME - Failed
+-- Adding CPU backend variant ggml-cpu:  
+-- ggml version: 0.9.11
+-- ggml commit:  cf8b0db-dirty
+-- Shannon-Prime: linking Adreno NEON backend (SP_HAVE_ADRENO)
+-- Shannon-Prime: linking Hexagon cDSP backend (SP_HAVE_HEXAGON, FastRPC)
+-- Shannon-Prime: full engine enabled (core + engine + bridge)
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Could NOT find OpenSSL, try to set the path to OpenSSL root folder in the system variable OPENSSL_ROOT_DIR (missing: OPENSSL_CRYPTO_LIBRARY OPENSSL_INCLUDE_DIR) 
+-- Generating embedded license file for target: llama-common
+-- Configuring done (6.4s)
+-- Generating done (0.3s)
+-- Build files have been written to: D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon
+
+[3/3] Build llama-cli
+[1/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[2/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[4/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[5/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[6/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[7/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[8/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[9/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[10/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[11/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[12/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_cauchy.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[13/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_modelpack.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[14/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[15/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[16/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/arm/quants.c.o
+[17/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:361:45: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  359 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
+      |                 ~~~~~~~
+  360 |                         "freq_base=%.0f, %d freq pairs\n",
+  361 |                         role_tag, pe_alpha, freq_base, n_freqs);
+      |                                             ^~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:361:35: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  359 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
+      |                 ~~~~~~~
+  360 |                         "freq_base=%.0f, %d freq pairs\n",
+  361 |                         role_tag, pe_alpha, freq_base, n_freqs);
+      |                                   ^~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:366:25: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  362 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
+      |                 ~~~~~~~
+  363 |                         "[%.4f, %.4f]\n",
+  364 |                         role_tag,
+  365 |                         ctx->freq_factors[0],
+  366 |                         ctx->freq_factors[n_freqs - 1]);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:365:25: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  362 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
+      |                 ~~~~~~~
+  363 |                         "[%.4f, %.4f]\n",
+  364 |                         role_tag,
+  365 |                         ctx->freq_factors[0],
+      |                         ^~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:391:63: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  387 |                 fprintf(stderr, "[Shannon-Prime]%s preset '%s' matched. "
+      |                 ~~~~~~~
+  388 |                         "Suggested draft for speculative decoding: %s "
+  389 |                         "(expected acceptance ~%.0f%%). Pass it with "
+  390 |                         "llama-cli's -md flag, or ignore for single-model use.\n",
+  391 |                         role_tag, preset->name, draft, accept * 100.0f);
+      |                                                        ~~~~~~~^~~~~~~~
+6 warnings generated.
+[18/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[19/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_pe.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[20/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:188:54: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  187 |         fprintf(stderr, "[Shannon-Prime SQFREE] scaling law: safe K_corr floor=%.4f "
+      |         ~~~~~~~
+  188 |                 "(est. %.1fB params @ Q8)\n", floor, params_b);
+      |                                                      ^~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:188:47: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  187 |         fprintf(stderr, "[Shannon-Prime SQFREE] scaling law: safe K_corr floor=%.4f "
+      |         ~~~~~~~
+  188 |                 "(est. %.1fB params @ Q8)\n", floor, params_b);
+      |                                               ^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:123:24: warning: no previous prototype for function 'sp_llama_sqfree_init' [-Wmissing-prototypes]
+  123 | sp_llama_sqfree_ctx_t *sp_llama_sqfree_init(int head_dim, int n_layers,
+      |                        ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:123:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  123 | sp_llama_sqfree_ctx_t *sp_llama_sqfree_init(int head_dim, int n_layers,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:194:6: warning: no previous prototype for function 'sp_llama_sqfree_free' [-Wmissing-prototypes]
+  194 | void sp_llama_sqfree_free(sp_llama_sqfree_ctx_t *ctx) {
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:194:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  194 | void sp_llama_sqfree_free(sp_llama_sqfree_ctx_t *ctx) {
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:208:6: warning: no previous prototype for function 'sp_llama_sqfree_write_kv' [-Wmissing-prototypes]
+  208 | void sp_llama_sqfree_write_kv(sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:208:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  208 | void sp_llama_sqfree_write_kv(sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:220:6: warning: no previous prototype for function 'sp_llama_sqfree_read_k' [-Wmissing-prototypes]
+  220 | void sp_llama_sqfree_read_k(const sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:220:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  220 | void sp_llama_sqfree_read_k(const sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:226:6: warning: no previous prototype for function 'sp_llama_sqfree_read_v' [-Wmissing-prototypes]
+  226 | void sp_llama_sqfree_read_v(const sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:226:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  226 | void sp_llama_sqfree_read_v(const sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:240:2: warning: no newline at end of file [-Wnewline-eof]
+  240 | }
+      |  ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:233:7: warning: no previous prototype for function 'sp_llama_sqfree_validate_k' [-Wmissing-prototypes]
+  233 | float sp_llama_sqfree_validate_k(sp_llama_sqfree_ctx_t *ctx,
+      |       ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:233:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  233 | float sp_llama_sqfree_validate_k(sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+10 warnings generated.
+[21/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:83:51: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+   83 |         for (int i = 0; i < head_dim; i++) sum += in[i];
+      |                                                ~~ ^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1070:55: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1070 |             hp->calib_XtX[i * ns + j] += (double)xi * xj;
+      |                                                     ~ ^~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1075:55: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1075 |             hp->calib_XtY[i * nt + t] += (double)xi * yt;
+      |                                                     ~ ^~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1325:44: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1323 |         fprintf(stderr, "[Shannon-Prime HIER] bytes/pos: K=%d V=%d (%.1f× vs fp16)\n",
+      |         ~~~~~~~
+ 1324 |                 hc->k_bytes_per_pos, hc->v_bytes_per_pos,
+ 1325 |                 (float)(cfg->head_dim * 4) / (hc->k_bytes_per_pos + hc->v_bytes_per_pos));
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1595:2: warning: no newline at end of file [-Wnewline-eof]
+ 1595 | }
+      |  ^
+6 warnings generated.
+[22/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1181:19: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1181 |         sum_a  += a[i];
+      |                ~~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1182:19: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1182 |         sum_b  += b[i];
+      |                ~~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1183:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1183 |         sum_ab += (double)a[i] * b[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1184:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1184 |         sum_a2 += (double)a[i] * a[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1185:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1185 |         sum_b2 += (double)b[i] * b[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1238:61: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1237 |         fprintf(stderr, " (%d primes, %.0f%% energy)",
+      |         ~~~~~~~
+ 1238 |                 cfg->vilenkin_primes, cfg->energy_threshold * 100);
+      |                                       ~~~~~~~~~~~~~~~~~~~~~~^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1242:49: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1242 |     fprintf(stderr, "  Compression:  %.1f×\n", sp_compression_ratio(cfg));
+      |     ~~~~~~~                                    ^~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1503:57: warning: unused parameter 'sc' [-Wunused-parameter]
+ 1503 | static int sp_load_layer_kv(FILE *f, sp_shadow_cache_t *sc, int il,
+      |                                                         ^
+9 warnings generated.
+[23/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+51 warnings generated.
+[24/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: warning: address of function 'remote_session_control' will always evaluate to 'true' [-Wpointer-bool-conversion]
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |         ~^~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: note: prefix with the address-of operator to silence this warning
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |          ^
+      |          &
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:972:9: warning: unused variable 'hd' [-Wunused-variable]
+  972 |     int hd = cache->cfg_snapshot.head_dim;
+      |         ^~
+3 warnings generated.
+[25/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:391:38: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  391 |                 d[i + j]       = u + v;
+      |                                    ~ ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:391:34: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  391 |                 d[i + j]       = u + v;
+      |                                  ^ ~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:392:38: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  392 |                 d[i + j + len] = u - v;
+      |                                    ~ ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:392:34: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  392 |                 d[i + j + len] = u - v;
+      |                                  ^ ~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:405:32: warning: implicit conversion increases floating-point precision: 'const __fp16' to 'float' [-Wdouble-promotion]
+  405 |     for (; i < n; i++) d[i] *= inv_sqrt_n;
+      |                             ~~ ^~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:657:13: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  653 |     fprintf(stderr, "[Shannon-Prime Mobile] Cache: %.2f MB "
+      |     ~~~~~~~
+  654 |             "(vs %.2f MB fp16, %.1f× compression)\n",
+  655 |             (k_total + v_total) / (1024.0 * 1024.0),
+  656 |             (size_t)n_slots * max_seq_len * cfg->head_dim * 4 / (1024.0 * 1024.0),
+  657 |             compression);
+      |             ^~~~~~~~~~~
+7 warnings generated.
+[26/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[27/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/llama_sp_fused_kq.cpp.o
+D:/F/shannon-prime-repos/shannon-prime-llama/src/engine/llama_sp_fused_kq.cpp:145:15: warning: unused variable 'n_head_kv' [-Wunused-variable]
+  145 |     const int n_head_kv  = u->n_heads_kv;
+      |               ^~~~~~~~~
+1 warning generated.
+[28/263] Linking C static library src\libshannon_prime_core.a
+[29/263] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+[30/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/llama_sp_kcap.cpp.o
+[31/263] Building CXX object src/CMakeFiles/llama.dir/llama-cparams.cpp.o
+[32/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/arm/repack.cpp.o
+[33/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/gdn_state.cpp.o
+[34/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/kv_cache.cpp.o
+[35/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[36/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[37/263] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[38/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[39/263] Building CXX object src/CMakeFiles/llama.dir/llama-hparams.cpp.o
+[40/263] Building CXX object src/CMakeFiles/llama.dir/llama-arch.cpp.o
+[41/263] Building CXX object src/CMakeFiles/llama.dir/llama-io.cpp.o
+[42/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[43/263] Building CXX object src/CMakeFiles/llama.dir/llama-impl.cpp.o
+[44/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[45/263] Building CXX object src/CMakeFiles/llama.dir/llama-adapter.cpp.o
+[46/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[47/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory.cpp.o
+[48/263] Building CXX object src/CMakeFiles/llama.dir/llama-chat.cpp.o
+[49/263] Building CXX object src/CMakeFiles/llama.dir/llama.cpp.o
+[50/263] Building CXX object src/CMakeFiles/llama.dir/llama-batch.cpp.o
+[51/263] Linking CXX shared library bin\libggml-base.so
+[52/263] Building CXX object src/CMakeFiles/llama.dir/llama-mmap.cpp.o
+[53/263] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o
+[54/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o
+[55/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o
+[56/263] Building CXX object src/CMakeFiles/llama.dir/llama-graph.cpp.o
+[57/263] Building CXX object src/CMakeFiles/llama.dir/llama-model-saver.cpp.o
+[58/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o
+[59/263] Building CXX object src/CMakeFiles/llama.dir/models/afmoe.cpp.o
+[60/263] Building CXX object src/CMakeFiles/llama.dir/llama-context.cpp.o
+[61/263] Building CXX object src/CMakeFiles/llama.dir/unicode-data.cpp.o
+[62/263] Building CXX object src/CMakeFiles/llama.dir/models/apertus.cpp.o
+[63/263] Building CXX object src/CMakeFiles/llama.dir/models/arcee.cpp.o
+[64/263] Building CXX object src/CMakeFiles/llama.dir/models/arctic.cpp.o
+[65/263] Building CXX object src/CMakeFiles/llama.dir/models/arwkv7.cpp.o
+[66/263] Building CXX object src/CMakeFiles/llama.dir/models/baichuan.cpp.o
+[67/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[68/263] Building CXX object src/CMakeFiles/llama.dir/models/bailingmoe.cpp.o
+[69/263] Building CXX object src/CMakeFiles/llama.dir/models/bailingmoe2.cpp.o
+[70/263] Building CXX object src/CMakeFiles/llama.dir/models/bloom.cpp.o
+[71/263] Linking CXX shared library bin\libggml-cpu.so
+[72/263] Building CXX object src/CMakeFiles/llama.dir/models/bitnet.cpp.o
+[73/263] Building CXX object src/CMakeFiles/llama.dir/models/bert.cpp.o
+[74/263] Building CXX object src/CMakeFiles/llama.dir/models/chameleon.cpp.o
+[75/263] Building CXX object src/CMakeFiles/llama.dir/models/chatglm.cpp.o
+[76/263] Linking CXX shared library bin\libggml.so
+[77/263] Building CXX object src/CMakeFiles/llama.dir/llama-grammar.cpp.o
+[78/263] Building CXX object src/CMakeFiles/llama.dir/models/codeshell.cpp.o
+[79/263] Building CXX object src/CMakeFiles/llama.dir/models/cogvlm.cpp.o
+[80/263] Building CXX object src/CMakeFiles/llama.dir/models/cohere2-iswa.cpp.o
+[81/263] Building CXX object src/CMakeFiles/llama.dir/models/command-r.cpp.o
+[82/263] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o
+[83/263] Building CXX object src/CMakeFiles/llama.dir/models/dbrx.cpp.o
+[84/263] Building CXX object src/CMakeFiles/llama.dir/models/deepseek.cpp.o
+[85/263] Building CXX object src/CMakeFiles/llama.dir/models/deci.cpp.o
+[86/263] Building CXX object src/CMakeFiles/llama.dir/models/delta-net-base.cpp.o
+[87/263] Building CXX object src/CMakeFiles/llama.dir/models/deepseek2.cpp.o
+[88/263] Building CXX object src/CMakeFiles/llama.dir/models/dream.cpp.o
+[89/263] Building CXX object src/CMakeFiles/llama.dir/models/dots1.cpp.o
+[90/263] Building CXX object src/CMakeFiles/llama.dir/models/ernie4-5.cpp.o
+[91/263] Building CXX object src/CMakeFiles/llama.dir/models/ernie4-5-moe.cpp.o
+[92/263] Building CXX object src/CMakeFiles/llama.dir/llama-model-loader.cpp.o
+[93/263] Building CXX object src/CMakeFiles/llama.dir/models/eurobert.cpp.o
+[94/263] Building CXX object src/CMakeFiles/llama.dir/llama-quant.cpp.o
+[95/263] Building CXX object src/CMakeFiles/llama.dir/llama-vocab.cpp.o
+[96/263] Building CXX object src/CMakeFiles/llama.dir/llama-sampler.cpp.o
+[97/263] Building CXX object src/CMakeFiles/llama.dir/models/exaone.cpp.o
+[98/263] Building CXX object src/CMakeFiles/llama.dir/models/exaone4.cpp.o
+[99/263] Building CXX object src/CMakeFiles/llama.dir/models/exaone-moe.cpp.o
+[100/263] Building CXX object src/CMakeFiles/llama.dir/models/falcon-h1.cpp.o
+[101/263] Building CXX object src/CMakeFiles/llama.dir/models/falcon.cpp.o
+[102/263] Building CXX object src/CMakeFiles/llama.dir/models/gemma-embedding.cpp.o
+[103/263] Building CXX object src/CMakeFiles/llama.dir/models/gemma2-iswa.cpp.o
+[104/263] Building CXX object src/CMakeFiles/llama.dir/models/gemma.cpp.o
+[105/263] Building CXX object src/CMakeFiles/llama.dir/models/gemma3.cpp.o
+[106/263] Building CXX object src/CMakeFiles/llama.dir/models/gemma3n-iswa.cpp.o
+[107/263] Building CXX object src/CMakeFiles/llama.dir/models/gemma4-iswa.cpp.o
+[108/263] Building CXX object src/CMakeFiles/llama.dir/models/glm4-moe.cpp.o
+[109/263] Building CXX object src/CMakeFiles/llama.dir/models/glm4.cpp.o
+[110/263] Building CXX object src/CMakeFiles/llama.dir/models/gptneox.cpp.o
+[111/263] Building CXX object src/CMakeFiles/llama.dir/models/gpt2.cpp.o
+[112/263] Building CXX object src/CMakeFiles/llama.dir/models/granite.cpp.o
+[113/263] Building CXX object src/CMakeFiles/llama.dir/models/granite-hybrid.cpp.o
+[114/263] Building CXX object src/CMakeFiles/llama.dir/models/grovemoe.cpp.o
+[115/263] Building CXX object src/CMakeFiles/llama.dir/models/grok.cpp.o
+[116/263] Building CXX object src/CMakeFiles/llama.dir/models/hunyuan-moe.cpp.o
+[117/263] Building CXX object src/CMakeFiles/llama.dir/models/hunyuan-dense.cpp.o
+[118/263] Building CXX object src/CMakeFiles/llama.dir/models/internlm2.cpp.o
+[119/263] Building CXX object src/CMakeFiles/llama.dir/models/jais2.cpp.o
+[120/263] Building CXX object src/CMakeFiles/llama.dir/models/jais.cpp.o
+[121/263] Building CXX object src/CMakeFiles/llama.dir/models/jamba.cpp.o
+[122/263] Building CXX object src/CMakeFiles/llama.dir/models/kimi-linear.cpp.o
+[123/263] Building CXX object src/CMakeFiles/llama.dir/models/llada.cpp.o
+[124/263] Building CXX object src/CMakeFiles/llama.dir/models/llada-moe.cpp.o
+[125/263] Building CXX object src/CMakeFiles/llama.dir/models/lfm2.cpp.o
+[126/263] Building CXX object src/CMakeFiles/llama.dir/models/llama4.cpp.o
+[127/263] Building CXX object src/CMakeFiles/llama.dir/models/llama.cpp.o
+[128/263] Building CXX object src/CMakeFiles/llama.dir/models/maincoder.cpp.o
+[129/263] Building CXX object src/CMakeFiles/llama.dir/models/mamba.cpp.o
+[130/263] Building CXX object src/CMakeFiles/llama.dir/unicode.cpp.o
+[131/263] Building CXX object src/CMakeFiles/llama.dir/models/mimo2-iswa.cpp.o
+[132/263] Building CXX object src/CMakeFiles/llama.dir/models/mistral3.cpp.o
+[133/263] Building CXX object src/CMakeFiles/llama.dir/models/mamba-base.cpp.o
+[134/263] Building CXX object src/CMakeFiles/llama.dir/models/minimax-m2.cpp.o
+[135/263] Building CXX object src/CMakeFiles/llama.dir/models/minicpm3.cpp.o
+[136/263] Building CXX object src/CMakeFiles/llama.dir/models/modern-bert.cpp.o
+[137/263] Building CXX object src/CMakeFiles/llama.dir/models/nemotron-h.cpp.o
+[138/263] Building CXX object src/CMakeFiles/llama.dir/models/mpt.cpp.o
+[139/263] Building CXX object src/CMakeFiles/llama.dir/models/nemotron.cpp.o
+[140/263] Building CXX object src/CMakeFiles/llama.dir/models/neo-bert.cpp.o
+[141/263] Building CXX object src/CMakeFiles/llama.dir/models/olmo.cpp.o
+[142/263] Building CXX object src/CMakeFiles/llama.dir/models/openai-moe-iswa.cpp.o
+[143/263] Building CXX object src/CMakeFiles/llama.dir/models/olmo2.cpp.o
+[144/263] Building CXX object src/CMakeFiles/llama.dir/models/olmoe.cpp.o
+[145/263] Building CXX object src/CMakeFiles/llama.dir/models/openelm.cpp.o
+[146/263] Building CXX object src/CMakeFiles/llama.dir/models/orion.cpp.o
+[147/263] Building CXX object src/CMakeFiles/llama.dir/models/paddleocr.cpp.o
+[148/263] Building CXX object src/CMakeFiles/llama.dir/models/pangu-embedded.cpp.o
+[149/263] Building CXX object src/CMakeFiles/llama.dir/models/phi2.cpp.o
+[150/263] Building CXX object src/CMakeFiles/llama.dir/models/phi3.cpp.o
+[151/263] Building CXX object src/CMakeFiles/llama.dir/models/plamo.cpp.o
+[152/263] Building CXX object src/CMakeFiles/llama.dir/models/plamo3.cpp.o
+[153/263] Building CXX object src/CMakeFiles/llama.dir/models/plm.cpp.o
+[154/263] Building CXX object src/CMakeFiles/llama.dir/models/plamo2.cpp.o
+[155/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen.cpp.o
+[156/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen2.cpp.o
+[157/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen2vl.cpp.o
+[158/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen2moe.cpp.o
+[159/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen3.cpp.o
+[160/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen35moe.cpp.o
+[161/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen35.cpp.o
+[162/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen3moe.cpp.o
+[163/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen3vl-moe.cpp.o
+[164/263] Building CXX object src/CMakeFiles/llama.dir/models/refact.cpp.o
+[165/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen3next.cpp.o
+[166/263] Building CXX object src/CMakeFiles/llama.dir/models/qwen3vl.cpp.o
+[167/263] Building CXX object src/CMakeFiles/llama.dir/models/rwkv6-base.cpp.o
+[168/263] Building CXX object src/CMakeFiles/llama.dir/models/rnd1.cpp.o
+[169/263] Building CXX object src/CMakeFiles/llama.dir/models/rwkv6qwen2.cpp.o
+[170/263] Building CXX object src/CMakeFiles/llama.dir/models/rwkv6.cpp.o
+[171/263] Linking CXX static library src\libshannon_prime_engine.a
+[172/263] Building CXX object src/CMakeFiles/llama.dir/models/rwkv7.cpp.o
+[173/263] Building CXX object src/CMakeFiles/llama.dir/models/rwkv7-base.cpp.o
+[174/263] Building CXX object src/CMakeFiles/llama.dir/models/seed-oss.cpp.o
+[175/263] Building CXX object src/CMakeFiles/llama.dir/models/smollm3.cpp.o
+[176/263] Building CXX object src/CMakeFiles/llama.dir/models/smallthinker.cpp.o
+[177/263] Building CXX object src/CMakeFiles/llama.dir/models/stablelm.cpp.o
+[178/263] Building CXX object common/CMakeFiles/llama-common-base.dir/build-info.cpp.o
+[179/263] Building CXX object src/CMakeFiles/llama.dir/models/starcoder.cpp.o
+[180/263] Building CXX object src/CMakeFiles/llama.dir/models/starcoder2.cpp.o
+[181/263] Building CXX object src/CMakeFiles/llama.dir/models/xverse.cpp.o
+[182/263] Building CXX object src/CMakeFiles/llama.dir/models/step35-iswa.cpp.o
+[183/263] Building CXX object src/CMakeFiles/llama.dir/models/t5.cpp.o
+[184/263] Building CXX object src/CMakeFiles/llama.dir/models/wavtokenizer-dec.cpp.o
+[185/263] Building CXX object src/CMakeFiles/llama.dir/models/t5encoder.cpp.o
+[186/263] Linking CXX static library common\libllama-common-base.a
+[187/263] Building CXX object src/CMakeFiles/llama.dir/llama-shannon-prime.cpp.o
+[188/263] Building CXX object common/CMakeFiles/llama-common.dir/llguidance.cpp.o
+[189/263] Building CXX object common/CMakeFiles/llama-common.dir/log.cpp.o
+[190/263] Building CXX object common/CMakeFiles/llama-common.dir/console.cpp.o
+[191/263] Building CXX object common/CMakeFiles/llama-common.dir/debug.cpp.o
+[192/263] Building CXX object common/CMakeFiles/llama-common.dir/chat-auto-parser-helpers.cpp.o
+[193/263] Building CXX object common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o
+[194/263] Building CXX object common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o
+[195/263] Building CXX object common/CMakeFiles/llama-common.dir/ngram-map.cpp.o
+[196/263] Building CXX object common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o
+[197/263] Building CXX object common/CMakeFiles/llama-common.dir/common.cpp.o
+[198/263] Building CXX object common/CMakeFiles/llama-common.dir/chat-auto-parser-generator.cpp.o
+[199/263] Building CXX object common/CMakeFiles/llama-common.dir/unicode.cpp.o
+[200/263] Building CXX object common/CMakeFiles/llama-common.dir/json-partial.cpp.o
+[201/263] Building CXX object common/CMakeFiles/llama-common.dir/speculative.cpp.o
+[202/263] Building CXX object common/CMakeFiles/llama-common.dir/sampling.cpp.o
+[203/263] Building CXX object common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o
+[204/263] Building CXX object common/CMakeFiles/llama-common.dir/__/license.cpp.o
+[205/263] Building CXX object common/CMakeFiles/llama-common.dir/regex-partial.cpp.o
+[206/263] Building CXX object common/CMakeFiles/llama-common.dir/jinja/string.cpp.o
+[207/263] Building CXX object common/CMakeFiles/llama-common.dir/preset.cpp.o
+[208/263] Building CXX object common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o
+[209/263] Building CXX object common/CMakeFiles/llama-common.dir/chat-peg-parser.cpp.o
+[210/263] Building CXX object common/CMakeFiles/llama-common.dir/download.cpp.o
+[211/263] Building CXX object common/CMakeFiles/llama-common.dir/hf-cache.cpp.o
+[212/263] Building CXX object src/CMakeFiles/llama.dir/llama-model.cpp.o
+[213/263] Building CXX object common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o
+[214/263] Linking CXX shared library bin\libllama.so
+[215/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/cogvlm.cpp.o
+[216/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd.cpp.o
+[217/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-audio.cpp.o
+[218/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/conformer.cpp.o
+[219/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-image.cpp.o
+[220/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/dotsocr.cpp.o
+[221/263] Building CXX object common/CMakeFiles/llama-common.dir/json-schema-to-grammar.cpp.o
+[222/263] Building CXX object common/CMakeFiles/llama-common.dir/chat-diff-analyzer.cpp.o
+[223/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/glm4v.cpp.o
+[224/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4v.cpp.o
+[225/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/hunyuanocr.cpp.o
+[226/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4a.cpp.o
+[227/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/internvl.cpp.o
+[228/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/kimivl.cpp.o
+[229/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/kimik25.cpp.o
+[230/263] Building CXX object common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o
+[231/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/nemotron-v2-vl.cpp.o
+[232/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/llama4.cpp.o
+[233/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/minicpmv.cpp.o
+[234/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/paddleocr.cpp.o
+[235/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/llava.cpp.o
+[236/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/pixtral.cpp.o
+[237/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/clip.cpp.o
+[238/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3vl.cpp.o
+[239/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen2vl.cpp.o
+[240/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3a.cpp.o
+[241/263] Building CXX object common/CMakeFiles/llama-common.dir/arg.cpp.o
+[242/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/siglip.cpp.o
+[243/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/step3vl.cpp.o
+[244/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/whisper-enc.cpp.o
+[245/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/deepseekocr.cpp.o
+[246/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/mobilenetv5.cpp.o
+[247/263] Building CXX object common/CMakeFiles/llama-common.dir/chat.cpp.o
+[248/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/youtuvl.cpp.o
+[249/263] Building CXX object common/CMakeFiles/llama-common.dir/peg-parser.cpp.o
+[250/263] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-helper.cpp.o
+[251/263] Linking CXX shared library bin\libmtmd.so
+[252/263] Building CXX object vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o
+[253/263] Linking CXX static library vendor\cpp-httplib\libcpp-httplib.a
+[254/263] Building CXX object tools/server/CMakeFiles/server-context.dir/server-queue.cpp.o
+[255/263] Building CXX object common/CMakeFiles/llama-common.dir/jinja/value.cpp.o
+[256/263] Linking CXX shared library bin\libllama-common.so
+[257/263] Building CXX object tools/cli/CMakeFiles/llama-cli.dir/cli.cpp.o
+[258/263] Building CXX object tools/server/CMakeFiles/server-context.dir/server-tools.cpp.o
+[259/263] Building CXX object tools/server/CMakeFiles/server-context.dir/server-common.cpp.o
+[260/263] Building CXX object tools/server/CMakeFiles/server-context.dir/server-context.cpp.o
+[261/263] Building CXX object tools/server/CMakeFiles/server-context.dir/server-task.cpp.o
+[262/263] Linking CXX static library tools\server\libserver-context.a
+[263/263] Linking CXX executable bin\llama-cli
+
+OK: D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/bin/llama-cli
+-rw-r--r-- 1 Knack 197121 20681672 Apr 30 22:18 D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/bin/llama-cli
+
+Next steps:
+  1. Build libsp_hex_skel.so via Hexagon SDK build.cmd (skel=DSP-side)
+  2. adb push D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/bin/llama-cli /data/local/tmp/sp/
+  3. adb push D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/bin/lib*.so /data/local/tmp/sp/lib/
+  4. adb push libsp_hex_skel.so /data/local/tmp/sp/  (or to ADSP_LIBRARY_PATH)
+  5. SHANNON_PRIME_ENABLED=1 SHANNON_PRIME_BACKEND=hexagon \
+     SHANNON_PRIME_VERBOSE=1 ADSP_LIBRARY_PATH=/data/local/tmp/sp \
+     ./llama-cli -m model.gguf -p 'The capital of France is' -n 30

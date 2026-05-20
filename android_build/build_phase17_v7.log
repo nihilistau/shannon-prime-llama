@@ -1,0 +1,1092 @@
+NDK:         D:/Files/Android/android-ndk-r27d
+SP:          D:/F/shannon-prime-repos/shannon-prime-llama
+SRC:         D:/F/shannon-prime-repos/sp-model-test/llama-cpp
+HEXAGON_SDK: C:/Qualcomm/Hexagon_SDK/5.5.6.0
+BUILD:       D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon
+API:         28
+PATCH:       D:/F/shannon-prime-repos/shannon-prime-llama/patches/llama-cpp-b8861-full-engine.patch
+
+[1/3] Reset D:/F/shannon-prime-repos/sp-model-test/llama-cpp to upstream HEAD and apply Shannon-Prime patch
+Updating files:  58% (1528/2603)
+Updating files:  59% (1536/2603)
+Updating files:  60% (1562/2603)
+Updating files:  61% (1588/2603)
+Updating files:  62% (1614/2603)
+Updating files:  63% (1640/2603)
+Updating files:  64% (1666/2603)
+Updating files:  65% (1692/2603)
+Updating files:  66% (1718/2603)
+Updating files:  67% (1745/2603)
+Updating files:  68% (1771/2603)
+Updating files:  69% (1797/2603)
+Updating files:  70% (1823/2603)
+Updating files:  71% (1849/2603)
+Updating files:  72% (1875/2603)
+Updating files:  73% (1901/2603)
+Updating files:  74% (1927/2603)
+Updating files:  75% (1953/2603)
+Updating files:  76% (1979/2603)
+Updating files:  77% (2005/2603)
+Updating files:  78% (2031/2603)
+Updating files:  79% (2057/2603)
+Updating files:  80% (2083/2603)
+Updating files:  81% (2109/2603)
+Updating files:  82% (2135/2603)
+Updating files:  83% (2161/2603)
+Updating files:  84% (2187/2603)
+Updating files:  85% (2213/2603)
+Updating files:  86% (2239/2603)
+Updating files:  87% (2265/2603)
+Updating files:  88% (2291/2603)
+Updating files:  89% (2317/2603)
+Updating files:  90% (2343/2603)
+Updating files:  91% (2369/2603)
+Updating files:  92% (2395/2603)
+Updating files:  93% (2421/2603)
+Updating files:  94% (2447/2603)
+Updating files:  95% (2473/2603)
+Updating files:  96% (2499/2603)
+Updating files:  97% (2525/2603)
+Updating files:  98% (2551/2603)
+Updating files:  99% (2577/2603)
+Updating files: 100% (2603/2603)
+Updating files: 100% (2603/2603), done.
+      patch applied OK
+
+[2/3] Configure CMake (Hexagon enabled)
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:146 (include)
+  CMakeLists.txt:2 (project)
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:146 (include)
+  CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  CMakeLists.txt:2 (project)
+
+
+-- The C compiler identification is Clang 18.0.4
+-- The CXX compiler identification is Clang 18.0.4
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  CMakeLists.txt:2 (project)
+
+
+-- Detecting C compiler ABI info
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-jy46hi/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-jy46hi/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-jy46hi/CMakeLists.txt:2 (project)
+
+
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-2yq51q/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-2yq51q/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-2yq51q/CMakeLists.txt:2 (project)
+
+
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMAKE_BUILD_TYPE=Release
+-- Found Git: C:/Program Files/Git/mingw64/bin/git.exe (found version "2.53.0.windows.1")
+-- Shannon-Prime: applied K-quant getrows patch to ggml/
+-- The ASM compiler identification is Clang with GNU-like command-line
+-- Found assembler: D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe
+-- Setting GGML_NATIVE_DEFAULT to OFF
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-sgaf0d/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-sgaf0d/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-sgaf0d/CMakeLists.txt:3 (project)
+
+
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-mf74qr/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-mf74qr/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-mf74qr/CMakeLists.txt:3 (project)
+
+
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: aarch64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- ARM detected
+-- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-c7ykqj/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-c7ykqj/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-c7ykqj/CMakeLists.txt:3 (project)
+
+
+-- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E - Failed
+-- Checking for ARM features using flags:
+-- Performing Test HAVE_DOTPROD
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-67s7x9/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-67s7x9/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-67s7x9/CMakeLists.txt:3 (project)
+
+
+-- Performing Test HAVE_DOTPROD - Success
+-- Performing Test HAVE_SVE
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-87dewt/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-87dewt/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-87dewt/CMakeLists.txt:3 (project)
+
+
+-- Performing Test HAVE_SVE - Failed
+-- Performing Test HAVE_MATMUL_INT8
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-bk9985/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-bk9985/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-bk9985/CMakeLists.txt:3 (project)
+
+
+-- Performing Test HAVE_MATMUL_INT8 - Failed
+-- Performing Test HAVE_FMA
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-pk920h/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-pk920h/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-pk920h/CMakeLists.txt:3 (project)
+
+
+-- Performing Test HAVE_FMA - Success
+-- Performing Test HAVE_FP16_VECTOR_ARITHMETIC
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-cqhjw7/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-cqhjw7/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-cqhjw7/CMakeLists.txt:3 (project)
+
+
+-- Performing Test HAVE_FP16_VECTOR_ARITHMETIC - Success
+-- Performing Test HAVE_SME
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-uq8hp2/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-uq8hp2/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-uq8hp2/CMakeLists.txt:3 (project)
+
+
+-- Performing Test HAVE_SME - Failed
+-- Adding CPU backend variant ggml-cpu:  
+-- ggml version: 0.9.11
+-- ggml commit:  cf8b0db-dirty
+-- Shannon-Prime: linking Adreno NEON backend (SP_HAVE_ADRENO)
+-- Shannon-Prime: linking Hexagon cDSP backend (SP_HAVE_HEXAGON, FastRPC)
+-- Shannon-Prime: full engine enabled (core + engine + bridge)
+-- Looking for pthread_create in pthreads
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-p3q9hi/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-p3q9hi/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-p3q9hi/CMakeLists.txt:3 (project)
+
+
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-l0ej8x/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-l0ej8x/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-l0ej8x/CMakeLists.txt:3 (project)
+
+
+-- Looking for pthread_create in pthread - not found
+-- Could NOT find OpenSSL, try to set the path to OpenSSL root folder in the system variable OPENSSL_ROOT_DIR (missing: OPENSSL_CRYPTO_LIBRARY OPENSSL_INCLUDE_DIR) 
+CMake Warning at vendor/cpp-httplib/CMakeLists.txt:152 (message):
+  OpenSSL not found, HTTPS support disabled
+
+
+-- Generating embedded license file for target: llama-common
+-- Configuring done (10.8s)
+-- Generating done (0.2s)
+-- Build files have been written to: D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon
+
+[3/3] Build llama-cli
+[1/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[2/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[4/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[5/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[6/263] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/arm/quants.c.o
+[7/263] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[8/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[9/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1181:19: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1181 |         sum_a  += a[i];
+      |                ~~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1182:19: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1182 |         sum_b  += b[i];
+      |                ~~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1183:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1183 |         sum_ab += (double)a[i] * b[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1184:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1184 |         sum_a2 += (double)a[i] * a[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1185:34: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+ 1185 |         sum_b2 += (double)b[i] * b[i];
+      |                                ~ ^~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1238:61: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1237 |         fprintf(stderr, " (%d primes, %.0f%% energy)",
+      |         ~~~~~~~
+ 1238 |                 cfg->vilenkin_primes, cfg->energy_threshold * 100);
+      |                                       ~~~~~~~~~~~~~~~~~~~~~~^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1242:49: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1242 |     fprintf(stderr, "  Compression:  %.1f×\n", sp_compression_ratio(cfg));
+      |     ~~~~~~~                                    ^~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime.c:1503:57: warning: unused parameter 'sc' [-Wunused-parameter]
+ 1503 | static int sp_load_layer_kv(FILE *f, sp_shadow_cache_t *sc, int il,
+      |                                                         ^
+9 warnings generated.
+[10/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_cauchy.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[11/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_modelpack.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[12/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[13/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[14/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_pe.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+1 warning generated.
+[15/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[16/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:188:54: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  187 |         fprintf(stderr, "[Shannon-Prime SQFREE] scaling law: safe K_corr floor=%.4f "
+      |         ~~~~~~~
+  188 |                 "(est. %.1fB params @ Q8)\n", floor, params_b);
+      |                                                      ^~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:188:47: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  187 |         fprintf(stderr, "[Shannon-Prime SQFREE] scaling law: safe K_corr floor=%.4f "
+      |         ~~~~~~~
+  188 |                 "(est. %.1fB params @ Q8)\n", floor, params_b);
+      |                                               ^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:123:24: warning: no previous prototype for function 'sp_llama_sqfree_init' [-Wmissing-prototypes]
+  123 | sp_llama_sqfree_ctx_t *sp_llama_sqfree_init(int head_dim, int n_layers,
+      |                        ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:123:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  123 | sp_llama_sqfree_ctx_t *sp_llama_sqfree_init(int head_dim, int n_layers,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:194:6: warning: no previous prototype for function 'sp_llama_sqfree_free' [-Wmissing-prototypes]
+  194 | void sp_llama_sqfree_free(sp_llama_sqfree_ctx_t *ctx) {
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:194:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  194 | void sp_llama_sqfree_free(sp_llama_sqfree_ctx_t *ctx) {
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:208:6: warning: no previous prototype for function 'sp_llama_sqfree_write_kv' [-Wmissing-prototypes]
+  208 | void sp_llama_sqfree_write_kv(sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:208:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  208 | void sp_llama_sqfree_write_kv(sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:220:6: warning: no previous prototype for function 'sp_llama_sqfree_read_k' [-Wmissing-prototypes]
+  220 | void sp_llama_sqfree_read_k(const sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:220:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  220 | void sp_llama_sqfree_read_k(const sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:226:6: warning: no previous prototype for function 'sp_llama_sqfree_read_v' [-Wmissing-prototypes]
+  226 | void sp_llama_sqfree_read_v(const sp_llama_sqfree_ctx_t *ctx,
+      |      ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:226:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  226 | void sp_llama_sqfree_read_v(const sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:240:2: warning: no newline at end of file [-Wnewline-eof]
+  240 | }
+      |  ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:233:7: warning: no previous prototype for function 'sp_llama_sqfree_validate_k' [-Wmissing-prototypes]
+  233 | float sp_llama_sqfree_validate_k(sp_llama_sqfree_ctx_t *ctx,
+      |       ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama_sqfree.c:233:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  233 | float sp_llama_sqfree_validate_k(sp_llama_sqfree_ctx_t *ctx,
+      | ^
+      | static 
+10 warnings generated.
+[17/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:361:45: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  359 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
+      |                 ~~~~~~~
+  360 |                         "freq_base=%.0f, %d freq pairs\n",
+  361 |                         role_tag, pe_alpha, freq_base, n_freqs);
+      |                                             ^~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:361:35: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  359 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
+      |                 ~~~~~~~
+  360 |                         "freq_base=%.0f, %d freq pairs\n",
+  361 |                         role_tag, pe_alpha, freq_base, n_freqs);
+      |                                   ^~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:366:25: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  362 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
+      |                 ~~~~~~~
+  363 |                         "[%.4f, %.4f]\n",
+  364 |                         role_tag,
+  365 |                         ctx->freq_factors[0],
+  366 |                         ctx->freq_factors[n_freqs - 1]);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:365:25: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  362 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
+      |                 ~~~~~~~
+  363 |                         "[%.4f, %.4f]\n",
+  364 |                         role_tag,
+  365 |                         ctx->freq_factors[0],
+      |                         ^~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:391:63: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  387 |                 fprintf(stderr, "[Shannon-Prime]%s preset '%s' matched. "
+      |                 ~~~~~~~
+  388 |                         "Suggested draft for speculative decoding: %s "
+  389 |                         "(expected acceptance ~%.0f%%). Pass it with "
+  390 |                         "llama-cli's -md flag, or ignore for single-model use.\n",
+  391 |                         role_tag, preset->name, draft, accept * 100.0f);
+      |                                                        ~~~~~~~^~~~~~~~
+6 warnings generated.
+[18/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:83:51: warning: implicit conversion increases floating-point precision: 'const float' to 'double' [-Wdouble-promotion]
+   83 |         for (int i = 0; i < head_dim; i++) sum += in[i];
+      |                                                ~~ ^~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1070:55: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1070 |             hp->calib_XtX[i * ns + j] += (double)xi * xj;
+      |                                                     ~ ^~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1075:55: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1075 |             hp->calib_XtY[i * nt + t] += (double)xi * yt;
+      |                                                     ~ ^~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1325:44: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+ 1323 |         fprintf(stderr, "[Shannon-Prime HIER] bytes/pos: K=%d V=%d (%.1f× vs fp16)\n",
+      |         ~~~~~~~
+ 1324 |                 hc->k_bytes_per_pos, hc->v_bytes_per_pos,
+ 1325 |                 (float)(cfg->head_dim * 4) / (hc->k_bytes_per_pos + hc->v_bytes_per_pos));
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core/shannon_prime_sqfree.c:1595:2: warning: no newline at end of file [-Wnewline-eof]
+ 1595 | }
+      |  ^
+6 warnings generated.
+[19/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:6:
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex.h:189:28: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  189 |          FARF(level, msg , ##__VA_ARGS__); \
+      |                            ^
+In file included from D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/sp_hex_stub.c:9:
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:102:65: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  102 | #define FARF(x, ...) _FARF_PASTE(_FARF_,_FARF_VAL(FARF_##x))(x, ##__VA_ARGS__)
+      |                                                                 ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:249:73: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  249 |                 _HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                         ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:253:106: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  253 |                         HAP_debug_runtime(FARF_##x##_LEVEL ^ HAP_LEVEL_RUNTIME , __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                                                          ^
+C:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/HAP_farf.h:258:76: warning: token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
+  258 |                     HAP_debug_v2(FARF_##x##_LEVEL, __FILENAME__, __LINE__, ##__VA_ARGS__); \
+      |                                                                            ^
+46 warnings generated.
+[20/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: warning: address of function 'remote_session_control' will always evaluate to 'true' [-Wpointer-bool-conversion]
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |         ~^~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: note: prefix with the address-of operator to silence this warning
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |          ^
+      |          &
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:972:9: warning: unused variable 'hd' [-Wunused-variable]
+  972 |     int hd = cache->cfg_snapshot.head_dim;
+      |         ^~
+3 warnings generated.
+[21/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[22/263] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:391:38: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  391 |                 d[i + j]       = u + v;
+      |                                    ~ ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:391:34: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  391 |                 d[i + j]       = u + v;
+      |                                  ^ ~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:392:38: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  392 |                 d[i + j + len] = u - v;
+      |                                    ~ ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:392:34: warning: implicit conversion increases floating-point precision: '__fp16' to 'float' [-Wdouble-promotion]
+  392 |                 d[i + j + len] = u - v;
+      |                                  ^ ~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:405:32: warning: implicit conversion increases floating-point precision: 'const __fp16' to 'float' [-Wdouble-promotion]
+  405 |     for (; i < n; i++) d[i] *= inv_sqrt_n;
+      |                             ~~ ^~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno/shannon_prime_adreno.c:657:13: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  653 |     fprintf(stderr, "[Shannon-Prime Mobile] Cache: %.2f MB "
+      |     ~~~~~~~
+  654 |             "(vs %.2f MB fp16, %.1f× compression)\n",
+  655 |             (k_total + v_total) / (1024.0 * 1024.0),
+  656 |             (size_t)n_slots * max_seq_len * cfg->head_dim * 4 / (1024.0 * 1024.0),
+  657 |             compression);
+      |             ^~~~~~~~~~~
+7 warnings generated.
+[23/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/llama_sp_fused_kq.cpp.o
+D:/F/shannon-prime-repos/shannon-prime-llama/src/engine/llama_sp_fused_kq.cpp:93:15: warning: unused variable 'n_head_kv' [-Wunused-variable]
+   93 |     const int n_head_kv  = u->n_heads_kv;
+      |               ^~~~~~~~~
+1 warning generated.
+[24/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[25/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[26/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[27/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/arm/repack.cpp.o
+[28/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[29/263] Linking C static library src\libshannon_prime_core.a
+[30/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[31/263] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+[32/263] Building CXX object src/CMakeFiles/llama.dir/llama-cparams.cpp.o
+[33/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/llama_sp_kcap.cpp.o
+[34/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[35/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/gdn_state.cpp.o
+[36/263] Building CXX object src/CMakeFiles/shannon_prime_engine.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/engine/kv_cache.cpp.o
+[37/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[38/263] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[39/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[40/263] Building CXX object src/CMakeFiles/llama.dir/llama-arch.cpp.o
+[41/263] Building CXX object src/CMakeFiles/llama.dir/llama-io.cpp.o
+[42/263] Building CXX object src/CMakeFiles/llama.dir/llama-hparams.cpp.o
+[43/263] Building CXX object src/CMakeFiles/llama.dir/llama-impl.cpp.o
+[44/263] Building CXX object src/CMakeFiles/llama.dir/llama-chat.cpp.o
+[45/263] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[46/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[47/263] Building CXX object src/CMakeFiles/llama.dir/llama-batch.cpp.o
+[48/263] Building CXX object src/CMakeFiles/llama.dir/llama-adapter.cpp.o
+[49/263] Building CXX object src/CMakeFiles/llama.dir/llama-context.cpp.o
+FAILED: [code=1] src/CMakeFiles/llama.dir/llama-context.cpp.o 
+D:\Files\Android\android-ndk-r27d\toolchains\llvm\prebuilt\windows-x86_64\bin\clang++.exe --target=aarch64-none-linux-android28 --sysroot=D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DGGML_BACKEND_SHARED -DGGML_SHARED -DGGML_USE_CPU -DLLAMA_BUILD -DLLAMA_SHANNON_PRIME -DLLAMA_SHARED -DSP_HAVE_ADRENO -DSP_HAVE_HEXAGON -DSP_HEXAGON_FASTRPC -Dllama_EXPORTS -ID:/F/shannon-prime-repos/sp-model-test/llama-cpp/src/. -ID:/F/shannon-prime-repos/sp-model-test/llama-cpp/src/../include -ID:/F/shannon-prime-repos/sp-model-test/llama-cpp/ggml/src/../include -ID:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core -ID:/F/shannon-prime-repos/shannon-prime-llama/src/tools -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/cuda -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/vulkan -ID:/F/shannon-prime-repos/shannon-prime-llama/src/engine -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/incs -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/stddef -ID:/F/shannon-prime-repos/sp-model-test/llama-cpp/src/../ggml/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -march=armv8.2-a+fp16+dotprod -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/ipc/fastrpc/rpcmem/inc -O3 -DNDEBUG  -fPIC -Wmissing-declarations -Wmissing-noreturn -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wunreachable-code-break -Wunreachable-code-return -Wmissing-prototypes -Wextra-semi -MD -MT src/CMakeFiles/llama.dir/llama-context.cpp.o -MF src\CMakeFiles\llama.dir\llama-context.cpp.o.d -o src/CMakeFiles/llama.dir/llama-context.cpp.o -c D:/F/shannon-prime-repos/sp-model-test/llama-cpp/src/llama-context.cpp
+D:/F/shannon-prime-repos/sp-model-test/llama-cpp/src/llama-context.cpp:1255:9: error: use of undeclared identifier 'llama_sp_kcap_clear_post_compute_skip'
+ 1255 |         llama_sp_kcap_clear_post_compute_skip();
+      |         ^
+1 error generated.
+[50/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory.cpp.o
+[51/263] Building CXX object src/CMakeFiles/llama.dir/llama.cpp.o
+[52/263] Linking CXX shared library bin\libggml-base.so
+[53/263] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o
+[54/263] Building CXX object src/CMakeFiles/llama.dir/llama-mmap.cpp.o
+[55/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o
+[56/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o
+[57/263] Building CXX object src/CMakeFiles/llama.dir/llama-model-saver.cpp.o
+[58/263] Building CXX object src/CMakeFiles/llama.dir/llama-graph.cpp.o
+[59/263] Building CXX object src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o
+[60/263] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[61/263] Building CXX object src/CMakeFiles/llama.dir/llama-grammar.cpp.o
+[62/263] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o
+[63/263] Building CXX object src/CMakeFiles/llama.dir/llama-model-loader.cpp.o
+[64/263] Building CXX object src/CMakeFiles/llama.dir/llama-quant.cpp.o
+[65/263] Building CXX object src/CMakeFiles/llama.dir/llama-sampler.cpp.o

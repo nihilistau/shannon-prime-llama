@@ -1,0 +1,11 @@
+CMake Warning at /mnt/d/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:431 (message):
+  An old version of CMake is being used that cannot automatically detect
+  compiler attributes.  Compiler identification is being bypassed.  Some
+  values may be wrong or missing.  Update to CMake 3.19 or newer to use
+  CMake's built-in compiler identification.
+Call Stack (most recent call first):
+  /mnt/d/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  /usr/share/cmake-3.16/Modules/CMakeDetermineSystem.cmake:93 (include)
+  CMakeLists.txt:2 (project)
+
+

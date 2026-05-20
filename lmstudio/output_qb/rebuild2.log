@@ -1,0 +1,16 @@
+**********************************************************************
+** Visual Studio 2019 Developer Command Prompt v16.0
+** Copyright (c) 2021 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+ninja: Entering directory `D:\F\shannon-prime-repos\llama-cpp-sp\build_sp_server'
+[1/5] Building CXX object src\CMakeFiles\shannon_prime_quickborn.dir\D_\F\shannon-prime-repos\shannon-prime-llama\src\tools\sp_quickborn_http.cpp.obj
+[2/5] Linking CXX static library src\shannon_prime_quickborn.lib
+[3/5] Linking CXX shared library bin\llama.dll
+[4/4] Linking CXX executable bin\llama-server.exe
+FAILED: [code=4294967295] bin/llama-server.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && C:\Users\Knack\AppData\Local\Programs\Python\Python313\Lib\site-packages\cmake\data\bin\cmake.exe -E vs_link_exe --msvc-ver=1929 --intdir=tools\server\CMakeFiles\llama-server.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100261~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100261~1.0\x64\mt.exe --manifests  -- C:\PROGRA~2\MICROS~2\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx64\x64\link.exe /nologo tools\server\CMakeFiles\llama-server.dir\server.cpp.obj tools\server\CMakeFiles\llama-server.dir\server-http.cpp.obj tools\server\CMakeFiles\llama-server.dir\server-models.cpp.obj  /out:bin\llama-server.exe /implib:tools\server\llama-server.lib /pdb:bin\llama-server.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console  tools\server\server-context.lib  common\common.lib  vendor\cpp-httplib\cpp-httplib.lib  tools\mtmd\mtmd.lib  src\llama.lib  ggml\src\ggml.lib  ggml\src\ggml-cpu.lib  ggml\src\ggml-cuda\ggml-cuda.lib  ggml\src\ggml-base.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\PROGRA~2\MICROS~2\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx64\x64\link.exe /nologo tools\server\CMakeFiles\llama-server.dir\server.cpp.obj tools\server\CMakeFiles\llama-server.dir\server-http.cpp.obj tools\server\CMakeFiles\llama-server.dir\server-models.cpp.obj /out:bin\llama-server.exe /implib:tools\server\llama-server.lib /pdb:bin\llama-server.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console tools\server\server-context.lib common\common.lib vendor\cpp-httplib\cpp-httplib.lib tools\mtmd\mtmd.lib src\llama.lib ggml\src\ggml.lib ggml\src\ggml-cpu.lib ggml\src\ggml-cuda\ggml-cuda.lib ggml\src\ggml-base.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+common.lib(speculative.cpp.obj) : error LNK2019: unresolved external symbol __imp_sp_quickborn_request_draft referenced in function "public: virtual void __cdecl common_speculative_state_sp_quickborn::draft(struct common_params_speculative const &,class std::vector<int,class std::allocator<int> > const &,int,class std::vector<int,class std::allocator<int> > &)" (?draft@common_speculative_state_sp_quickborn@@UEAAXAEBUcommon_params_speculative@@AEBV?$vector@HV?$allocator@H@std@@@std@@HAEAV34@@Z)
+bin\llama-server.exe : fatal error LNK1120: 1 unresolved externals
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,9 @@
+**********************************************************************
+** Visual Studio 2019 Developer Command Prompt v16.0
+** Copyright (c) 2021 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+ninja: Entering directory `D:\F\shannon-prime-repos\llama-cpp-sp\build_sp_lmstudio'
+[1/3] Building CXX object common\CMakeFiles\common.dir\arg.cpp.obj
+[2/3] Linking CXX static library common\common.lib
+[3/3] Linking CXX executable bin\llama-server.exe

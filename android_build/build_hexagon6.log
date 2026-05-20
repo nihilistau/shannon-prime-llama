@@ -1,0 +1,15 @@
+[1/6] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: warning: address of function 'remote_session_control' will always evaluate to 'true' [-Wpointer-bool-conversion]
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |         ~^~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: note: prefix with the address-of operator to silence this warning
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |          ^
+      |          &
+2 warnings generated.
+[2/6] Linking C static library src\libshannon_prime_core.a
+[3/6] Linking CXX shared library bin\libllama.so
+[4/6] Linking CXX shared library bin\libmtmd.so
+[5/6] Linking CXX shared library bin\libllama-common.so
+[6/6] Linking CXX executable bin\llama-cli

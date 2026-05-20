@@ -1,0 +1,563 @@
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:146 (include)
+  CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:146 (include)
+  CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-6qyfxm/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-6qyfxm/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-6qyfxm/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-ufidm6/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-ufidm6/CMakeLists.txt:2 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-ufidm6/CMakeLists.txt:2 (project)
+
+
+CMAKE_BUILD_TYPE=Release
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xyyw7y/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xyyw7y/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xyyw7y/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xnw07c/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xnw07c/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xnw07c/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-fw305e/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-fw305e/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-fw305e/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-g74p8j/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-g74p8j/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-g74p8j/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-152x98/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-152x98/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-152x98/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-4tez27/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-4tez27/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-4tez27/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-vw4sa4/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-vw4sa4/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-vw4sa4/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xd5y1x/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xd5y1x/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-xd5y1x/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-fsmjjz/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-fsmjjz/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-CXX.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-fsmjjz/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-hbwv4m/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-hbwv4m/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-hbwv4m/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-kqsv9u/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/android-legacy.toolchain.cmake:35 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  D:/Files/Android/android-ndk-r27d/build/cmake/android.toolchain.cmake:55 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/4.2.1/CMakeSystem.cmake:6 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-kqsv9u/CMakeLists.txt:3 (project)
+
+
+CMake Deprecation Warning at D:/Files/Android/android-ndk-r27d/build/cmake/flags.cmake:18 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+Call Stack (most recent call first):
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang.cmake:23 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/Platform/Android-Clang-C.cmake:1 (include)
+  C:/Users/Knack/AppData/Local/Programs/Python/Python313/Lib/site-packages/cmake/data/share/cmake-4.2/Modules/CMakeCInformation.cmake:48 (include)
+  D:/F/shannon-prime-repos/sp-model-test/llama-cpp/build-android-hexagon/CMakeFiles/CMakeScratch/TryCompile-kqsv9u/CMakeLists.txt:3 (project)
+
+
+CMake Warning at vendor/cpp-httplib/CMakeLists.txt:152 (message):
+  OpenSSL not found, HTTPS support disabled
+
+

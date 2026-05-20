@@ -1,0 +1,71 @@
+[1/71] Linking CXX shared library bin\libggml-base.so
+[2/71] Linking CXX shared library bin\libggml-cpu.so
+[3/71] Linking CXX shared library bin\libggml.so
+[4/71] Linking CXX shared library bin\libllama.so
+[5/71] Building CXX object common/CMakeFiles/llama-common.dir/console.cpp.o
+[6/71] Building CXX object common/CMakeFiles/llama-common.dir/llguidance.cpp.o
+[7/71] Building CXX object common/CMakeFiles/llama-common.dir/debug.cpp.o
+[8/71] Building CXX object common/CMakeFiles/llama-common.dir/log.cpp.o
+[9/71] Building CXX object common/CMakeFiles/llama-common.dir/ngram-map.cpp.o
+[10/71] Building CXX object common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o
+[11/71] Building CXX object common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o
+[12/71] Building CXX object common/CMakeFiles/llama-common.dir/common.cpp.o
+[13/71] Building CXX object common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o
+[14/71] Building CXX object common/CMakeFiles/llama-common.dir/json-partial.cpp.o
+[15/71] Building CXX object common/CMakeFiles/llama-common.dir/regex-partial.cpp.o
+[16/71] Building CXX object common/CMakeFiles/llama-common.dir/preset.cpp.o
+[17/71] Building CXX object common/CMakeFiles/llama-common.dir/unicode.cpp.o
+[18/71] Building CXX object common/CMakeFiles/llama-common.dir/sampling.cpp.o
+[19/71] Building CXX object common/CMakeFiles/llama-common.dir/hf-cache.cpp.o
+[20/71] Building CXX object common/CMakeFiles/llama-common.dir/download.cpp.o
+[21/71] Building CXX object common/CMakeFiles/llama-common.dir/speculative.cpp.o
+[22/71] Building CXX object common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o
+[23/71] Building CXX object common/CMakeFiles/llama-common.dir/__/license.cpp.o
+[24/71] Building CXX object common/CMakeFiles/llama-common.dir/json-schema-to-grammar.cpp.o
+[25/71] Linking CXX static library vendor\cpp-httplib\libcpp-httplib.a
+[26/71] Building CXX object common/CMakeFiles/llama-common.dir/jinja/string.cpp.o
+[27/71] Building CXX object common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o
+[28/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-audio.cpp.o
+[29/71] Building CXX object common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o
+[30/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd.cpp.o
+[31/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-image.cpp.o
+[32/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/cogvlm.cpp.o
+[33/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/conformer.cpp.o
+[34/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/dotsocr.cpp.o
+[35/71] Building CXX object common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o
+[36/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4a.cpp.o
+[37/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/gemma4v.cpp.o
+[38/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/glm4v.cpp.o
+[39/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/hunyuanocr.cpp.o
+[40/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/internvl.cpp.o
+[41/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/kimivl.cpp.o
+[42/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/kimik25.cpp.o
+[43/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/nemotron-v2-vl.cpp.o
+[44/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/llama4.cpp.o
+[45/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/clip.cpp.o
+[46/71] Building CXX object common/CMakeFiles/llama-common.dir/peg-parser.cpp.o
+[47/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/llava.cpp.o
+[48/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/minicpmv.cpp.o
+[49/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/paddleocr.cpp.o
+[50/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen2vl.cpp.o
+[51/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/pixtral.cpp.o
+[52/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3vl.cpp.o
+[53/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/qwen3a.cpp.o
+[54/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/step3vl.cpp.o
+[55/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/whisper-enc.cpp.o
+[56/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/siglip.cpp.o
+[57/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/deepseekocr.cpp.o
+[58/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/mtmd-helper.cpp.o
+[59/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/youtuvl.cpp.o
+[60/71] Building CXX object common/CMakeFiles/llama-common.dir/jinja/value.cpp.o
+[61/71] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/mobilenetv5.cpp.o
+[62/71] Linking CXX shared library bin\libmtmd.so
+[63/71] Linking CXX shared library bin\libllama-common.so
+[64/71] Building CXX object tools/server/CMakeFiles/server-context.dir/server-queue.cpp.o
+[65/71] Building CXX object tools/cli/CMakeFiles/llama-cli.dir/cli.cpp.o
+[66/71] Building CXX object tools/server/CMakeFiles/server-context.dir/server-common.cpp.o
+[67/71] Building CXX object tools/server/CMakeFiles/server-context.dir/server-tools.cpp.o
+[68/71] Building CXX object tools/server/CMakeFiles/server-context.dir/server-task.cpp.o
+[69/71] Building CXX object tools/server/CMakeFiles/server-context.dir/server-context.cpp.o
+[70/71] Linking CXX static library tools\server\libserver-context.a
+[71/71] Linking CXX executable bin\llama-cli

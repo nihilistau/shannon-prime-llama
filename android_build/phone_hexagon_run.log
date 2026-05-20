@@ -1,0 +1,34 @@
+warning: no usable GPU found, --gpu-layers option will be ignored
+warning: one possible reason is that llama.cpp was compiled without GPU support
+warning: consult docs/build.md for compilation instructions
+
+Loading model... |-\|/-[Shannon-Prime] llama.cpp integration
+  Backend:  Hexagon (cDSP)
+Shannon-Prime VHT2 Configuration:
+  head_dim:     64
+  n_layers:     16
+  n_heads_kv:   8
+  K bands:      3 (5/4/4)
+  V bands:      1 (5)
+  Möbius mask:  on
+  Vilenkin:     off
+  Compression:  3.0×
+[Shannon-Prime] PrimePE enabled: ?=0.17, freq_base=10000, 32 freq pairs
+[Shannon-Prime] PrimePE factor range: [0.8300, 1275.6501]
+[Shannon-Prime] enabled: model=0xb400007ddc99a010 head_dim_k=64 head_dim_v=64 n_layers=16 n_heads_kv=8 n_ctx=512
+[Shannon-Prime] PrimePE applied: alpha=1.000 n_freqs=32 patched=0 skipped=16 mismatched=0
+\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|[Shannon-Prime] llama.cpp integration
+  Backend:  Hexagon (cDSP)
+Shannon-Prime VHT2 Configuration:
+  head_dim:     64
+  n_layers:     16
+  n_heads_kv:   8
+  K bands:      3 (5/4/4)
+  V bands:      1 (5)
+  Möbius mask:  on
+  Vilenkin:     off
+  Compression:  3.0×
+[Shannon-Prime] PrimePE enabled: ?=0.17, freq_base=10000, 32 freq pairs
+[Shannon-Prime] PrimePE factor range: [0.8300, 1275.6501]
+[Shannon-Prime] enabled: model=0xb400007ddc99a010 head_dim_k=64 head_dim_v=64 n_layers=16 n_heads_kv=8 n_ctx=512
+/-\Segmentation fault 

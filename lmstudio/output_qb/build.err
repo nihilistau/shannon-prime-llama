@@ -1,0 +1,7 @@
+'vswhere.exe' is not recognized as an internal or external command,
+operable program or batch file.
+CMAKE_BUILD_TYPE=Release
+CMake Warning at vendor/cpp-httplib/CMakeLists.txt:150 (message):
+  OpenSSL not found, HTTPS support disabled
+
+

@@ -1,0 +1,6 @@
+**********************************************************************
+** Visual Studio 2019 Developer Command Prompt v16.0
+** Copyright (c) 2021 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[1/1] Building CXX object common\CMakeFiles\common.dir\speculative.cpp.obj

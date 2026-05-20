@@ -1,0 +1,44 @@
+[SP] Shannon-Prime LM Studio builder
+[SP] llama.cpp:          D:\F\shannon-prime-repos\llama-cpp-sp
+[SP] shannon-prime-llama: D:\F\shannon-prime-repos\shannon-prime-llama
+[SP] output:             D:\F\shannon-prime-repos\shannon-prime-llama\lmstudio\output_qb
+
+**********************************************************************
+** Visual Studio 2019 Developer Command Prompt v16.0
+** Copyright (c) 2021 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[SP] Vulkan SDK: C:\VulkanSDK\1.4.341.1
+[SP] CUDA: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2
+[SP] Configuring...
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: 
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- ggml version: 0.9.11
+-- ggml commit:  2622975
+-- Shannon-Prime: linking CUDA backends (SP_HAVE_CUDA)
+-- Shannon-Prime: full engine enabled (core + engine + bridge)
+-- Shannon-Prime: QuickBorn outbound side-channel enabled (Phase G)
+-- Could NOT find OpenSSL, try to set the path to OpenSSL root folder in the system variable OPENSSL_ROOT_DIR (missing: OPENSSL_CRYPTO_LIBRARY OPENSSL_INCLUDE_DIR) 
+-- Generating embedded license file for target: common
+-- Configuring done (2.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/F/shannon-prime-repos/llama-cpp-sp/build_sp_lmstudio
+[SP] Building llama.dll...
+ninja: Entering directory `D:\F\shannon-prime-repos\llama-cpp-sp\build_sp_lmstudio'
+ninja: no work to do.
+[SP] Copying DLLs to D:\F\shannon-prime-repos\shannon-prime-llama\lmstudio\output_qb...
+
+[SP] Build complete. Drop these into your LM Studio runtime folder:
+[SP]   D:\F\shannon-prime-repos\shannon-prime-llama\lmstudio\output_qb\llama.dll
+[SP]   D:\F\shannon-prime-repos\shannon-prime-llama\lmstudio\output_qb\ggml.dll
+
+[SP] LM Studio runtime folder is typically:
+[SP]   %USERPROFILE%\.cache\lm-studio\extensions\backends\llama.cpp-win-x86_64-nvidia-cuda12-avx2-2.14.0\
+
+[SP] Keep the stock ggml-base.dll, ggml-cpu.dll, and ggml-cuda.dll from LM Studio.
+[SP] Only replace llama.dll and ggml.dll with the ones built here.

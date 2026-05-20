@@ -1,0 +1,58 @@
+[1/7] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o
+FAILED: [code=1] src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o 
+D:\Files\Android\android-ndk-r27d\toolchains\llvm\prebuilt\windows-x86_64\bin\clang.exe --target=aarch64-none-linux-android28 --sysroot=D:/Files/Android/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DLLAMA_SHANNON_PRIME -DSP_HAVE_ADRENO -DSP_HAVE_HEXAGON -DSP_HEXAGON_FASTRPC -ID:/F/shannon-prime-repos/shannon-prime-llama/lib/shannon-prime/core -ID:/F/shannon-prime-repos/shannon-prime-llama/src/tools -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/adreno -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/cuda -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/vulkan -ID:/F/shannon-prime-repos/shannon-prime-llama/src/engine -ID:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/incs -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/incs/stddef -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -march=armv8.2-a+fp16+dotprod -IC:/Qualcomm/Hexagon_SDK/5.5.6.0/ipc/fastrpc/rpcmem/inc -O3 -DNDEBUG  -fPIC -Wshadow -Wstrict-prototypes -Wpointer-arith -Wmissing-prototypes -Werror=implicit-int -Werror=implicit-function-declaration -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wunreachable-code-break -Wunreachable-code-return -Wdouble-promotion -Wno-alloc-size-larger-than -Wno-cast-qual -Wno-overflow -MD -MT src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o -MF src\CMakeFiles\shannon_prime_core.dir\D_\F\shannon-prime-repos\shannon-prime-llama\src\backends\hexagon\shannon_prime_hexagon.c.o.d -o src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c.o -c D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: warning: address of function 'remote_session_control' will always evaluate to 'true' [-Wpointer-bool-conversion]
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |         ~^~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:94:10: note: prefix with the address-of operator to silence this warning
+   94 |     if (!remote_session_control) return AEE_EUNSUPPORTED;
+      |          ^
+      |          &
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:530:5: error: call to undeclared function 'sp_hex_rpcmem_sync_for_host'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  530 |     sp_hex_rpcmem_sync_for_host(out_scratch, bc->total_bytes);
+      |     ^
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:530:5: note: did you mean 'sp_hex_rpcmem_sync_for_dsp'?
+D:/F/shannon-prime-repos/shannon-prime-llama/src/backends/hexagon/shannon_prime_hexagon.c:390:20: note: 'sp_hex_rpcmem_sync_for_dsp' declared here
+  390 | static inline void sp_hex_rpcmem_sync_for_dsp(const void *buf, size_t bytes) {
+      |                    ^
+2 warnings and 1 error generated.
+[2/7] Building C object src/CMakeFiles/shannon_prime_core.dir/D_/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c.o
+warning: unknown warning option '-Wno-alloc-size-larger-than'; did you mean '-Wno-frame-larger-than'? [-Wunknown-warning-option]
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:361:45: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  359 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
+      |                 ~~~~~~~
+  360 |                         "freq_base=%.0f, %d freq pairs\n",
+  361 |                         role_tag, pe_alpha, freq_base, n_freqs);
+      |                                             ^~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:361:35: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  359 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE enabled: ?=%.2f, "
+      |                 ~~~~~~~
+  360 |                         "freq_base=%.0f, %d freq pairs\n",
+  361 |                         role_tag, pe_alpha, freq_base, n_freqs);
+      |                                   ^~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:366:25: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  362 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
+      |                 ~~~~~~~
+  363 |                         "[%.4f, %.4f]\n",
+  364 |                         role_tag,
+  365 |                         ctx->freq_factors[0],
+  366 |                         ctx->freq_factors[n_freqs - 1]);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:365:25: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  362 |                 fprintf(stderr, "[Shannon-Prime]%s PrimePE factor range: "
+      |                 ~~~~~~~
+  363 |                         "[%.4f, %.4f]\n",
+  364 |                         role_tag,
+  365 |                         ctx->freq_factors[0],
+      |                         ^~~~~~~~~~~~~~~~~~~~
+D:/F/shannon-prime-repos/shannon-prime-llama/src/tools/shannon_prime_llama.c:391:63: warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  387 |                 fprintf(stderr, "[Shannon-Prime]%s preset '%s' matched. "
+      |                 ~~~~~~~
+  388 |                         "Suggested draft for speculative decoding: %s "
+  389 |                         "(expected acceptance ~%.0f%%). Pass it with "
+  390 |                         "llama-cli's -md flag, or ignore for single-model use.\n",
+  391 |                         role_tag, preset->name, draft, accept * 100.0f);
+      |                                                        ~~~~~~~^~~~~~~~
+6 warnings generated.
+ninja: build stopped: subcommand failed.
