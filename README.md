@@ -9,6 +9,9 @@ This is a **bridge**, not the primary deployment path. llama.cpp was not designe
 The long-term plan is to phase this out as the engine matures and gains its own ecosystem integrations..
 
 ---
+All of the interesting and ongoing work has now moved to [Shannon-Prime-Latice](https://github.com/nihilistau/shannon-prime-lattice), [Shannon-Prime-System](https://github.com/nihilistau/shannon-prime-system) and [Shannon-Prime-System-Engine](https://github.com/nihilistau/shannon-prime-system-engine)
+
+---
 
 ## What It Does
 
